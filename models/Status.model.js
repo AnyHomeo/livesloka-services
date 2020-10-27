@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 var StatusSchema = new mongoose.Schema({
-    id: {
+    statusId: {
         type: String,
 
     },
