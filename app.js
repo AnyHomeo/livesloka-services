@@ -23,8 +23,8 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 
-// require('./config/config');
-require("dotenv").config();
+require('./config/config');
+// require("dotenv").config();
 require("./models/db");
 require("./config/passportConfig");
 
