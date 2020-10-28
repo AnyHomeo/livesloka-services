@@ -178,7 +178,7 @@ module.exports.addcurrency = (req, res) => {
 
 module.exports.addStatus = (req, res) => {
     var newStat = new Status();
-    newStat.id = req.body.statusId,
+    newStat.statusId = req.body.statusId,
         newStat.statusName = req.body.statusName,
         newStat.statusDesc = req.body.statusDesc
     newStat.save()
