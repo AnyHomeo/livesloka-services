@@ -1,7 +1,7 @@
 {
   "development": {
     "PORT": 5000,
-    "MONGODB_URI": "mongodb+srv://liveslokaDev:8522p@cluster0.ox8do.mongodb.net/<Livesloka>?retryWrites=true&w=majority",
+    "MONGODB_URI": "mongodb+srv://charan:bharathi@cluster0-2hbtz.mongodb.net/Livekumon?retryWrites=true&w=majority",
     "JWT_SECRET": "SECRET#123",
     "JWT_EXP": "60m"
   },
@@ -11,3 +11,4 @@
     "JWT_EXP": "6688224"
   }
 }
+
