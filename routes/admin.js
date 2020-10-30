@@ -39,4 +39,8 @@ router.post("/admin/update/:name", ctrl.updateCorrespondingData)
 //deleting Every Fields
 router.post("/admin/delete/:name/:id", ctrl.DeleteCorrespondingData)
 
+//working with comments
+router.post("/admin/addcomment", ctrl.addcomment)
+router.get("/admin/comments/:id", ctrl.getComments)
+router.post("/admin/updatecomment", ctrl.updatecomment)
 module.exports = router;
