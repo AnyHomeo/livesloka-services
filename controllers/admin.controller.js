@@ -11,6 +11,7 @@ const Status = require('../models/Status.model')
 const ClassStatus = require('../models/ClassStatuses.model')
 const Teacher = require('../models/Teacher.model')
 const Agent = require('../models/Agent.model')
+const Comment = require('../models/comment.model');
 
 module.exports = {
 
@@ -178,7 +179,7 @@ module.exports.addcurrency = (req, res) => {
 
 module.exports.addStatus = (req, res) => {
     var newStat = new Status();
-    newStat.id = req.body.statusId,
+    newStat.statusId = req.body.statusId,
         newStat.statusName = req.body.statusName,
         newStat.statusDesc = req.body.statusDesc
     newStat.save()
@@ -228,6 +229,25 @@ module.exports.addAgent = (req, res) => {
         addAgentnew.AgentStatus = req.body.AgentStatus
     addAgentnew.save()
         .then(result => { res.status('200').send({ message: "Agent added successfully", status: 'ok', result }) })
+        .catch(err => { res.status('400').send({ message: "something went wrong !!", err }) })
+}
+
+module.exports.addcomment = (req, res) => {
+    Comment.insertMany(req.body)
+        .then(res => { console.log(res) })
+        .catch(err => { console.log(err) })
+}
+
+module.exports.getComments = (req, res) => {
+    Comment.find({ customerId: req.params.id })
+        .then(result => { res.status('200').send({ message: "comment got successfully", status: 'ok', result }) })
+        .catch(err => { res.status('400').send({ message: "something went wrong !!", err }) })
+}
+
+module.exports.updatecomment = (req, res) => {
+    console.log(req.body)
+    Comment.update({ _id: req.body._id }, req.body)
+        .then(result => { res.status('200').send({ message: " Updated  successfully", status: 'ok', result }) })
         .catch(err => { res.status('400').send({ message: "something went wrong !!", err }) })
 }
 

@@ -11,8 +11,13 @@ var TeacherSchema = new mongoose.Schema({
     TeacherName: {
         type: String,
     },
+
     TeacherStatus: {
         type: String,
+    },
+    TeacherDetailsId: { type: mongoose.Schema.Types.ObjectId, ref: "teacherDet" },
+    TeacherSubjectsId: {
+        type: Array,
     },
 
 });
