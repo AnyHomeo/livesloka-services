@@ -234,8 +234,8 @@ module.exports.addAgent = (req, res) => {
 
 module.exports.addcomment = (req, res) => {
     Comment.insertMany(req.body)
-        .then(res => { console.log(res) })
-        .catch(err => { console.log(err) })
+        .then(result => { res.status('200').send({ message: "comment added successfully", status: 'ok', result }) })
+        .catch(err => { res.status('400').send({ message: "something went wrong !!", err }) })
 }
 
 module.exports.getComments = (req, res) => {
