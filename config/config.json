@@ -1,7 +1,7 @@
 {
   "development": {
     "PORT": 5000,
-    "MONGODB_URI": "mongodb://localhost:27017/Livekumon",
+    "MONGODB_URI": "mongodb+srv://6fqHWBUpkD2bvrxY:6fqHWBUpkD2bvrxY@Global-Testing.oqgrq.mongodb.net/global-testing?retryWrites=true&w=majority",
     "JWT_SECRET": "SECRET#123",
     "JWT_EXP": "60m"
   },

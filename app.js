@@ -23,16 +23,15 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 
-require('./config/config');
+require("./config/config");
 // require("dotenv").config();
 require("./models/db");
 require("./config/passportConfig");
 
 const server = require("http").createServer(app);
 
-server.listen(process.env.PORT || "5000", () =>
+server.listen(process.env.PORT || 5000, () =>
   console.log(`Server started at port : ${process.env.PORT}`)
 );
 
 module.exports = app;
-
