@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 mongoose.connect(
-  process.env.MONGODB_URI,
+  "mongodb+srv://6fqHWBUpkD2bvrxY:6fqHWBUpkD2bvrxY@Global-Testing.oqgrq.mongodb.net/global-testing?retryWrites=true&w=majority",
   { useUnifiedTopology: true, useNewUrlParser: true },
   (err) => {
     if (!err) {
