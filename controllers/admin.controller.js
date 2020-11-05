@@ -11,7 +11,8 @@ const Status = require("../models/Status.model");
 const ClassStatus = require("../models/ClassStatuses.model");
 const Teacher = require("../models/Teacher.model");
 const Agent = require("../models/Agent.model");
-const Comment = require("../models/comment.model");
+const Comment = require("../models/comments.model");
+const InvoiceModel = require("../models/Invoice.model");
 
 module.exports = {
   authentication(req, res, next) {
@@ -30,9 +31,13 @@ module.exports = {
             _id: user._id,
             userId: user.userId,
           };
-          var newToken = jwt.sign(payload, process.env.JWT_SECRET, {
-            expiresIn: process.env.JWT_EXP,
-          });
+          var newToken = jwt.sign(
+            payload,
+            "mckdsmlckmweifjmc;mapofkmdskmvidonvcodkscklsdmcksdoisdsdmcks",
+            {
+              expiresIn: process.env.JWT_EXP,
+            }
+          );
           var obj = {
             userId: user.userId,
             roleId: user.roleId,
@@ -300,7 +305,10 @@ module.exports.addAgent = (req, res) => {
 };
 
 module.exports.addcomment = (req, res) => {
-  Comment.insertMany(req.body)
+  let comm = new Comment(req.body);
+  console.log(req.body);
+  comm
+    .save()
     .then((result) => {
       console.log(result);
 
@@ -509,5 +517,96 @@ module.exports.DeleteCorrespondingData = (req, res) => {
     })
     .catch((err) => {
       res.status("400").send({ message: "something went wrong !!", err });
+    });
+};
+
+module.exports.addinvoice = (req, res) => {
+  req.body.invoiceDate = new Date(req.body.invoiceDate);
+  req.body.dueDate = new Date(req.body.dueDate);
+
+  let invoice = new InvoiceModel(req.body);
+
+  invoice
+    .save()
+    .then((val) => {
+      res.status(200).send({
+        status: "OK",
+        message: "Invoice inserted Successfully",
+        result: null,
+      });
+    })
+    .catch((err) => {
+      res.status(500).send({
+        status: "Bad Request",
+        message: "Internal Error",
+        result: null,
+      });
+    });
+};
+
+module.exports.getinvoices = (req, res) => {
+  console.log(req.body);
+  if (req.body.start == "") {
+    let d = new Date();
+    req.body.start =
+      d.getFullYear().toString() + "-" + (d.getMonth() + 1).toString() + "-01";
+    req.body.end =
+      d.getFullYear().toString() + "-" + (d.getMonth() + 1).toString() + "-30";
+  }
+
+  let startDate = new Date(req.body.start);
+  let endDate = new Date(req.body.end);
+
+  InvoiceModel.find({ invoiceDate: { $gte: startDate, $lte: endDate } })
+    .then((val) => {
+      let parse = (d) => {
+        let givenDate = new Date(d.toString());
+        return (
+          givenDate.getDay() +
+          "-" +
+          givenDate.getMonth() +
+          "-" +
+          givenDate.getFullYear()
+        );
+      };
+
+      val = val.map((value, index) => {
+        let ds = value.toJSON();
+        ds.invoiceDate = parse(ds.invoiceDate);
+        ds.dueDate = parse(ds.dueDate);
+
+        return ds;
+      });
+
+      res.status(200).send({
+        status: "OK",
+        message: "Invoice fetched Successfully",
+        result: val,
+      });
+    })
+    .catch((err) => {
+      res.status(500).send({
+        status: "Bad Request",
+        message: "Internal Error",
+        result: null,
+      });
+    });
+};
+
+module.exports.deleteInvoice = (req, res) => {
+  InvoiceModel.deleteOne({ _id: req.body._id })
+    .then((result) => {
+      res.status(200).send({
+        status: "OK",
+        message: "Invoice Deleted Successfully",
+        result: null,
+      });
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: "Internal Error",
+        result: null,
+        status: "Bad request",
+      });
     });
 };

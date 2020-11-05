@@ -27,6 +27,11 @@ router.post("/admin/addstatus", ctrl.addStatus);
 router.post("/admin/addTeacher", ctrl.addTeacher);
 router.post("/admin/addAgent", ctrl.addAgent);
 
+//invoice
+router.post("/admin/addinvoice", ctrl.addinvoice);
+router.post("/admin/getinvoices", ctrl.getinvoices);
+router.post("/admin/deleteinvoice", ctrl.deleteInvoice);
+
 //Getting all Feilds
 router.get("/admin/get/:name", ctrl.getCorrespondingData);
 
