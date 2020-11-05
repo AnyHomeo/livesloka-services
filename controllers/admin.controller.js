@@ -533,6 +533,9 @@ module.exports.getComments = (req, res) => {
 };
 
 module.exports.addinvoice = (req, res) => {
+  req.body.invoiceDate = new Date(req.body.invoiceDate);
+  req.body.dueDate = new Date(req.body.dueDate);
+
   let invoice = new InvoiceModel(req.body);
 
   invoice
@@ -554,8 +557,39 @@ module.exports.addinvoice = (req, res) => {
 };
 
 module.exports.getinvoices = (req, res) => {
-  InvoiceModel.find({})
+  console.log(req.body);
+  if (req.body.start == "") {
+    let d = new Date();
+    req.body.start =
+      d.getFullYear().toString() + "-" + (d.getMonth() + 1).toString() + "-01";
+    req.body.end =
+      d.getFullYear().toString() + "-" + (d.getMonth() + 1).toString() + "-30";
+  }
+
+  let startDate = new Date(req.body.start);
+  let endDate = new Date(req.body.end);
+
+  InvoiceModel.find({ invoiceDate: { $gte: startDate, $lte: endDate } })
     .then((val) => {
+      let parse = (d) => {
+        let givenDate = new Date(d.toString());
+        return (
+          givenDate.getDay() +
+          "-" +
+          givenDate.getMonth() +
+          "-" +
+          givenDate.getFullYear()
+        );
+      };
+
+      val = val.map((value, index) => {
+        let ds = value.toJSON();
+        ds.invoiceDate = parse(ds.invoiceDate);
+        ds.dueDate = parse(ds.dueDate);
+
+        return ds;
+      });
+
       res.status(200).send({
         status: "OK",
         message: "Invoice fetched Successfully",

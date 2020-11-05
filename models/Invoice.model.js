@@ -8,10 +8,10 @@ var Invoice = new mongoose.Schema({
     type: String,
   },
   invoiceDate: {
-    type: String,
+    type: Date,
   },
   dueDate: {
-    type: String,
+    type: Date,
   },
   currentCustomerID: {
     type: String,
@@ -27,6 +27,12 @@ var Invoice = new mongoose.Schema({
   },
   classes: {
     type: [],
+  },
+  currency: {
+    type: String,
+  },
+  totalAmountINR: {
+    type: Number,
   },
 });
 

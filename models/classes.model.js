@@ -1,20 +1,18 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 var ClassSchema = new mongoose.Schema({
-    id: {
-        type: String,
-
-    },
-    classDesc: {
-        type: String,
-    },
-    className: {
-        type: String,
-    },
-    classesStatus: {
-        type: String,
-    },
-
+  id: {
+    type: String,
+  },
+  classDesc: {
+    type: String,
+  },
+  className: {
+    type: String,
+  },
+  classesStatus: {
+    type: String,
+  },
 });
 
-module.exports = mongoose.model('Classe', ClassSchema);
+module.exports = mongoose.model("Classe", ClassSchema);

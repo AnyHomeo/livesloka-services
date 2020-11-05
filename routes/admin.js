@@ -30,9 +30,8 @@ router.post("/admin/comments", ctrl.getComments);
 router.post("/admin/addcomment", ctrl.addComment);
 router.post("/admin/updatecomment", ctrl.updateComment);
 router.post("/admin/addinvoice", ctrl.addinvoice);
-router.get("/admin/getinvoices", ctrl.getinvoices);
+router.post("/admin/getinvoices", ctrl.getinvoices);
 router.post("/admin/deleteinvoice", ctrl.deleteInvoice);
-
 
 //Getting all Feilds
 router.get("/admin/get/:name", ctrl.getCorrespondingData);
