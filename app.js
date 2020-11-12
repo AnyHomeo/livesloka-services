@@ -6,7 +6,6 @@ var logger = require("morgan");
 var cors = require("cors");
 
 var indexRouter = require("./routes/admin");
-var usersRouter = require("./routes/users");
 
 var app = express();
 
@@ -21,7 +20,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
-app.use("/users", usersRouter);
 
 require("./config/config");
 // require("dotenv").config();

@@ -1,4 +1,5 @@
 const CustomerModel = require("../models/Customer.model");
+const AdminModel = require("../models/Admin.model");
 
 module.exports = {
   async registerCustomer(req, res) {
@@ -7,13 +8,34 @@ module.exports = {
     customerRegData
       .save()
       .then((val) => {
-        res.status(200).send({
-          status: "OK",
-          message: "Customer data inserted Successfully",
-          result: null,
+        console.log(val);
+        let user = new AdminModel({
+          userId: req.body.email,
+          customerId: val._id,
+          username: req.body.firstName + " " + req.body.lastName,
+          roleId: 1,
+          password: "default123",
         });
+        user
+          .save()
+          .then((newUser) => {
+            return res.status(200).send({
+              status: "OK",
+              message:
+                "Customer data inserted and Login Credentials created Successfully",
+              result: null,
+            });
+          })
+          .catch((err) => {
+            return res.status(500).json({
+              status: "Internal Server Error",
+              error: "Error in creating Username and Password",
+              result: null,
+            });
+          });
       })
       .catch((err) => {
+        console.log(err);
         res.status(400).send({
           status: "Bad Request",
           message: "Invalid Syntax",

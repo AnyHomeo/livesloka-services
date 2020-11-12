@@ -1,7 +1,5 @@
 const jwt = require("jsonwebtoken");
 const admin = require("../models/Admin.model");
-const passport = require("passport");
-const localStrategy = require("passport-local").Strategy;
 const bcrypt = require("bcryptjs");
 const classes = require("../models/classes.model");
 const TimeZone = require("../models/timeZone.model");
@@ -17,7 +15,6 @@ const InvoiceModel = require("../models/Invoice.model");
 module.exports = {
   authentication(req, res, next) {
     console.log(req.body);
-
     admin.findOne({ userId: req.body.userId }, (err, user) => {
       console.log(user);
       if (!user) {
@@ -46,7 +43,7 @@ module.exports = {
           };
           return res
             .status(200)
-            .json({ message: "LoggedIn successfully", obj });
+            .json({ message: "LoggedIn successfully", result: obj });
         }
         return res.status(200).json({ message: "Wrong Password !!" });
       }
@@ -118,7 +115,7 @@ module.exports.PasswordConfirm = (req, res, next) => {
 module.exports.ChangePassword = (req, res, next) => {
   // call for passport authentication
 
-  console.log("inside else if of admion controller");
+  console.log("inside else if of admin controller");
   if (req.body.newPassword == req.body.confirmPassword) {
     console.log("inside");
     admin
@@ -148,6 +145,7 @@ module.exports.register = (req, res, next) => {
   adm.userId = req.body.userId;
   adm.username = req.body.username;
   adm.password = req.body.password;
+  adm.roleId = 3;
   adm.save((err, doc) => {
     if (!err)
       res.status(200).send({ message: "admin created successfully", doc });
@@ -186,7 +184,6 @@ module.exports.addtimezone = (req, res) => {
     (newTime.timeZoneStatus = req.body.timeZoneStatus);
   newTime
     .save()
-
     .then((result) => {
       res
         .status("200")

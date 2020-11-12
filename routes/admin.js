@@ -8,7 +8,7 @@ var customerCtrl = require("../controllers/Customer.controller");
 
 router.post("/login", ctrl.authentication);
 
-router.post("/PasswordConfirm", ctrl.PasswordConfirm);
+// router.post("/PasswordConfirm", ctrl.PasswordConfirm);
 router.post("/ChangePassword", ctrl.ChangePassword);
 
 router.post("/register", ctrl.register);
