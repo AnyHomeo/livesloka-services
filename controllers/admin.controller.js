@@ -18,9 +18,7 @@ module.exports = {
     admin.findOne({ userId: req.body.userId }, (err, user) => {
       console.log(user);
       if (!user) {
-        return res
-          .status(400)
-          .json({ message: "Invalid Credentials..you got no access" });
+        return res.status(400).json({ message: "Invalid userId or Password" });
       } else {
         console.log(user);
         if (user.password === req.body.password) {
