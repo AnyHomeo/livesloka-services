@@ -119,15 +119,13 @@ module.exports.ChangePassword = (req, res) => {
         }
       )
       .then((result) => {
-        res
-          .status(200)
-          .send({ message: "password updated successfully!", result });
+        res.status(200).send({ message: "password updated successfully!" });
       })
       .catch((err) => {
         res.status(400).send({ message: "Invalid userId" });
       });
   } else {
-    return res.status(200).send({ message: "password didnot match" });
+    return res.status(400).send({ message: "password didnot match" });
   }
 };
 
