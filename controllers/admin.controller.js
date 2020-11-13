@@ -14,9 +14,7 @@ const InvoiceModel = require("../models/Invoice.model");
 
 module.exports = {
   authentication(req, res, next) {
-    console.log(req.body);
     admin.findOne({ userId: req.body.userId }, (err, user) => {
-      console.log(user);
       if (!user) {
         return res.status(400).json({ message: "Invalid userId or Password" });
       } else {
@@ -43,7 +41,7 @@ module.exports = {
             .status(200)
             .json({ message: "LoggedIn successfully", result: obj });
         }
-        return res.status(200).json({ message: "Wrong Password !!" });
+        return res.status(400).json({ message: "Wrong Password !!" });
       }
     });
   },
@@ -110,12 +108,9 @@ module.exports.PasswordConfirm = (req, res, next) => {
 //     }
 // };
 
-module.exports.ChangePassword = (req, res, next) => {
-  // call for passport authentication
-
-  console.log("inside else if of admin controller");
+module.exports.ChangePassword = (req, res) => {
+  // call for passport aut hentication
   if (req.body.newPassword == req.body.confirmPassword) {
-    console.log("inside");
     admin
       .updateOne(
         { userId: req.body.userId },
@@ -124,16 +119,14 @@ module.exports.ChangePassword = (req, res, next) => {
         }
       )
       .then((result) => {
-        result = null;
         res
           .status(200)
-          .send({ message: "customer registration succesfully done!", result });
+          .send({ message: "password updated successfully!", result });
       })
       .catch((err) => {
         res.status(400).send({ message: "Invalid userId" });
       });
   } else {
-    console.log("outside");
     return res.status(200).send({ message: "password didnot match" });
   }
 };
