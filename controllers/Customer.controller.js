@@ -1,5 +1,6 @@
 const CustomerModel = require("../models/Customer.model");
 const AdminModel = require("../models/Admin.model");
+const AttendanceModel = require("../models/Attendance");
 
 module.exports = {
   async registerCustomer(req, res) {
@@ -71,6 +72,66 @@ module.exports = {
       .catch((err) => {
         res.sendStatus(500);
         console.log(err);
+      });
+  },
+
+  getCustomerMeeting: async (req, res) => {
+    const { id } = req.params;
+    const { date } = req.query;
+    CustomerModel.findById(id)
+      .select("meetingLink")
+      .then((doc) => {
+        if (date && date.includes("T")) {
+          let arr = date.split("T");
+          if (arr.length == 2) {
+            AttendanceModel.findOne({
+              customerId: id,
+              date: arr[0],
+            })
+              .then((data) => {
+                console.log("data", data);
+                if (data) {
+                  data.time = arr[1].split(".")[0];
+                  data.save().then((docs) => {
+                    if (doc.meetingLink.includes("http")) {
+                      return res.redirect(doc.meetingLink);
+                    } else {
+                      return res.redirect("https://" + doc.meetingLink);
+                    }
+                  });
+                } else {
+                  const newAttendance = new AttendanceModel({
+                    date: arr[0],
+                    time: arr[1].split(".")[0],
+                    customerId: id,
+                  });
+                  newAttendance
+                    .save()
+                    .then((data) => {
+                      if (doc.meetingLink.includes("http")) {
+                        return res.redirect(doc.meetingLink);
+                      } else {
+                        return res.redirect("https://" + doc.meetingLink);
+                      }
+                    })
+                    .catch((err) => {
+                      return res
+                        .status(400)
+                        .send("unable to publish attendance, try again!");
+                    });
+                }
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          }
+        } else {
+          return res.status(400).send("unable to get your date, try again!");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        return res.status(400).send("invalid login!, please login again");
       });
   },
 };

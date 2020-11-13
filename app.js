@@ -4,10 +4,15 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var cors = require("cors");
-
 var indexRouter = require("./routes/admin");
+var customerRouter = require("./routes/customer");
 
 var app = express();
+require("./config/config");
+// require("dotenv").config();
+require("./models/db");
+
+require("./config/passportConfig");
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
@@ -20,11 +25,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
-
-require("./config/config");
-// require("dotenv").config();
-require("./models/db");
-require("./config/passportConfig");
+app.use("/", customerRouter);
 
 const server = require("http").createServer(app);
 

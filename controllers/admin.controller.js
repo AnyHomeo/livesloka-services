@@ -36,6 +36,7 @@ module.exports = {
             roleId: user.roleId,
             firstTimeLogin: user.firstTimeLogin,
             token: newToken,
+            customerId: user.customerId,
           };
           return res
             .status(200)
@@ -110,7 +111,7 @@ module.exports.PasswordConfirm = (req, res, next) => {
 
 module.exports.ChangePassword = (req, res) => {
   // call for passport aut hentication
-  if (req.body.newPassword == req.body.confirmPassword) {
+  if (req.body.newPassword === req.body.confirmPassword) {
     admin
       .updateOne(
         { userId: req.body.userId },
