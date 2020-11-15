@@ -31,11 +31,11 @@ app.use("/", indexRouter);
 app.use("/", customerRouter);
 
 const server = require("http").createServer(app);
-console.log(os.hostname());
-console.log(dns.getServers());
+// console.log(os.hostname());
+// console.log(dns.getServers());
 
-server.listen(process.env.PORT, () =>
-  console.log(`Server started at port : ${process.env.PORT}`)
-);
+const PORT = process.env.PORT || 5000;
+
+server.listen(PORT, () => console.log(`Server started at port : ${PORT}`));
 
 module.exports = app;
