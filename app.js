@@ -4,6 +4,9 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var cors = require("cors");
+var os = require("os");
+var dns = require("dns");
+
 var indexRouter = require("./routes/admin");
 var customerRouter = require("./routes/customer");
 
@@ -28,8 +31,10 @@ app.use("/", indexRouter);
 app.use("/", customerRouter);
 
 const server = require("http").createServer(app);
+console.log(os.hostname());
+console.log(dns.getServers());
 
-server.listen(process.env.PORT || 5000, () =>
+server.listen(process.env.PORT, () =>
   console.log(`Server started at port : ${process.env.PORT}`)
 );
 

@@ -1,20 +1,18 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 var AgentSchema = new mongoose.Schema({
-    id: {
-        type: String,
-
-    },
-    AgentDesc: {
-        type: String,
-    },
-    AgentName: {
-        type: String,
-    },
-    AgentStatus: {
-        type: String,
-    },
-
+  id: {
+    type: String,
+  },
+  AgentDesc: {
+    type: String,
+  },
+  AgentName: {
+    type: String,
+  },
+  AgentStatus: {
+    type: String,
+  },
 });
 
-module.exports = mongoose.model('Agent', AgentSchema);
+module.exports = mongoose.model("Agent", AgentSchema);
