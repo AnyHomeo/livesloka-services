@@ -34,10 +34,12 @@ module.exports = {
           var obj = {
             userId: user.userId,
             roleId: user.roleId,
+            username: user.username,
             firstTimeLogin: user.firstTimeLogin,
             token: newToken,
             customerId: user.customerId,
           };
+          console.log("obj", obj);
           return res
             .status(200)
             .json({ message: "LoggedIn successfully", result: obj });
