@@ -2,30 +2,33 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-var adminSchema = new mongoose.Schema({
-  username: {
-    type: String,
+var adminSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+    },
+    userId: {
+      type: String,
+    },
+    roleId: {
+      type: Number,
+    },
+    firstTimeLogin: {
+      type: String,
+      default: "Y",
+    },
+    customerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Customer",
+    },
+    password: {
+      type: String,
+      required: "Password can't be empty",
+      minlength: [4, "Password must be atleast 4 character long"],
+    },
   },
-  userId: {
-    type: String,
-  },
-  roleId: {
-    type: Number,
-  },
-  firstTimeLogin: {
-    type: String,
-    default: "Y",
-  },
-  customerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Customer",
-  },
-  password: {
-    type: String,
-    required: "Password can't be empty",
-    minlength: [4, "Password must be atleast 4 character long"],
-  },
-});
+  { timestamps: true }
+);
 
 // Methods
 adminSchema.methods.verifyPassword = function (password) {

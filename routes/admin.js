@@ -13,6 +13,7 @@ router.post("/register", ctrl.register);
 
 router.post("/customer/registerCustomer", customerCtrl.registerCustomer);
 router.get("/customer/details", customerCtrl.details);
+router.get("/customer/data", customerCtrl.getRespectiveDetails);
 router.post("/customer/updateCustomer", customerCtrl.updateCustomer);
 
 //Posting all kinds of data

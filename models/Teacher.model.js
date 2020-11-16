@@ -1,25 +1,29 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-var TeacherSchema = new mongoose.Schema({
+var TeacherSchema = new mongoose.Schema(
+  {
     id: {
-        type: String,
-
+      type: String,
     },
     TeacherDesc: {
-        type: String,
+      type: String,
     },
     TeacherName: {
-        type: String,
+      type: String,
     },
 
     TeacherStatus: {
-        type: String,
+      type: String,
     },
-    TeacherDetailsId: { type: mongoose.Schema.Types.ObjectId, ref: "teacherDet" },
+    TeacherDetailsId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "teacherDet",
+    },
     TeacherSubjectsId: {
-        type: Array,
+      type: Array,
     },
+  },
+  { timestamps: true }
+);
 
-});
-
-module.exports = mongoose.model('Teacher', TeacherSchema);
+module.exports = mongoose.model("Teacher", TeacherSchema);

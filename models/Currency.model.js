@@ -1,20 +1,21 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-var CurrencySchema = new mongoose.Schema({
+var CurrencySchema = new mongoose.Schema(
+  {
     id: {
-        type: String,
-
+      type: String,
     },
     currencyDesc: {
-        type: String,
+      type: String,
     },
     currencyName: {
-        type: String,
+      type: String,
     },
     currencyStatus: {
-        type: String,
+      type: String,
     },
+  },
+  { timestamps: true }
+);
 
-});
-
-module.exports = mongoose.model('Currency', CurrencySchema);
+module.exports = mongoose.model("Currency", CurrencySchema);

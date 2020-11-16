@@ -49,6 +49,7 @@ module.exports = {
     console.log(req.body);
     CustomerModel.find({})
       .select(" -customerId ")
+      .sort({ created })
       .then((result) => {
         res
           .status(200)
@@ -134,5 +135,32 @@ module.exports = {
         console.log(err);
         return res.status(400).send("invalid login!, please login again");
       });
+  },
+
+  getRespectiveDetails: async (req, res) => {
+    let { params } = req.query;
+    if (params.includes("password")) {
+      return res.status(401).json({
+        result: null,
+        error: "you can't access password",
+      });
+    }
+    params = params.split(",").join(" ");
+    AdminModel.find({})
+      .select(params)
+      .then((users) => {
+        return res
+          .status(200)
+          .json({ message: "retrieved all users", result: users });
+      })
+      .catch((err) => {
+        return res
+          .status(500)
+          .json({ error: "unable to retrieve users", result: null });
+      });
+  },
+
+  deleteCustomer: async (req, res) => {
+    const { id } = req.params;
   },
 };
