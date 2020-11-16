@@ -14,7 +14,7 @@ module.exports = {
           customerId: val._id,
           username: req.body.firstName + " " + req.body.lastName,
           roleId: 1,
-          password: "default123",
+          password: "livesloka",
         });
         user
           .save()
@@ -137,12 +137,12 @@ module.exports = {
 
   getRespectiveDetails: async (req, res) => {
     let { params } = req.query;
-    if (params.includes("password")) {
-      return res.status(401).json({
-        result: null,
-        error: "you can't access password",
-      });
-    }
+    // if (params.includes("password")) {
+    //   return res.status(401).json({
+    //     result: null,
+    //     error: "you can't access password",
+    //   });
+    // }
     params = params.split(",").join(" ");
     AdminModel.find({})
       .select(params)
