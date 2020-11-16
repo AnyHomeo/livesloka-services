@@ -335,10 +335,10 @@ module.exports.updatecomment = (req, res) => {
     .then((result) => {
       res
         .status("200")
-        .send({ message: " Updated  successfully", status: "ok", result });
+        .send({ message: "Updated  successfully", status: "ok", result });
     })
     .catch((err) => {
-      res.status("400").send({ message: "something went wrong !!", err });
+      res.status(500).send({ error: "something went wrong !!", err });
     });
 };
 

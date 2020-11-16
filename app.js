@@ -4,17 +4,13 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 var cors = require("cors");
-var os = require("os");
-var dns = require("dns");
 
 var indexRouter = require("./routes/admin");
 var customerRouter = require("./routes/customer");
 
 var app = express();
 require("./config/config");
-// require("dotenv").config();
 require("./models/db");
-
 require("./config/passportConfig");
 
 // view engine setup
@@ -31,11 +27,7 @@ app.use("/", indexRouter);
 app.use("/", customerRouter);
 
 const server = require("http").createServer(app);
-// console.log(os.hostname());
-// console.log(dns.getServers());
-
 const PORT = process.env.PORT || 5000;
-
 server.listen(PORT, () => console.log(`Server started at port : ${PORT}`));
 
 module.exports = app;
