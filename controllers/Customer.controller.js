@@ -77,7 +77,7 @@ module.exports = {
 
   getCustomerMeeting: async (req, res) => {
     const { id } = req.params;
-    const { date } = req.query;
+    const { date, timeZone } = req.query;
     CustomerModel.findById(id)
       .select("meetingLink")
       .then((doc) => {
@@ -103,6 +103,7 @@ module.exports = {
                   const newAttendance = new AttendanceModel({
                     date: arr[0],
                     time: arr[1].split(".")[0],
+                    timeZone,
                     customerId: id,
                   });
                   newAttendance

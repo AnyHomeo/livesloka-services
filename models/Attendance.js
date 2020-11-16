@@ -11,6 +11,9 @@ var AttendanceSchema = new mongoose.Schema({
   time: {
     type: String,
   },
+  timeZone: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model("Attendance", AttendanceSchema);
