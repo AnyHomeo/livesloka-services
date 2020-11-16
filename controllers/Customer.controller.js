@@ -49,7 +49,6 @@ module.exports = {
     console.log(req.body);
     CustomerModel.find({})
       .select(" -customerId ")
-      .sort({ created })
       .then((result) => {
         res
           .status(200)

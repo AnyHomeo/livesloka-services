@@ -9,6 +9,7 @@ var adminSchema = new mongoose.Schema(
     },
     userId: {
       type: String,
+      required: "email or userid is required",
     },
     roleId: {
       type: Number,

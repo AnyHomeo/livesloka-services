@@ -16,9 +16,8 @@ module.exports = {
   authentication(req, res, next) {
     admin.findOne({ userId: req.body.userId }, (err, user) => {
       if (!user) {
-        return res.status(400).json({ message: "Invalid userId or Password" });
+        return res.status(400).json({ error: "Invalid userId or Password" });
       } else {
-        console.log(user);
         if (user.password === req.body.password) {
           var payload = {
             _id: user._id,
@@ -44,7 +43,7 @@ module.exports = {
             .status(200)
             .json({ message: "LoggedIn successfully", result: obj });
         }
-        return res.status(400).json({ message: "Wrong Password !!" });
+        return res.status(400).json({ error: "Wrong Password !!" });
       }
     });
   },
