@@ -1,16 +1,18 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-var StatusSchema = new mongoose.Schema({
+var StatusSchema = new mongoose.Schema(
+  {
     statusId: {
-        type: String,
-
+      type: String,
     },
     statusDesc: {
-        type: String,
+      type: String,
     },
     statusName: {
-        type: String,
+      type: String,
     },
-});
+  },
+  { timestamps: true }
+);
 
-module.exports = mongoose.model('Status', StatusSchema);
+module.exports = mongoose.model("Status", StatusSchema);

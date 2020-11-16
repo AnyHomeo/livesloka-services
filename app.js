@@ -1,17 +1,17 @@
-var createError = require("http-errors");
-var express = require("express");
-var path = require("path");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
-var cors = require("cors");
-var indexRouter = require("./routes/admin");
-var customerRouter = require("./routes/customer");
+const createError = require("http-errors");
+const express = require("express");
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const logger = require("morgan");
+const cors = require("cors");
 
-var app = express();
+const indexRouter = require("./routes/admin");
+const customerRouter = require("./routes/customer");
+const attendanceRouter = require("./routes/attendance");
+
+const app = express();
 require("./config/config");
-// require("dotenv").config();
 require("./models/db");
-
 require("./config/passportConfig");
 
 // view engine setup
@@ -26,11 +26,10 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
 app.use("/", customerRouter);
+app.use("/", attendanceRouter);
 
 const server = require("http").createServer(app);
-
-server.listen(process.env.PORT || 5000, () =>
-  console.log(`Server started at port : ${process.env.PORT}`)
-);
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`Server started at port : ${PORT}`));
 
 module.exports = app;

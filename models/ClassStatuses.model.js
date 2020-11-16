@@ -1,20 +1,21 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-var ClassStatusSchema = new mongoose.Schema({
+var ClassStatusSchema = new mongoose.Schema(
+  {
     id: {
-        type: String,
-
+      type: String,
     },
     classStatusDesc: {
-        type: String,
+      type: String,
     },
     classStatusName: {
-        type: String,
+      type: String,
     },
     status: {
-        type: String
-    }
-});
+      type: String,
+    },
+  },
+  { timestamps: true }
+);
 
-module.exports = mongoose.model('ClassStatu', ClassStatusSchema);
-
+module.exports = mongoose.model("ClassStatu", ClassStatusSchema);

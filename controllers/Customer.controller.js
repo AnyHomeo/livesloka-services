@@ -5,7 +5,6 @@ const AttendanceModel = require("../models/Attendance");
 module.exports = {
   async registerCustomer(req, res) {
     let customerRegData = new CustomerModel(req.body);
-
     customerRegData
       .save()
       .then((val) => {
@@ -77,7 +76,7 @@ module.exports = {
 
   getCustomerMeeting: async (req, res) => {
     const { id } = req.params;
-    const { date } = req.query;
+    const { date, timeZone } = req.query;
     CustomerModel.findById(id)
       .select("meetingLink")
       .then((doc) => {
@@ -103,6 +102,7 @@ module.exports = {
                   const newAttendance = new AttendanceModel({
                     date: arr[0],
                     time: arr[1].split(".")[0],
+                    timeZone,
                     customerId: id,
                   });
                   newAttendance
@@ -133,5 +133,32 @@ module.exports = {
         console.log(err);
         return res.status(400).send("invalid login!, please login again");
       });
+  },
+
+  getRespectiveDetails: async (req, res) => {
+    let { params } = req.query;
+    if (params.includes("password")) {
+      return res.status(401).json({
+        result: null,
+        error: "you can't access password",
+      });
+    }
+    params = params.split(",").join(" ");
+    AdminModel.find({})
+      .select(params)
+      .then((users) => {
+        return res
+          .status(200)
+          .json({ message: "retrieved all users", result: users });
+      })
+      .catch((err) => {
+        return res
+          .status(500)
+          .json({ error: "unable to retrieve users", result: null });
+      });
+  },
+
+  deleteCustomer: async (req, res) => {
+    const { id } = req.params;
   },
 };

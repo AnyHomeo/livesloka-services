@@ -1,20 +1,21 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-var TimeZoneSchema = new mongoose.Schema({
+var TimeZoneSchema = new mongoose.Schema(
+  {
     id: {
-        type: String,
-
+      type: String,
     },
     timeZoneDesc: {
-        type: String,
+      type: String,
     },
     timeZoneName: {
-        type: String,
+      type: String,
     },
     timeZoneStatus: {
-        type: String,
+      type: String,
     },
+  },
+  { timestamps: true }
+);
 
-});
-
-module.exports = mongoose.model('timeZone', TimeZoneSchema);
+module.exports = mongoose.model("timeZone", TimeZoneSchema);

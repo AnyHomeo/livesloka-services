@@ -4,8 +4,6 @@ var router = express.Router();
 var ctrl = require("../controllers/admin.controller");
 var customerCtrl = require("../controllers/Customer.controller");
 
-/* GET home page. */
-
 router.post("/login", ctrl.authentication);
 
 // router.post("/PasswordConfirm", ctrl.PasswordConfirm);
@@ -15,6 +13,7 @@ router.post("/register", ctrl.register);
 
 router.post("/customer/registerCustomer", customerCtrl.registerCustomer);
 router.get("/customer/details", customerCtrl.details);
+router.get("/customer/data", customerCtrl.getRespectiveDetails);
 router.post("/customer/updateCustomer", customerCtrl.updateCustomer);
 
 //Posting all kinds of data

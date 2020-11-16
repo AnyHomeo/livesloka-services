@@ -132,6 +132,6 @@ var TeacherDetailsSchema = new mongoose.Schema({
 
 
 
-});
+},,{timestamps:true});
 
 module.exports = mongoose.model('TeacherDetail', TeacherDetailsSchema);
