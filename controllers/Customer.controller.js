@@ -5,7 +5,6 @@ const AttendanceModel = require("../models/Attendance");
 module.exports = {
   async registerCustomer(req, res) {
     let customerRegData = new CustomerModel(req.body);
-
     customerRegData
       .save()
       .then((val) => {

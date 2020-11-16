@@ -44,10 +44,7 @@ const createUsers = (next) => {
         } else if (userData.phone) {
           user.userId = userData.phone;
         } else {
-          user.userId =
-            userData.firstName +
-            userData.lastName +
-            Math.floor(Math.random() * 10000 + 1);
+          user.userId = "Livesloka" + Math.floor(Math.random() * 1000000 + 1);
         }
         user.roleId = 1;
         user.customerId = userData._id;
