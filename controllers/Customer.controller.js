@@ -9,12 +9,15 @@ module.exports = {
       .save()
       .then((val) => {
         console.log(val);
+        if (!req.body.email) {
+          req.body.email = `livesloka-User` + Math.floor(Math.random * 100000);
+        }
         let user = new AdminModel({
           userId: req.body.email,
           customerId: val._id,
           username: req.body.firstName + " " + req.body.lastName,
           roleId: 1,
-          password: "default123",
+          password: "livesloka",
         });
         user
           .save()

@@ -475,6 +475,23 @@ module.exports.getCorrespondingData = (req, res) => {
   }
 };
 
+module.exports.updateStatus = (req, res) => {
+  const statusModel = require("../models/Status.model");
+  statusModel
+    .updateOne({ statusId: req.body.statusId }, req.body)
+    .then((result) => {
+      res.status(200).json({
+        status: "OK",
+        message: `status updated successfully`,
+        result,
+      });
+    })
+    .catch((err) => {
+      res.sendStatus(500);
+      console.log(err);
+    });
+};
+
 module.exports.updateCorrespondingData = (req, res) => {
   const vell = require(`../models/${req.params.name}.model`);
   vell
