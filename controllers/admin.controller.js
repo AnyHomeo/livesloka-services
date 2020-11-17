@@ -150,7 +150,7 @@ module.exports.register = (req, res, next) => {
 
 module.exports.addClass = (req, res) => {
   var newClass = new classes();
-  (newClass.id = Math.floor(Math.random() * 100) * Number(Date.now())),
+  (newClass.id = Math.floor(Math.random() * 100000) * Number(Date.now())),
     (newClass.classDesc = req.body.classDesc),
     (newClass.className = req.body.className),
     (newClass.classesStatus = req.body.classesStatus),
@@ -169,7 +169,7 @@ module.exports.addClass = (req, res) => {
 
 module.exports.addtimezone = (req, res) => {
   var newTime = new TimeZone();
-  (newTime.id = Math.floor(Math.random() * 100) * Number(Date.now())),
+  (newTime.id = Math.floor(Math.random() * 100000) * Number(Date.now())),
     (newTime.timeZoneName = req.body.timeZoneName),
     (newTime.timeZoneDesc = req.body.timeZoneDesc),
     (newTime.timeZoneStatus = req.body.timeZoneStatus);
@@ -187,7 +187,7 @@ module.exports.addtimezone = (req, res) => {
 
 module.exports.addcurrency = (req, res) => {
   var newCur = new Currency();
-  (newCur.id = Math.floor(Math.random() * 100) * Number(Date.now())),
+  (newCur.id = Math.floor(Math.random() * 100000) * Number(Date.now())),
     (newCur.currencyDesc = req.body.currencyDesc),
     (newCur.currencyName = req.body.currencyName),
     (newCur.currencyStatus = req.body.currencyStatus);
@@ -205,7 +205,7 @@ module.exports.addcurrency = (req, res) => {
 
 module.exports.addStatus = (req, res) => {
   var newStat = new Status();
-  (newStat.statusId = req.body.statusId),
+  (newStat.statusId = Math.floor(Math.random() * 100000) * Number(Date.now())),
     (newStat.statusName = req.body.statusName),
     (newStat.statusDesc = req.body.statusDesc);
   newStat
@@ -222,7 +222,7 @@ module.exports.addStatus = (req, res) => {
 
 module.exports.addcountry = (req, res) => {
   var newCountry = new Country();
-  (newCountry.id = Math.floor(Math.random() * 100) * Number(Date.now())),
+  (newCountry.id = Math.floor(Math.random() * 100000) * Number(Date.now())),
     (newCountry.countryName = req.body.countryName),
     (newCountry.countryDesc = req.body.countryDesc),
     (newCountry.countryStatus = req.body.countryStatus);
@@ -240,7 +240,7 @@ module.exports.addcountry = (req, res) => {
 
 module.exports.addclassstatus = (req, res) => {
   var newClassStatus = new ClassStatus();
-  (newClassStatus.id = Math.floor(Math.random() * 100) * Number(Date.now())),
+  (newClassStatus.id = Math.floor(Math.random() * 100000) * Number(Date.now())),
     (newClassStatus.classStatusName = req.body.classStatusName),
     (newClassStatus.classStatusDesc = req.body.classStatusDesc),
     (newClassStatus.status = req.body.status);
@@ -258,7 +258,7 @@ module.exports.addclassstatus = (req, res) => {
 
 module.exports.addTeacher = (req, res) => {
   var addTeachernew = new Teacher();
-  (addTeachernew.id = Math.floor(Math.random() * 100) * Number(Date.now())),
+  (addTeachernew.id = Math.floor(Math.random() * 100000) * Number(Date.now())),
     (addTeachernew.TeacherName = req.body.TeacherName),
     (addTeachernew.TeacherDesc = req.body.TeacherDesc),
     (addTeachernew.TeacherStatus = req.body.TeacherStatus);
@@ -276,7 +276,7 @@ module.exports.addTeacher = (req, res) => {
 
 module.exports.addAgent = (req, res) => {
   var addAgentnew = new Agent();
-  (addAgentnew.id = Math.floor(Math.random() * 100) * Number(Date.now())),
+  (addAgentnew.id = Math.floor(Math.random() * 100000) * Number(Date.now())),
     (addAgentnew.AgentName = req.body.AgentName),
     (addAgentnew.AgentDesc = req.body.AgentDesc),
     (addAgentnew.AgentStatus = req.body.AgentStatus);
