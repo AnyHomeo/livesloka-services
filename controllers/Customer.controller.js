@@ -8,15 +8,32 @@ module.exports = {
     customerRegData
       .save()
       .then((val) => {
-        console.log(val);
-        let user = new AdminModel({
-          userId: req.body.email,
-          customerId: val._id,
-          username: req.body.firstName + " " + req.body.lastName,
-          roleId: 1,
-          password: "livesloka",
-        });
-        user
+        let user = {};
+        if (req.body.firstName && req.body.lastName) {
+          user.username = req.body.firstName + " " + req.body.lastName;
+        } else if (req.body.firstName) {
+          user.username = req.body.firstName;
+        } else if (req.body.lastName) {
+          user.username = req.body.lastName;
+        } else if (req.body.email) {
+          user.username = req.body.email.split("@")[0];
+        } else {
+          user.username =
+            "Livesloka User " + Math.floor(Math.random() * 1000000 + 1);
+        }
+        console.log("creating userId and password for", user.username);
+        if (req.body.email) {
+          user.userId = req.body.email;
+        } else if (req.body.phone) {
+          user.userId = req.body.phone;
+        } else {
+          user.userId = "Livesloka" + Math.floor(Math.random() * 1000000 + 1);
+        }
+        user.roleId = 1;
+        user.customerId = val._id;
+        user.password = "livesloka";
+        let newUserdata = new AdminModel(user);
+        newUserdata
           .save()
           .then((newUser) => {
             return res.status(200).send({

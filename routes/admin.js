@@ -35,6 +35,8 @@ router.post("/admin/deleteinvoice", ctrl.deleteInvoice);
 router.get("/admin/get/:name", ctrl.getCorrespondingData);
 
 //Updating Every Fields
+
+router.post("/admin/update/status", ctrl.updateStatus);
 router.post("/admin/update/:name", ctrl.updateCorrespondingData);
 
 //deleting Every Fields

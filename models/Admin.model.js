@@ -25,7 +25,7 @@ var adminSchema = new mongoose.Schema(
     password: {
       type: String,
       required: "Password can't be empty",
-      minlength: [4, "Password must be atleast 4 character long"],
+      minlength: [3, "Password must be atleast 4 character long"],
     },
   },
   { timestamps: true }
