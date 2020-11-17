@@ -27,53 +27,61 @@ const createUsers = (next) => {
       }
     );
 
-    Customer.find({}, (err, docs) => {
-      docs.forEach((userData, i) => {
-        let user = {};
-        console.log(
-          "creating user id for" +
-            " " +
-            userData.firstName +
-            " " +
-            userData.lastName +
-            "......"
-        );
-        user.username = userData.firstName + " " + userData.lastName;
-        if (userData.email) {
-          user.userId = userData.email;
-        } else if (userData.phone) {
-          user.userId = userData.phone;
-        } else {
-          user.userId = "Livesloka" + Math.floor(Math.random() * 1000000 + 1);
-        }
-        user.roleId = 1;
-        user.customerId = userData._id;
-        user.password = "livesloka";
-        const newUser = new AdminModel(user);
-        newUser
-          .save()
-          .then((data) => {
-            console.log(
-              " userid and password successfully created for " +
-                userData.firstName +
-                " " +
-                userData.lastName
-            );
-            if (i === docs.length - 1) {
-              next();
+    AdminModel.collection
+      .drop()
+      .then((val) => {
+        Customer.find({}, (err, docs) => {
+          docs.forEach((userData, i) => {
+            let user = {};
+            if (userData.firstName && userData.lastName) {
+              user.username = userData.firstName + " " + userData.lastName;
+            } else if (userData.firstName) {
+              user.username = userData.firstName;
+            } else if (userData.lastName) {
+              user.username = userData.lastName;
+            } else if (userData.email) {
+              user.username = userData.email.split("@")[0];
+            } else {
+              user.username =
+                "Livesloka User " + Math.floor(Math.random() * 1000000 + 1);
             }
-          })
-          .catch((err) => {
-            problematicUsers.push(user);
-            console.error(
-              "error in creating userid and password for" +
-                userData.firstName +
-                " " +
-                userData.lastName
-            );
+            console.log("creating userId and password for", user.username);
+            if (userData.email) {
+              user.userId = userData.email;
+            } else if (userData.phone) {
+              user.userId = userData.phone;
+            } else {
+              user.userId =
+                "Livesloka" + Math.floor(Math.random() * 1000000 + 1);
+            }
+            user.roleId = 1;
+            user.customerId = userData._id;
+            user.password = "livesloka";
+            const newUser = new AdminModel(user);
+            newUser
+              .save()
+              .then((data) => {
+                console.log(
+                  " userid and password successfully created for " +
+                    user.username
+                );
+                if (i === docs.length - 1) {
+                  next();
+                }
+              })
+              .catch((err) => {
+                problematicUsers.push(user);
+                console.error(
+                  "error in creating userid and password for" + user.username
+                );
+              });
           });
+        });
+      })
+      .catch((err) => {
+        console.log(err);
       });
-    });
+
     rl.close();
   });
 };
