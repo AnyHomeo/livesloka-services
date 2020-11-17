@@ -370,7 +370,7 @@ module.exports.getCorrespondingData = (req, res) => {
   if (req.params.name == "classes") {
     classes
       .find({})
-      .select(" -_id -__v  ")
+      .select(" -_id -__v -createdAt -updatedAt ")
       .then((result) => {
         res.status("200").send({
           message: "classes retrieved successfully",
@@ -383,7 +383,7 @@ module.exports.getCorrespondingData = (req, res) => {
       });
   } else if (req.params.name == "timezones") {
     TimeZone.find({})
-      .select(" -_id -__v  ")
+      .select(" -_id -__v -createdAt -updatedAt ")
       .then((result) => {
         res.status("200").send({
           message: "TimeZones retrieved successfully",
@@ -396,7 +396,7 @@ module.exports.getCorrespondingData = (req, res) => {
       });
   } else if (req.params.name == "currencies") {
     Currency.find({})
-      .select(" -_id -__v  ")
+      .select(" -_id -__v -createdAt -updatedAt ")
       .then((result) => {
         res.status("200").send({
           message: "currencies retrieved successfully",
@@ -409,7 +409,7 @@ module.exports.getCorrespondingData = (req, res) => {
       });
   } else if (req.params.name == "countries") {
     Country.find({})
-      .select(" -_id -__v  ")
+      .select(" -_id -__v -createdAt -updatedAt ")
       .then((result) => {
         res.status("200").send({
           message: "Countries retrieved successfully",
@@ -422,7 +422,7 @@ module.exports.getCorrespondingData = (req, res) => {
       });
   } else if (req.params.name == "statuses") {
     Status.find({})
-      .select(" -_id -__v  ")
+      .select(" -_id -__v -createdAt -updatedAt ")
       .then((result) => {
         res.status("200").send({
           message: "status retrieved successfully",
@@ -435,7 +435,7 @@ module.exports.getCorrespondingData = (req, res) => {
       });
   } else if (req.params.name == "ClassStatuses") {
     ClassStatus.find({})
-      .select(" -_id -__v  ")
+      .select(" -_id -__v -createdAt -updatedAt ")
       .then((result) => {
         res.status("200").send({
           message: "Classstatus retrieved successfully",
@@ -448,7 +448,7 @@ module.exports.getCorrespondingData = (req, res) => {
       });
   } else if (req.params.name == "Teachers") {
     Teacher.find({})
-      .select(" -_id -__v  ")
+      .select(" -_id -__v -createdAt -updatedAt ")
       .then((result) => {
         res.status("200").send({
           message: "Teacher retrieved successfully",
@@ -461,7 +461,7 @@ module.exports.getCorrespondingData = (req, res) => {
       });
   } else if (req.params.name == "Agents") {
     Agent.find({})
-      .select(" -_id -__v  ")
+      .select(" -_id -__v -createdAt -updatedAt ")
       .then((result) => {
         res.status("200").send({
           message: "Agents retrieved successfully",
