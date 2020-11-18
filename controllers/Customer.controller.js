@@ -176,7 +176,24 @@ module.exports = {
   },
 
   deleteCustomer: async (req, res) => {
-    const { id } = req.params;
+    const { customerId } = req.params;
+    CustomerModel.findByIdAndDelete(customerId, (err, data) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ error: "error in Deleting customer", result: null });
+      }
+      AdminModel.findOneAndDelete({ customerId }, (err, docs) => {
+        if (err) {
+          return res
+            .status(500)
+            .json({ error: "error in Deleting customer", result: null });
+        }
+        return res
+          .status(200)
+          .json({ message: "Customer Deleted Successfully" });
+      });
+    });
   },
 
   getCustomerData: (req, res) => {
