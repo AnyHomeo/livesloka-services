@@ -178,4 +178,30 @@ module.exports = {
   deleteCustomer: async (req, res) => {
     const { id } = req.params;
   },
+
+  getCustomerData: (req, res) => {
+    const { customerId } = req.params;
+    let { params } = req.query;
+    if (params) {
+      params = params.split(",").join(" ");
+      CustomerModel.findById(customerId)
+        .select(params)
+        .then((docs) => {
+          return res.status(200).json({
+            message: "data retrieved successfully",
+            result: docs,
+          });
+        })
+        .catch((err) =>
+          res.status(500).json({
+            error: "Internal Server Error",
+            result: null,
+          })
+        );
+    } else {
+      return res
+        .status(400)
+        .json({ error: "Please provide Params", result: null });
+    }
+  },
 };
