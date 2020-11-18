@@ -79,11 +79,23 @@ module.exports = {
     console.log(req.body);
     CustomerModel.update({ _id: req.body._id }, req.body)
       .then((result) => {
-        res.status(200).send({
-          status: "OK",
-          message: "Customer data updated Successfully",
-          result: null,
-        });
+        if (req.body.email) {
+          AdminModel.updateOne(
+            { customerId: req.body._id },
+            { userId: req.body.email }
+          );
+          return res.status(200).send({
+            status: "OK",
+            message: "Customer data updated Successfully",
+            result: null,
+          });
+        } else {
+          res.status(200).send({
+            status: "OK",
+            message: "Customer data updated Successfully",
+            result: null,
+          });
+        }
       })
       .catch((err) => {
         res.sendStatus(500);
