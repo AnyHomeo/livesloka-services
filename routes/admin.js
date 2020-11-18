@@ -15,6 +15,7 @@ router.post("/customer/registerCustomer", customerCtrl.registerCustomer);
 router.get("/customer/details", customerCtrl.details);
 router.get("/customer/data", customerCtrl.getRespectiveDetails);
 router.post("/customer/updateCustomer", customerCtrl.updateCustomer);
+router.get("/customer/delete/:customerId", customerCtrl.deleteCustomer);
 
 //Posting all kinds of data
 router.post("/admin/addclass", ctrl.addClass);
