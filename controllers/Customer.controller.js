@@ -40,7 +40,7 @@ module.exports = {
               status: "OK",
               message:
                 "Customer data inserted and Login Credentials created Successfully",
-              result: null,
+              result: val,
             });
           })
           .catch((err) => {
@@ -65,10 +65,13 @@ module.exports = {
     console.log(req.body);
     CustomerModel.find({})
       .select(" -customerId ")
+      .sort({ createdAt: -1 })
       .then((result) => {
-        res
-          .status(200)
-          .json({ message: "Customer data retrieved", status: "OK", result });
+        res.status(200).json({
+          message: "Customer data retrieved",
+          status: "OK",
+          result: result,
+        });
       })
       .catch((err) => {
         res.status(400).json({ message: "something went Wrong", err });
@@ -166,12 +169,6 @@ module.exports = {
 
   getRespectiveDetails: async (req, res) => {
     let { params } = req.query;
-    // if (params.includes("password")) {
-    //   return res.status(401).json({
-    //     result: null,
-    //     error: "you can't access password",
-    //   });
-    // }
     params = params.split(",").join(" ");
     AdminModel.find({})
       .select(params)
