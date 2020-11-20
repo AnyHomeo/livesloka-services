@@ -30,7 +30,8 @@ module.exports = {
               expiresIn: process.env.JWT_EXP,
             }
           );
-          user.token = newToken
+          user.password = undefined;
+          user.token = newToken;
           return res
             .status(200)
             .json({ message: "LoggedIn successfully", result: user });
