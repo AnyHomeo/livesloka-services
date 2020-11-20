@@ -31,10 +31,10 @@ module.exports = {
             }
           );
           user.password = undefined;
-          user.token = newToken;
-          return res
-            .status(200)
-            .json({ message: "LoggedIn successfully", result: user });
+          return res.status(200).json({
+            message: "LoggedIn successfully",
+            result: { ...user._doc, token: newToken },
+          });
         }
         return res.status(400).json({ error: "Wrong Password !!" });
       }
