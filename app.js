@@ -8,6 +8,7 @@ const cors = require("cors");
 const indexRouter = require("./routes/admin");
 const customerRouter = require("./routes/customer");
 const attendanceRouter = require("./routes/attendance");
+const settingsRouter = require("./routes/settings");
 
 const app = express();
 require("./config/config");
@@ -27,6 +28,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/", customerRouter);
 app.use("/", attendanceRouter);
+app.use("/settings", settingsRouter);
 
 const server = require("http").createServer(app);
 const PORT = process.env.PORT || 5000;

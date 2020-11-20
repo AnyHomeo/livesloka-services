@@ -33,6 +33,7 @@ module.exports = {
           var obj = {
             userId: user.userId,
             roleId: user.roleId,
+            _id: user._id,
             username: user.username,
             firstTimeLogin: user.firstTimeLogin,
             token: newToken,
