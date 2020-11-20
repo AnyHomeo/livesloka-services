@@ -30,19 +30,10 @@ module.exports = {
               expiresIn: process.env.JWT_EXP,
             }
           );
-          var obj = {
-            userId: user.userId,
-            roleId: user.roleId,
-            _id: user._id,
-            username: user.username,
-            firstTimeLogin: user.firstTimeLogin,
-            token: newToken,
-            customerId: user.customerId,
-          };
-          console.log("obj", obj);
+          user.token = newToken
           return res
             .status(200)
-            .json({ message: "LoggedIn successfully", result: obj });
+            .json({ message: "LoggedIn successfully", result: user });
         }
         return res.status(400).json({ error: "Wrong Password !!" });
       }
