@@ -27,6 +27,7 @@ var adminSchema = new mongoose.Schema(
       required: "Password can't be empty",
       minlength: [3, "Password must be atleast 4 character long"],
     },
+    settings: mongoose.Schema.Types.Mixed,
   },
   { timestamps: true }
 );
