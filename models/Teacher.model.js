@@ -11,16 +11,19 @@ var TeacherSchema = new mongoose.Schema(
     TeacherName: {
       type: String,
     },
-
     TeacherStatus: {
       type: String,
     },
-    TeacherDetailsId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "teacherDet",
-    },
     TeacherSubjectsId: {
       type: Array,
+    },
+    availableSlots: {
+      type: Array,
+      default: [],
+    },
+    scheduledSlots: {
+      type: Array,
+      default: [],
     },
   },
   { timestamps: true }

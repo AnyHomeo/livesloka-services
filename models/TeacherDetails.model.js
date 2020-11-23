@@ -1,137 +1,128 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-var TeacherDetailsSchema = new mongoose.Schema({
+var TeacherDetailsSchema = new mongoose.Schema(
+  {
     teacherId: {
-        type: String,
-
+      type: String,
     },
     TeacherSubjects: [
-        {
-            subjectName: String
-        }
+      {
+        subjectName: String,
+      },
     ],
     TeacherName: {
-        type: String,
+      type: String,
     },
     WorkingSlots: [
-        {
-            timmings: String
-        }
+      {
+        timmings: String,
+      },
     ],
     WorkingDates: [
-        {
-            day: String
-        }
+      {
+        day: String,
+      },
     ],
     Monday: [
-
-        {
-            timmingsSlot: String,
-            className: String,
-            studentsLimit: String,
-            EnrolledStudents: [
-                {
-                    studentId: String,
-                    studentName: String
-                }
-            ],
-            meetingLink: String
-        },
+      {
+        timmingsSlot: String,
+        className: String,
+        studentsLimit: String,
+        EnrolledStudents: [
+          {
+            studentId: String,
+            studentName: String,
+          },
+        ],
+        meetingLink: String,
+      },
     ],
     Tuesday: [
-
-        {
-            timmingsSlot: String,
-            className: String,
-            studentsLimit: String,
-            EnrolledStudents: [
-                {
-                    studentId: String,
-                    studentName: String
-                }
-            ],
-            meetingLink: String
-        },
+      {
+        timmingsSlot: String,
+        className: String,
+        studentsLimit: String,
+        EnrolledStudents: [
+          {
+            studentId: String,
+            studentName: String,
+          },
+        ],
+        meetingLink: String,
+      },
     ],
     WednesDay: [
-
-        {
-            timmingsSlot: String,
-            className: String,
-            studentsLimit: String,
-            EnrolledStudents: [
-                {
-                    studentId: String,
-                    studentName: String
-                }
-            ],
-            meetingLink: String
-        },
+      {
+        timmingsSlot: String,
+        className: String,
+        studentsLimit: String,
+        EnrolledStudents: [
+          {
+            studentId: String,
+            studentName: String,
+          },
+        ],
+        meetingLink: String,
+      },
     ],
     Thrusday: [
-
-        {
-            timmingsSlot: String,
-            className: String,
-            studentsLimit: String,
-            EnrolledStudents: [
-                {
-                    studentId: String,
-                    studentName: String
-                }
-            ],
-            meetingLink: String
-        },
+      {
+        timmingsSlot: String,
+        className: String,
+        studentsLimit: String,
+        EnrolledStudents: [
+          {
+            studentId: String,
+            studentName: String,
+          },
+        ],
+        meetingLink: String,
+      },
     ],
     Friday: [
-
-        {
-            timmingsSlot: String,
-            className: String,
-            studentsLimit: String,
-            EnrolledStudents: [
-                {
-                    studentId: String,
-                    studentName: String
-                }
-            ],
-            meetingLink: String
-        },
+      {
+        timmingsSlot: String,
+        className: String,
+        studentsLimit: String,
+        EnrolledStudents: [
+          {
+            studentId: String,
+            studentName: String,
+          },
+        ],
+        meetingLink: String,
+      },
     ],
     Saturday: [
-
-        {
-            timmingsSlot: String,
-            className: String,
-            studentsLimit: String,
-            EnrolledStudents: [
-                {
-                    studentId: String,
-                    studentName: String
-                }
-            ],
-            meetingLink: String
-        },
+      {
+        timmingsSlot: String,
+        className: String,
+        studentsLimit: String,
+        EnrolledStudents: [
+          {
+            studentId: String,
+            studentName: String,
+          },
+        ],
+        meetingLink: String,
+      },
     ],
     sunday: [
-
-        {
-            timmingsSlot: String,
-            className: String,
-            studentsLimit: String,
-            EnrolledStudents: [
-                {
-                    studentId: String,
-                    studentName: String
-                }
-            ],
-            meetingLink: String
-        },
+      {
+        timmingsSlot: String,
+        className: String,
+        studentsLimit: String,
+        EnrolledStudents: [
+          {
+            studentId: String,
+            studentName: String,
+          },
+        ],
+        meetingLink: String,
+      },
     ],
+  },
+  { timestamps: true }
+);
 
-
-
-
-},,{timestamps:true});
-
-module.exports = mongoose.model('TeacherDetail', TeacherDetailsSchema);
+module.exports = mongoose.model("TeacherDetail", TeacherDetailsSchema);
