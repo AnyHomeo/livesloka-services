@@ -230,4 +230,22 @@ module.exports = {
         .json({ error: "Please provide Params", result: null });
     }
   },
+  getCustomersAllData: (req, res) => {
+    let { params } = req.query;
+    params = params.split(",").join(" ");
+    CustomerModel.find()
+      .select(params)
+      .then((data) => {
+        return res.status(200).json({
+          message: "retrieved students successfully",
+          result: data,
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        return res.status(500).json({
+          message: "Error in retrieving data",
+        });
+      });
+  },
 };
