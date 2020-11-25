@@ -82,49 +82,45 @@ exports.addSlot = (req, res) => {
 };
 
 exports.getAvailableSlots = (req, res) => {
-  const { day } = req.query;
+  let { day } = req.query;
   const { id } = req.params;
-  if (days.includes(day)) {
-    TeacherModel.findOne({ id })
-      .select("availableSlots")
-      .then((data) => {
-        let arr = [];
-        if (data.availableSlots) {
-          data.availableSlots.forEach((slot) => {
-            if (slot.startsWith(day)) {
-              let slotArr = slot.split("-");
-              arr.push(slotArr[1] + "-" + slotArr[2]);
+  day = day.split(",");
+  TeacherModel.findOne({ id })
+    .select("availableSlots")
+    .then((data) => {
+      let arr = [];
+      if (data.availableSlots) {
+        data.availableSlots.forEach((slot) => {
+          day.forEach((oneDay) => {
+            if (slot.startsWith(oneDay)) {
+              arr.push(slot);
             }
           });
-          return res.status(200).json({
-            message: "slots retrieved successfully",
-            result: arr,
-          });
-        } else {
-          data.availableSlots = [];
-          data.save((err, docs) => {
-            if (err) {
-              return res.status(500).json({
-                error: "internal server error",
-              });
-            }
-            return res.status(200).json({
-              message: "Slots retrieved successfully",
-              result: [],
-            });
-          });
-        }
-      })
-      .catch((err) => {
-        return res.status(400).json({
-          error: "error in retrieving data",
         });
+        return res.status(200).json({
+          message: "slots retrieved successfully",
+          result: arr,
+        });
+      } else {
+        data.availableSlots = [];
+        data.save((err, docs) => {
+          if (err) {
+            return res.status(500).json({
+              error: "internal server error",
+            });
+          }
+          return res.status(200).json({
+            message: "Slots retrieved successfully",
+            result: [],
+          });
+        });
+      }
+    })
+    .catch((err) => {
+      return res.status(400).json({
+        error: "error in retrieving data",
       });
-  } else {
-    return res.status(400).json({
-      error: "invalid Day!",
     });
-  }
 };
 
 exports.getTeachers = (req, res) => {
