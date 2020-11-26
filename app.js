@@ -10,6 +10,7 @@ const customerRouter = require("./routes/customer");
 const attendanceRouter = require("./routes/attendance");
 const settingsRouter = require("./routes/settings");
 const teacherRouter = require("./routes/teacher");
+const scheduleRouter = require("./routes/schedule");
 
 const app = express();
 require("./config/config");
@@ -31,6 +32,7 @@ app.use("/", customerRouter);
 app.use("/", attendanceRouter);
 app.use("/settings", settingsRouter);
 app.use("/teacher", teacherRouter);
+app.use("/schedule", scheduleRouter);
 
 const server = require("http").createServer(app);
 const PORT = process.env.PORT || 5000;
