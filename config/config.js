@@ -1,6 +1,6 @@
 // check env.
-// var env = "production";
-var env = "development";
+var env = "production";
+// var env = "development";
 // fetch env. config
 var config = require("./config.json");
 var envConfig = config[env];
