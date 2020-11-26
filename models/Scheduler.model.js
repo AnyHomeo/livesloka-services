@@ -2,9 +2,8 @@ const mongoose = require("mongoose");
 
 const SchedulerSchema = new mongoose.Schema({
   teacher: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     required: "Teacher is Required",
-    ref: "Teacher",
   },
   students: [
     {

@@ -1,5 +1,6 @@
 const Schedule = require("../models/Scheduler.model");
 const Customer = require("../models/Customer.model");
+const Teacher = require("../models/Teacher.model");
 
 exports.addSchedule = (req, res) => {
   let {
@@ -71,8 +72,32 @@ exports.addSchedule = (req, res) => {
         { meetingLink, scheduleDescription }
       )
         .then((data) => {
-          return res.json({
-            message: "schedule saved successfully",
+          Teacher.findOne({ id: teacher }).then((data) => {
+            if (data) {
+              let { availableSlots } = data;
+              if (availableSlots) {
+                Object.keys(scheduledData.slots).forEach((day) => {
+                  let arr = scheduledData.slots[day];
+                  arr.forEach((slot) => {
+                    let index = availableSlots.indexOf(slot);
+                    data.availableSlots.splice(index, 1);
+                    data.scheduledSlots.push(slot);
+                  });
+                });
+              }
+              data.save((err, docs) => {
+                if (err) {
+                  console.log(err);
+                  return res.status(500).json({
+                    error: "error in updating teacher slots",
+                  });
+                } else {
+                  return res.json({
+                    message: "schedule saved successfully",
+                  });
+                }
+              });
+            }
           });
         })
         .catch((err) => {
