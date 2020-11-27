@@ -140,3 +140,29 @@ exports.getTeachers = (req, res) => {
       });
     });
 };
+
+exports.deleteSlot = (req, res) => {
+  const { id } = req.params;
+  const { slot } = req.body;
+  TeacherModel.findOne({ id })
+    .select("availableSlots")
+    .then((data) => {
+      if (data && data.availableSlots) {
+        let index = data.availableSlots.indexOf(slot);
+        data.availableSlots.splice(index, 1);
+        data.save((err, docs) => {
+          console.log(docs, err);
+          return res.status(200).json({
+            message: "deleted successfully",
+            result: docs.availableSlots,
+          });
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      return res.status(400).json({
+        error: "error in retrieving teacehers data",
+      });
+    });
+};

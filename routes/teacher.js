@@ -6,11 +6,11 @@ const {
   addSlot,
   getAvailableSlots,
   getTeachers,
-  // deleteSlot,
+  deleteSlot,
 } = require("../controllers/teacher.controller");
 
 router.post("/add/available/:id", validateSlot, addSlot);
 router.get("/available/:id", getAvailableSlots);
 router.get("/", getTeachers);
-// router.get("/delete-slot", deleteSlot);
+router.post("/delete/slot/:id", validateSlot, deleteSlot);
 module.exports = router;
