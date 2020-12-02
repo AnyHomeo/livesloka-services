@@ -79,19 +79,28 @@ module.exports = {
   },
 
   async updateCustomer(req, res) {
-    console.log(req.body);
-    CustomerModel.update({ _id: req.body._id }, req.body)
+    CustomerModel.updateOne({ _id: req.body._id }, req.body)
       .then((result) => {
+        console.log(req.body);
         if (req.body.email) {
+          console.log("inside");
           AdminModel.updateOne(
             { customerId: req.body._id },
             { userId: req.body.email }
-          );
-          return res.status(200).send({
-            status: "OK",
-            message: "Customer data updated Successfully",
-            result: null,
-          });
+          )
+            .then((updatedUser) => {
+              return res.status(200).send({
+                status: "OK",
+                message: "Customer data updated Successfully",
+                result: null,
+              });
+            })
+            .catch((err) => {
+              console.log(err);
+              return res
+                .status(500)
+                .json({ error: "error in updating userid" });
+            });
         } else {
           res.status(200).send({
             status: "OK",
@@ -101,7 +110,9 @@ module.exports = {
         }
       })
       .catch((err) => {
-        res.sendStatus(500);
+        res.status(500).json({
+          error: "something went wrong",
+        });
         console.log(err);
       });
   },

@@ -10,6 +10,8 @@ const Customer = new mongoose.Schema(
     phone: String,
     meetingLink: String,
     classId: String,
+    categoryId: String,
+    age: Number,
     timeZoneId: String,
     numberOfStudents: Number,
     customerId: String,
