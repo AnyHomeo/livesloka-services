@@ -10,9 +10,6 @@ var CategorySchema = new mongoose.Schema(
     categoryName: {
       type: String,
     },
-    categoryStatus: {
-      type: String,
-    },
   },
   { timestamps: true }
 );

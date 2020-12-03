@@ -12,6 +12,7 @@ const Customer = new mongoose.Schema(
     classId: String,
     categoryId: String,
     age: Number,
+    gender: String,
     timeZoneId: String,
     numberOfStudents: Number,
     customerId: String,
