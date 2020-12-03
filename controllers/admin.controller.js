@@ -135,8 +135,9 @@ module.exports.deletecomment = (req, res) => {
 
 module.exports.getCorrespondingData = (req, res) => {
   try {
-    console.log(req.params.name);
+    // console.log(req.params.name);
     const Model = require(`../models/${req.params.name}.model`);
+    // console.log(Object.keys(Model.schema.paths));
     Model.find({})
       .select(" -_id -__v -createdAt -updatedAt ")
       .then((result) => {

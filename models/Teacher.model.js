@@ -25,6 +25,9 @@ var TeacherSchema = new mongoose.Schema(
       type: Array,
       default: [],
     },
+    category: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

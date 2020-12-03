@@ -45,8 +45,11 @@ exports.addSlot = (req, res) => {
   TeacherModel.findOne({
     id,
   }).then((data) => {
-    if (data.availableSlots) {
-      if (!data.availableSlots.includes(req.body.slot)) {
+    if (data.availableSlots && data.scheduledSlots) {
+      if (
+        !data.availableSlots.includes(req.body.slot) ||
+        data.scheduledSlots.includes(req.body.slot)
+      ) {
         data.availableSlots.push(req.body.slot);
       } else {
         return res.status(400).json({

@@ -76,6 +76,7 @@ const getStartAndEndTime = (slots) => {
         : `${Math.floor(endTimeNumber)}:00 AM`);
   }
   console.log(final);
+  return final;
 };
 
 getStartAndEndTime(slots);
