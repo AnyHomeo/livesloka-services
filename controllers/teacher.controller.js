@@ -1,4 +1,5 @@
 const TeacherModel = require("../models/Teacher.model");
+const Category = require("../models/Category.model");
 const days = [
   "MONDAY",
   "TUESDAY",
@@ -168,4 +169,40 @@ exports.deleteSlot = (req, res) => {
         error: "error in retrieving teacehers data",
       });
     });
+};
+
+exports.getOccupancyDashboardData = async (req, res) => {
+  try {
+    let allCategories = await Category.find().select("id -_id categoryName");
+    let allTeachers = await TeacherModel.find().select(
+      "id TeacherName availableSlots scheduledSlots category"
+    );
+    let finalObject = {};
+    allCategories.forEach((category) => {
+      finalObject[category.categoryName] = {};
+      allTeachers.forEach((teacher) => {
+        const {
+          TeacherName,
+          scheduledSlots,
+          availableSlots,
+          _id,
+          id,
+        } = teacher;
+        if (teacher.category === category.id) {
+          finalObject[category.categoryName][TeacherName] = {
+            scheduledSlots,
+            availableSlots,
+            _id,
+            id,
+          };
+        }
+      });
+    });
+    return res.json(finalObject);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Error in retrieving Data",
+    });
+  }
 };
