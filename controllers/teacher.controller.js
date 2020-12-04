@@ -1,5 +1,6 @@
 const TeacherModel = require("../models/Teacher.model");
 const Category = require("../models/Category.model");
+const Schedule = require("../models/Scheduler.model");
 const days = [
   "MONDAY",
   "TUESDAY",
@@ -204,5 +205,78 @@ exports.getOccupancyDashboardData = async (req, res) => {
     return res.status(500).json({
       error: "Error in retrieving Data",
     });
+  }
+};
+
+exports.getAllDaysSlots = async (req, res) => {
+  const { id } = req.params;
+  try {
+    let availableSlotsData = await TeacherModel.findOne({ id }).select(
+      "availableSlots -_id"
+    );
+    let scheduledSlotsData = await Schedule.find({ teacher: id }).populate(
+      "students",
+      "firstName email"
+    );
+
+    let finalData = {
+      monday: {
+        availableSlots: [],
+        scheduledSlots: [],
+      },
+      tuesday: {
+        scheduledSlots: [],
+        availableSlots: [],
+      },
+      wednesday: {
+        scheduledSlots: [],
+        availableSlots: [],
+      },
+      thursday: {
+        scheduledSlots: [],
+        availableSlots: [],
+      },
+      friday: {
+        scheduledSlots: [],
+        availableSlots: [],
+      },
+      saturday: {
+        scheduledSlots: [],
+        availableSlots: [],
+      },
+      sunday: {
+        scheduledSlots: [],
+        availableSlots: [],
+      },
+    };
+    availableSlotsData.availableSlots.forEach((slot) => {
+      if (slot.split("-")[0]) {
+        finalData[slot.split("-")[0].toLowerCase()]["availableSlots"].push(
+          slot
+        );
+      }
+    });
+
+    scheduledSlotsData.forEach((meeting) => {
+      Object.keys(meeting.slots).forEach((day) => {
+        if (meeting.slots[day].length) {
+          let data = {};
+          data.students = meeting.students
+            .map((student) =>
+              student.firstName ? student.firstName : student.email
+            )
+            .join(",");
+          data.link = meeting.meetingLink;
+          data.demo = meeting.demo;
+          data._id = meeting._id;
+          finalData[day].scheduledSlots.push(data);
+        }
+      });
+    });
+
+    return res.json(finalData);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "error in retrieving the data" });
   }
 };
