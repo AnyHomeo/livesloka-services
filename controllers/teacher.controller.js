@@ -1,4 +1,5 @@
 const TeacherModel = require("../models/Teacher.model");
+const CustomerModel = require("../models/Customer.model");
 const days = [
   "MONDAY",
   "TUESDAY",
@@ -169,3 +170,79 @@ exports.deleteSlot = (req, res) => {
       });
     });
 };
+
+// exports.getAllTEachers = (req, res) => {
+
+//   CustomerModel.find({})
+//     .then((students) => {
+//       TeacherModel.find({})
+//         .then((teachers) => {
+//           let finalresult = [];
+
+//           let studentslen = students.length;
+//           let teachersLen = teachers.length;
+//           for (i = 0; i < teachersLen; i++) {
+//             let currentTeacher = teachers[i];
+
+//             for (j = 0; j < studentslen; j++) {
+//               let currentStud = students[j];
+//               let obj = {};
+//               if (currentTeacher.id === currentStud.teacherId) {
+//                 obj.TeacherName = currentTeacher.TeacherName;
+//                 obj.StudentId = currentStud._id;
+//                 obj.studentName = currentStud.firstName;
+//                 obj.amount = currentStud.proposedAmount;
+//                 console.log(obj);
+//                 finalresult.push(obj);
+//                 console.log(finalresult);
+
+//               }
+//             }
+//           }
+
+//         })
+//         .catch((err) => { console.log(err) })
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//     })
+
+// }
+
+
+exports.getAllTEachers = (req, res) => {
+
+  CustomerModel.find({})
+    .then((students) => {
+      TeacherModel.find({})
+        .then((teachers) => {
+          let finalresult = [];
+          let obje = {};
+          let studentslen = students.length;
+          let teachersLen = teachers.length;
+          for (i = 0; i < teachersLen; i++) {
+            let currentTeacher = teachers[i];
+            obje[i] = [];
+            console.log(currentTeacher.TeacherName)
+            for (j = 0; j < studentslen; j++) {
+              let currentStud = students[j];
+              let obj = {};
+              if (currentTeacher.id === currentStud.teacherId) {
+                obj.TeacherName = currentTeacher.TeacherName;
+                obj.StudentId = currentStud._id;
+                obj.studentName = currentStud.firstName;
+                obj.amount = currentStud.proposedAmount;
+                obje[i].push(obj);
+              }
+            }
+          }
+          //console.log(obje);
+          return res.status(200).json({ message: "TeachersStudetsFetched successfully", result: obje });
+        })
+        .catch((err) => { return res.status(400).json({ message: "error occurered ", err }); })
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+
+}
