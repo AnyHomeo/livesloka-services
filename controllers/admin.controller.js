@@ -73,12 +73,9 @@ module.exports.register = (req, res, next) => {
 
 module.exports.addcomment = (req, res) => {
   let comm = new Comment(req.body);
-  console.log(req.body);
   comm
     .save()
     .then((result) => {
-      console.log(result);
-
       res.status(200).send({
         message: "Comment Added Successfully",
         status: "OK",
@@ -261,7 +258,6 @@ module.exports.addinvoice = (req, res) => {
 };
 
 module.exports.getinvoices = (req, res) => {
-  console.log(req.body);
   if (req.body.start == "") {
     let d = new Date();
     req.body.start =

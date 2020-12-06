@@ -16,7 +16,6 @@ exports.validateSlot = (req, res, next) => {
   } else {
     let arr = req.body.slot.split("-");
     if (!days.includes(arr[0].trim())) {
-      console.log(arr[0], arr[0].length);
       return res.status(400).json({ stage: 2, error: "Invalid Entry" });
     } else if (
       !(!isNaN(arr[1].split(":")[0]) && parseInt(arr[1].split(":")[0]) <= 12)
@@ -156,7 +155,12 @@ exports.deleteSlot = (req, res) => {
         let index = data.availableSlots.indexOf(slot);
         data.availableSlots.splice(index, 1);
         data.save((err, docs) => {
-          console.log(docs, err);
+          if (err) {
+            console.error(err);
+            return res.status(400).json({
+              error: "can't delete slot",
+            });
+          }
           return res.status(200).json({
             message: "deleted successfully",
             result: docs.availableSlots,
