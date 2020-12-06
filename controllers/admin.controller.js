@@ -220,16 +220,18 @@ module.exports.addField = (req, res) => {
     model
       .save()
       .then((result) => {
-        res.status("200").send({
+        return res.status("200").send({
           message: name + " added successfully",
           status: "ok",
           result,
         });
       })
       .catch((err) => {
-        res.status("400").send({ error: "something went wrong !!" });
+        console.log(err);
+        return res.status("400").send({ error: "something went wrong !!" });
       });
   } catch (error) {
+    console.log(error);
     res.status("400").send({ error: "something went wrong !!" });
   }
 };

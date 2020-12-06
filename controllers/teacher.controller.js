@@ -1,5 +1,7 @@
 const TeacherModel = require("../models/Teacher.model");
 const CustomerModel = require("../models/Customer.model");
+const Category = require("../models/Category.model");
+const Schedule = require("../models/Scheduler.model");
 const days = [
   "MONDAY",
   "TUESDAY",
@@ -171,44 +173,6 @@ exports.deleteSlot = (req, res) => {
     });
 };
 
-// exports.getAllTEachers = (req, res) => {
-
-//   CustomerModel.find({})
-//     .then((students) => {
-//       TeacherModel.find({})
-//         .then((teachers) => {
-//           let finalresult = [];
-
-//           let studentslen = students.length;
-//           let teachersLen = teachers.length;
-//           for (i = 0; i < teachersLen; i++) {
-//             let currentTeacher = teachers[i];
-
-//             for (j = 0; j < studentslen; j++) {
-//               let currentStud = students[j];
-//               let obj = {};
-//               if (currentTeacher.id === currentStud.teacherId) {
-//                 obj.TeacherName = currentTeacher.TeacherName;
-//                 obj.StudentId = currentStud._id;
-//                 obj.studentName = currentStud.firstName;
-//                 obj.amount = currentStud.proposedAmount;
-//                 console.log(obj);
-//                 finalresult.push(obj);
-//                 console.log(finalresult);
-
-//               }
-//             }
-//           }
-
-//         })
-//         .catch((err) => { console.log(err) })
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//     })
-
-// }
-
 
 exports.getAllTEachers = (req, res) => {
 
@@ -246,3 +210,111 @@ exports.getAllTEachers = (req, res) => {
     })
 
 }
+exports.getOccupancyDashboardData = async (req, res) => {
+  try {
+    let allCategories = await Category.find().select("id -_id categoryName");
+    let allTeachers = await TeacherModel.find().select(
+      "id TeacherName availableSlots scheduledSlots category"
+    );
+    let finalObject = {};
+    allCategories.forEach((category) => {
+      finalObject[category.categoryName] = {};
+      allTeachers.forEach((teacher) => {
+        const {
+          TeacherName,
+          scheduledSlots,
+          availableSlots,
+          _id,
+          id,
+        } = teacher;
+        if (teacher.category === category.id) {
+          finalObject[category.categoryName][TeacherName] = {
+            scheduledSlots,
+            availableSlots,
+            _id,
+            id,
+          };
+        }
+      });
+    });
+    return res.json(finalObject);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Error in retrieving Data",
+    });
+  }
+};
+
+exports.getAllDaysSlots = async (req, res) => {
+  const { id } = req.params;
+  try {
+    let availableSlotsData = await TeacherModel.findOne({ id }).select(
+      "availableSlots -_id"
+    );
+    let scheduledSlotsData = await Schedule.find({ teacher: id }).populate(
+      "students",
+      "firstName email"
+    );
+
+    let finalData = {
+      monday: {
+        availableSlots: [],
+        scheduledSlots: [],
+      },
+      tuesday: {
+        scheduledSlots: [],
+        availableSlots: [],
+      },
+      wednesday: {
+        scheduledSlots: [],
+        availableSlots: [],
+      },
+      thursday: {
+        scheduledSlots: [],
+        availableSlots: [],
+      },
+      friday: {
+        scheduledSlots: [],
+        availableSlots: [],
+      },
+      saturday: {
+        scheduledSlots: [],
+        availableSlots: [],
+      },
+      sunday: {
+        scheduledSlots: [],
+        availableSlots: [],
+      },
+    };
+    availableSlotsData.availableSlots.forEach((slot) => {
+      if (slot.split("-")[0]) {
+        finalData[slot.split("-")[0].toLowerCase()]["availableSlots"].push(
+          slot
+        );
+      }
+    });
+
+    scheduledSlotsData.forEach((meeting) => {
+      Object.keys(meeting.slots).forEach((day) => {
+        if (meeting.slots[day].length) {
+          let data = {};
+          data.students = meeting.students
+            .map((student) =>
+              student.firstName ? student.firstName : student.email
+            )
+            .join(",");
+          data.link = meeting.meetingLink;
+          data.demo = meeting.demo;
+          data._id = meeting._id;
+          finalData[day].scheduledSlots.push(data);
+        }
+      });
+    });
+
+    return res.json(finalData);
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "error in retrieving the data" });
+  }
+};
