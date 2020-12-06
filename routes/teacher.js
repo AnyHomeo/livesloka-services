@@ -7,6 +7,7 @@ const {
   getAvailableSlots,
   getTeachers,
   deleteSlot,
+  getAllTEachers,
   getOccupancyDashboardData,
   getAllDaysSlots,
 } = require("../controllers/teacher.controller");
@@ -15,6 +16,7 @@ router.post("/add/available/:id", validateSlot, addSlot);
 router.get("/available/:id", getAvailableSlots);
 router.get("/", getTeachers);
 router.post("/delete/slot/:id", validateSlot, deleteSlot);
+router.get("/getTeacherStudents", getAllTEachers);
 router.get("/occupancy", getOccupancyDashboardData);
 router.get("/all/slots/:id", getAllDaysSlots);
 module.exports = router;
