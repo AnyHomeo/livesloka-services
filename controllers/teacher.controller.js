@@ -194,13 +194,17 @@ exports.getAllTEachers = (req, res) => {
               let obj = {};
               if (currentTeacher.id === currentStud.teacherId) {
                 obj.StudentId = currentStud._id;
-                obj.studentName = currentStud.firstName;
+                if (currentStud.firstName) {
+                  obj.studentName = currentStud.firstName;
+                } else if (currentStud.email) {
+                  obj.studentName = currentStud.email;
+                }
                 obj.amount = currentStud.proposedAmount;
                 obje[currentTeacher.TeacherName].push(obj);
               }
             }
           }
-          return res.status(200).json({
+          return res.json({
             message: "Teachers Students Fetched successfully",
             result: obje,
           });
