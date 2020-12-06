@@ -178,6 +178,7 @@ exports.getOccupancyDashboardData = async (req, res) => {
     let allTeachers = await TeacherModel.find().select(
       "id TeacherName availableSlots scheduledSlots category"
     );
+    let allSchedules = await Schedule.find().populate("students");
     let finalObject = {};
     allCategories.forEach((category) => {
       finalObject[category.categoryName] = {};
@@ -218,65 +219,13 @@ exports.getAllDaysSlots = async (req, res) => {
       "students",
       "firstName email"
     );
-
-    let finalData = {
-      monday: {
-        availableSlots: [],
-        scheduledSlots: [],
-      },
-      tuesday: {
-        scheduledSlots: [],
-        availableSlots: [],
-      },
-      wednesday: {
-        scheduledSlots: [],
-        availableSlots: [],
-      },
-      thursday: {
-        scheduledSlots: [],
-        availableSlots: [],
-      },
-      friday: {
-        scheduledSlots: [],
-        availableSlots: [],
-      },
-      saturday: {
-        scheduledSlots: [],
-        availableSlots: [],
-      },
-      sunday: {
-        scheduledSlots: [],
-        availableSlots: [],
-      },
-    };
-    availableSlotsData.availableSlots.forEach((slot) => {
-      if (slot.split("-")[0]) {
-        finalData[slot.split("-")[0].toLowerCase()]["availableSlots"].push(
-          slot
-        );
-      }
+    return res.status(200).json({
+      message: "data retrieved successfully",
+      availableSlots: availableSlotsData.availableSlots,
+      scheduledSlotsData,
     });
-
-    scheduledSlotsData.forEach((meeting) => {
-      Object.keys(meeting.slots).forEach((day) => {
-        if (meeting.slots[day].length) {
-          let data = {};
-          data.students = meeting.students
-            .map((student) =>
-              student.firstName ? student.firstName : student.email
-            )
-            .join(",");
-          data.link = meeting.meetingLink;
-          data.demo = meeting.demo;
-          data._id = meeting._id;
-          finalData[day].scheduledSlots.push(data);
-        }
-      });
-    });
-
-    return res.json(finalData);
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ error: "error in retrieving the data" });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ error: "error in loading data" });
   }
 };
