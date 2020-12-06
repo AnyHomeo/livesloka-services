@@ -222,17 +222,17 @@ exports.getAllTEachers = (req, res) => {
           let teachersLen = teachers.length;
           for (i = 0; i < teachersLen; i++) {
             let currentTeacher = teachers[i];
-            obje[i] = [];
+            obje[currentTeacher.TeacherName] = [];
             console.log(currentTeacher.TeacherName)
             for (j = 0; j < studentslen; j++) {
               let currentStud = students[j];
               let obj = {};
               if (currentTeacher.id === currentStud.teacherId) {
-                obj.TeacherName = currentTeacher.TeacherName;
+                // obj.TeacherName = currentTeacher.TeacherName;
                 obj.StudentId = currentStud._id;
                 obj.studentName = currentStud.firstName;
                 obj.amount = currentStud.proposedAmount;
-                obje[i].push(obj);
+                obje[currentTeacher.TeacherName].push(obj);
               }
             }
           }
