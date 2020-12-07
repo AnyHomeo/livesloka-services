@@ -2,6 +2,7 @@ const TeacherModel = require("../models/Teacher.model");
 const CustomerModel = require("../models/Customer.model");
 const Category = require("../models/Category.model");
 const Schedule = require("../models/Scheduler.model");
+const { param } = require("../routes/teacher");
 const days = [
   "MONDAY",
   "TUESDAY",
@@ -130,16 +131,35 @@ exports.getAvailableSlots = (req, res) => {
 
 exports.getTeachers = (req, res) => {
   let { params } = req.query;
+  if (!params) {
+    return res.status(400).json({
+      error: "params required",
+    });
+  }
   params = params.split(",").join(" ");
   TeacherModel.find()
     .select(params)
     .then((result) => {
+      let paramsNeeded = [];
+      params.split(" ").forEach((para) => {
+        if (!para.startsWith("-")) {
+          paramsNeeded.push(para);
+        }
+      });
+      result = result.map((item) => {
+        let returnObj = {};
+        paramsNeeded.forEach((key) => {
+          returnObj[key] = item[key] ? item[key] : "";
+        });
+        return returnObj;
+      });
       return res.status(200).json({
         message: "Teachers retrieved successfully",
         result,
       });
     })
     .catch((err) => {
+      console.log(err);
       return res.status(500).json({
         error: "error in retrieving",
       });
@@ -250,6 +270,7 @@ exports.getOccupancyDashboardData = async (req, res) => {
         }
       });
     });
+    console.log(allTeachers, allCategories);
     return res.json(finalObject);
   } catch (error) {
     console.log(error);
