@@ -225,19 +225,22 @@ exports.getOccupancyDashboardData = async (req, res) => {
     let allTeachers = await TeacherModel.find().select(
       "id TeacherName availableSlots scheduledSlots category"
     );
-    let allSchedules = await Schedule.find().populate("students");
+    let allSchedules = await Schedule.find().populate(
+      "students",
+      "firstName email"
+    );
     let finalObject = {};
     allCategories.forEach((category) => {
       finalObject[category.categoryName] = {};
       allTeachers.forEach((teacher) => {
-        const {
-          TeacherName,
-          scheduledSlots,
-          availableSlots,
-          _id,
-          id,
-        } = teacher;
         if (teacher.category === category.id) {
+          const {
+            TeacherName,
+            scheduledSlots,
+            availableSlots,
+            _id,
+            id,
+          } = teacher;
           finalObject[category.categoryName][TeacherName] = {
             scheduledSlots,
             availableSlots,
