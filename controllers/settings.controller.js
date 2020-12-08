@@ -4,7 +4,6 @@ exports.getSettings = (req, res) => {
   const { id } = req.params;
   Admin.findById(id)
     .then((data) => {
-      console.log(data);
       if (data.settings) {
         return res.status(200).json({
           message: "settings retrieved successfully",

@@ -21,7 +21,6 @@ module.exports = {
           user.username =
             "Livesloka User " + Math.floor(Math.random() * 1000000 + 1);
         }
-        console.log("creating userId and password for", user.username);
         if (req.body.email) {
           user.userId = req.body.email;
         } else if (req.body.phone) {
@@ -62,7 +61,6 @@ module.exports = {
   },
 
   async details(req, res) {
-    console.log(req.body);
     CustomerModel.find({})
       .select(" -customerId ")
       .sort({ createdAt: -1 })
@@ -81,9 +79,7 @@ module.exports = {
   async updateCustomer(req, res) {
     CustomerModel.updateOne({ _id: req.body._id }, req.body)
       .then((result) => {
-        console.log(req.body);
         if (req.body.email) {
-          console.log("inside");
           AdminModel.updateOne(
             { customerId: req.body._id },
             { userId: req.body.email }
@@ -131,7 +127,6 @@ module.exports = {
               date: arr[0],
             })
               .then((data) => {
-                console.log("data", data);
                 if (data) {
                   data.time = arr[1].split(".")[0];
                   data.save().then((docs) => {
