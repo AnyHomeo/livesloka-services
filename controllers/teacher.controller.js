@@ -239,6 +239,7 @@ exports.getAllTEachers = (req, res) => {
       console.log(err);
     });
 };
+
 exports.getOccupancyDashboardData = async (req, res) => {
   try {
     let allCategories = await Category.find().select("id -_id categoryName");
