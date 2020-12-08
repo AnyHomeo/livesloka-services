@@ -220,6 +220,23 @@ module.exports.addField = (req, res) => {
     model
       .save()
       .then((result) => {
+        console.log(result);
+        console.log(name);
+        if (name == "Teacher") {
+          let body = {
+            username: result.TeacherName,
+            userId: result.id,
+            roleId: 2,
+          }
+          const newTeacher = new admin(body)
+          newTeacher.save()
+            .then((result) => {
+              console.log(result)
+            })
+            .catch((err) => {
+              console.log(err);
+            })
+        }
         return res.status("200").send({
           message: name + " added successfully",
           status: "ok",

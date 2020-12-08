@@ -25,6 +25,7 @@ var adminSchema = new mongoose.Schema(
     password: {
       type: String,
       required: "Password can't be empty",
+      default: "livesloka",
       minlength: [3, "Password must be atleast 4 character long"],
     },
     settings: mongoose.Schema.Types.Mixed,

@@ -1,10 +1,12 @@
 const mongoose = require("mongoose");
 
 const SchedulerSchema = new mongoose.Schema({
+
   teacher: {
     type: String,
     required: "Teacher is Required",
   },
+
   students: [
     {
       type: mongoose.Schema.Types.ObjectId,
