@@ -16,6 +16,7 @@ var TeacherSchema = new mongoose.Schema(
     },
     TeacherSubjectsId: {
       type: Array,
+      default: [],
     },
     availableSlots: {
       type: Array,

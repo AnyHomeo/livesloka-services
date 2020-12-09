@@ -1,6 +1,8 @@
 const jwt = require("jsonwebtoken");
+const AdminModel = require("../models/Admin.model");
 const admin = require("../models/Admin.model");
 const Comment = require("../models/comments.model");
+const CustomerModel = require("../models/Customer.model");
 const InvoiceModel = require("../models/Invoice.model");
 
 module.exports = {
@@ -336,6 +338,50 @@ module.exports.deleteInvoice = (req, res) => {
         message: "Internal Error",
         result: null,
         status: "Bad request",
+      });
+    });
+};
+
+module.exports.resetPassword = (req, res) => {
+  const { id } = req.params;
+  AdminModel.findById(id)
+    .then((userData) => {
+      userData.password = "livesloka";
+      userData.firstTimeLogin = "Y";
+      userData
+        .save()
+        .then((response) => {
+          return res.status(200).json({
+            message: "password reset successful",
+          });
+        })
+        .catch((error) => {
+          return res.status(400).json({
+            error: "error in password reset",
+          });
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return res
+        .status(500)
+        .json({ error: "error in password reset,Try again later" });
+    });
+};
+
+module.exports.getAllAdmins = (req, res) => {
+  AdminModel.find()
+    .select("customerId")
+    .populate("customerId", "firstName email")
+    .then((data) => {
+      return res.json({
+        message: "data retrieved successfully",
+        result: data,
+      });
+    })
+    .catch((error) => {
+      return res.status(500).json({
+        error: "error in retrieving data",
       });
     });
 };

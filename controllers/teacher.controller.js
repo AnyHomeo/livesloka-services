@@ -2,6 +2,7 @@ const TeacherModel = require("../models/Teacher.model");
 const CustomerModel = require("../models/Customer.model");
 const Category = require("../models/Category.model");
 const Schedule = require("../models/Scheduler.model");
+const { param } = require("../routes/teacher");
 const days = [
   "MONDAY",
   "TUESDAY",
@@ -49,8 +50,8 @@ exports.addSlot = (req, res) => {
   }).then((data) => {
     if (data.availableSlots && data.scheduledSlots) {
       if (
-        !data.availableSlots.includes(req.body.slot) ||
-        data.scheduledSlots.includes(req.body.slot)
+        !data.availableSlots.includes(req.body.slot) &&
+        !data.scheduledSlots.includes(req.body.slot)
       ) {
         data.availableSlots.push(req.body.slot);
       } else {
@@ -130,16 +131,35 @@ exports.getAvailableSlots = (req, res) => {
 
 exports.getTeachers = (req, res) => {
   let { params } = req.query;
+  if (!params) {
+    return res.status(400).json({
+      error: "params required",
+    });
+  }
   params = params.split(",").join(" ");
   TeacherModel.find()
     .select(params)
     .then((result) => {
+      let paramsNeeded = [];
+      params.split(" ").forEach((para) => {
+        if (!para.startsWith("-")) {
+          paramsNeeded.push(para);
+        }
+      });
+      result = result.map((item) => {
+        let returnObj = {};
+        paramsNeeded.forEach((key) => {
+          returnObj[key] = item[key] ? item[key] : "";
+        });
+        return returnObj;
+      });
       return res.status(200).json({
         message: "Teachers retrieved successfully",
         result,
       });
     })
     .catch((err) => {
+      console.log(err);
       return res.status(500).json({
         error: "error in retrieving",
       });
@@ -219,6 +239,7 @@ exports.getAllTEachers = (req, res) => {
       console.log(err);
     });
 };
+
 exports.getOccupancyDashboardData = async (req, res) => {
   try {
     let allCategories = await Category.find().select("id -_id categoryName");
@@ -241,8 +262,34 @@ exports.getOccupancyDashboardData = async (req, res) => {
             _id,
             id,
           } = teacher;
+
+          let scheduledSlotsFinal = {};
+          if (scheduledSlots.length) {
+            allSchedules
+              .filter((schedule) => schedule.teacher === id)
+              .forEach((schedule) => {
+                Object.keys(schedule.slots).forEach((day) => {
+                  if (
+                    [
+                      "monday",
+                      "tuesday",
+                      "wednesday",
+                      "thursday",
+                      "friday",
+                      "saturday",
+                      "sunday",
+                    ].includes(day)
+                  ) {
+                    schedule.slots[day].forEach((slot) => {
+                      scheduledSlotsFinal[slot] = schedule._id;
+                    });
+                  }
+                });
+              });
+          }
+
           finalObject[category.categoryName][TeacherName] = {
-            scheduledSlots,
+            scheduledSlots: scheduledSlotsFinal,
             availableSlots,
             _id,
             id,
@@ -250,7 +297,8 @@ exports.getOccupancyDashboardData = async (req, res) => {
         }
       });
     });
-    return res.json(finalObject);
+
+    return res.json({ data: finalObject, allSchedules });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
