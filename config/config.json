@@ -1,8 +1,9 @@
 {
   "development": {
-    "MONGODB_URI": "mongodb+srv://kamal:kamal@cluster0.wa7m8.mongodb.net/livekumon-dev?retryWrites=true&w=majority",
+    "MONGODB_URI": "mongodb+srv://liveslokaDev:<passw0rd>@cluster0.ox8do.mongodb.net/LiveKumon>?retryWrites=true&w=majority",
     "JWT_SECRET": "SECRET#123",
     "JWT_EXP": "60m"
+    
   },
   "production": {
     "MONGODB_URI": "mongodb+srv://livesloka:Passw0rd@cluster0.hjcdd.mongodb.net/Livekumon?retryWrites=true&w=majority",
