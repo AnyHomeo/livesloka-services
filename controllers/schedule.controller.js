@@ -1,6 +1,7 @@
 const Schedule = require("../models/Scheduler.model");
 const Customer = require("../models/Customer.model");
 const Teacher = require("../models/Teacher.model");
+const { getStartAndEndTime } = require("../scripts/getStartAndEndTime");
 
 exports.addSchedule = (req, res) => {
   let {
@@ -45,27 +46,29 @@ exports.addSchedule = (req, res) => {
   schedule
     .save()
     .then((scheduledData) => {
-      let scheduleDescription = "Attend meeting every ";
+      let scheduleDescription = "Attend meeting every";
       if (monday.length) {
-        scheduleDescription += "Monday";
+        scheduleDescription += `Monday( ${getStartAndEndTime(monday)} )`;
       }
       if (tuesday.length) {
-        scheduleDescription += ", Tuesday";
+        scheduleDescription += `, Tuesday( ${getStartAndEndTime(tuesday)} )`;
       }
       if (wednesday.length) {
-        scheduleDescription += ", Wednesday";
+        scheduleDescription += `, Wednesday( ${getStartAndEndTime(
+          wednesday
+        )} ) `;
       }
       if (thursday.length) {
-        scheduleDescription += ", Thursday";
+        scheduleDescription += `, Thursday( ${getStartAndEndTime(thursday)} )`;
       }
       if (friday.length) {
-        scheduleDescription += ", Friday";
+        scheduleDescription += `, Friday( ${getStartAndEndTime(friday)} ) `;
       }
       if (saturday.length) {
-        scheduleDescription += ", Saturday";
+        scheduleDescription += `, Saturday( ${getStartAndEndTime(saturday)} )`;
       }
       if (sunday.length) {
-        scheduleDescription += ", Sunday";
+        scheduleDescription += `, Sunday( ${getStartAndEndTime(sunday)} )`;
       }
       Customer.updateMany(
         { _id: { $in: students } },

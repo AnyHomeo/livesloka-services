@@ -50,8 +50,8 @@ exports.addSlot = (req, res) => {
   }).then((data) => {
     if (data.availableSlots && data.scheduledSlots) {
       if (
-        !data.availableSlots.includes(req.body.slot) ||
-        data.scheduledSlots.includes(req.body.slot)
+        !data.availableSlots.includes(req.body.slot) &&
+        !data.scheduledSlots.includes(req.body.slot)
       ) {
         data.availableSlots.push(req.body.slot);
       } else {
@@ -262,8 +262,34 @@ exports.getOccupancyDashboardData = async (req, res) => {
             _id,
             id,
           } = teacher;
+
+          let scheduledSlotsFinal = {};
+          if (scheduledSlots.length) {
+            allSchedules
+              .filter((schedule) => schedule.teacher === id)
+              .forEach((schedule) => {
+                Object.keys(schedule.slots).forEach((day) => {
+                  if (
+                    [
+                      "monday",
+                      "tuesday",
+                      "wednesday",
+                      "thursday",
+                      "friday",
+                      "saturday",
+                      "sunday",
+                    ].includes(day)
+                  ) {
+                    schedule.slots[day].forEach((slot) => {
+                      scheduledSlotsFinal[slot] = schedule._id;
+                    });
+                  }
+                });
+              });
+          }
+
           finalObject[category.categoryName][TeacherName] = {
-            scheduledSlots,
+            scheduledSlots: scheduledSlotsFinal,
             availableSlots,
             _id,
             id,
@@ -271,8 +297,8 @@ exports.getOccupancyDashboardData = async (req, res) => {
         }
       });
     });
-    console.log(allTeachers, allCategories);
-    return res.json(finalObject);
+
+    return res.json({ data: finalObject, allSchedules });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
