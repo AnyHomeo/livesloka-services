@@ -125,3 +125,46 @@ exports.addSchedule = (req, res) => {
       });
     });
 };
+
+exports.deleteSchedule = (req, res) => {
+  const { id } = req.params;
+  Schedule.findById(id).then((ScheduleData) => {
+    Teacher.findOne({ id: data.teacher }).then((teacherData) => {
+      let {
+        monday,
+        tuesday,
+        wednesday,
+        thursday,
+        friday,
+        saturday,
+        sunday,
+      } = scheduledData.slots;
+      teacherData.availableSlots.concat([
+        ...monday,
+        ...tuesday,
+        ...wednesday,
+        ...thursday,
+        ...friday,
+        ...saturday,
+        ...sunday,
+      ]);
+    });
+  });
+};
+
+exports.getScheduleById = (req, res) => {
+  const { id } = req.params;
+  Schedule.findById(id)
+    .then((data) => {
+      return res.status(200).json({
+        message: "Schedule Retrieved Successfully",
+        result: data,
+      });
+    })
+    .catch((err) => {
+      return res.status(500).json({
+        error: "Internal server error",
+        result: null,
+      });
+    });
+};
