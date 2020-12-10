@@ -126,30 +126,57 @@ exports.addSchedule = (req, res) => {
     });
 };
 
-exports.deleteSchedule = (req, res) => {
+exports.deleteScheduleById = async (req, res) => {
   const { id } = req.params;
-  Schedule.findById(id).then((ScheduleData) => {
-    Teacher.findOne({ id: data.teacher }).then((teacherData) => {
-      let {
-        monday,
-        tuesday,
-        wednesday,
-        thursday,
-        friday,
-        saturday,
-        sunday,
-      } = scheduledData.slots;
-      teacherData.availableSlots.concat([
-        ...monday,
-        ...tuesday,
-        ...wednesday,
-        ...thursday,
-        ...friday,
-        ...saturday,
-        ...sunday,
-      ]);
+  try {
+    let schedule = await Schedule.findById(id);
+    let teacherOfSchedule = await Teacher.findOne({ id: schedule.teacher });
+    console.log(schedule);
+    let {
+      monday,
+      tuesday,
+      wednesday,
+      thursday,
+      friday,
+      saturday,
+      sunday,
+    } = schedule.slots;
+    teacherOfSchedule.availableSlots.concat([
+      ...monday,
+      ...tuesday,
+      ...wednesday,
+      ...thursday,
+      ...friday,
+      ...saturday,
+      ...sunday,
+    ]);
+    teacherOfSchedule.availableSlots = [
+      ...new Set(teacherOfSchedule.availableSlots),
+    ];
+    (await teacherOfSchedule).save((err, docs) => {
+      if (err) {
+        return res.status(500).json({
+          error: "error in updating teacher",
+        });
+      }
+      schedule.isDeleted = true;
+      schedule.save((err, deletedSchedule) => {
+        if (err) {
+          return res.status(500).json({
+            error: "error in updating teacher",
+          });
+        }
+        return res.status(200).json({
+          message: "Schedule Deleted Successfully",
+        });
+      });
     });
-  });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Error in Deleting Schedule",
+    });
+  }
 };
 
 exports.getScheduleById = (req, res) => {

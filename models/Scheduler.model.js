@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 
 const SchedulerSchema = new mongoose.Schema({
-
   teacher: {
     type: String,
     required: "Teacher is Required",
@@ -31,6 +30,10 @@ const SchedulerSchema = new mongoose.Schema({
     required: "Meeting Account is Required",
   },
   demo: Boolean,
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 module.exports = mongoose.model("Schedule", SchedulerSchema);
