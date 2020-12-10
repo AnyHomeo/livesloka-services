@@ -3,19 +3,24 @@ const mongoose = require("mongoose");
 var TeacherSchema = new mongoose.Schema(
   {
     id: {
+      trim: true,
       type: String,
     },
     TeacherDesc: {
+      trim: true,
       type: String,
     },
     TeacherName: {
+      trim: true,
       type: String,
     },
     TeacherStatus: {
+      trim: true,
       type: String,
     },
     TeacherSubjectsId: {
       type: Array,
+      default: [],
     },
     availableSlots: {
       type: Array,
@@ -26,6 +31,7 @@ var TeacherSchema = new mongoose.Schema(
       default: [],
     },
     category: {
+      trim: true,
       type: String,
     },
   },

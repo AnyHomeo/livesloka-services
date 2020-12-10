@@ -3,15 +3,19 @@ const mongoose = require("mongoose");
 var TimeZoneSchema = new mongoose.Schema(
   {
     id: {
+      trim: true,
       type: String,
     },
     timeZoneDesc: {
+      trim: true,
       type: String,
     },
     timeZoneName: {
+      trim: true,
       type: String,
     },
     timeZoneStatus: {
+      trim: true,
       type: String,
     },
   },

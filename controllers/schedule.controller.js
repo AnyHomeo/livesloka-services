@@ -1,6 +1,7 @@
 const Schedule = require("../models/Scheduler.model");
 const Customer = require("../models/Customer.model");
 const Teacher = require("../models/Teacher.model");
+const { getStartAndEndTime } = require("../scripts/getStartAndEndTime");
 
 exports.addSchedule = (req, res) => {
   let {
@@ -45,27 +46,29 @@ exports.addSchedule = (req, res) => {
   schedule
     .save()
     .then((scheduledData) => {
-      let scheduleDescription = "Attend meeting every ";
+      let scheduleDescription = "Attend meeting every";
       if (monday.length) {
-        scheduleDescription += "Monday";
+        scheduleDescription += `Monday( ${getStartAndEndTime(monday)} )`;
       }
       if (tuesday.length) {
-        scheduleDescription += ", Tuesday";
+        scheduleDescription += `, Tuesday( ${getStartAndEndTime(tuesday)} )`;
       }
       if (wednesday.length) {
-        scheduleDescription += ", Wednesday";
+        scheduleDescription += `, Wednesday( ${getStartAndEndTime(
+          wednesday
+        )} ) `;
       }
       if (thursday.length) {
-        scheduleDescription += ", Thursday";
+        scheduleDescription += `, Thursday( ${getStartAndEndTime(thursday)} )`;
       }
       if (friday.length) {
-        scheduleDescription += ", Friday";
+        scheduleDescription += `, Friday( ${getStartAndEndTime(friday)} ) `;
       }
       if (saturday.length) {
-        scheduleDescription += ", Saturday";
+        scheduleDescription += `, Saturday( ${getStartAndEndTime(saturday)} )`;
       }
       if (sunday.length) {
-        scheduleDescription += ", Sunday";
+        scheduleDescription += `, Sunday( ${getStartAndEndTime(sunday)} )`;
       }
       Customer.updateMany(
         { _id: { $in: students } },
@@ -119,6 +122,76 @@ exports.addSchedule = (req, res) => {
       }
       return res.status(500).json({
         error: "Error in saving the schedule",
+      });
+    });
+};
+
+exports.deleteScheduleById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    let schedule = await Schedule.findById(id);
+    let teacherOfSchedule = await Teacher.findOne({ id: schedule.teacher });
+    console.log(schedule);
+    let {
+      monday,
+      tuesday,
+      wednesday,
+      thursday,
+      friday,
+      saturday,
+      sunday,
+    } = schedule.slots;
+    teacherOfSchedule.availableSlots.concat([
+      ...monday,
+      ...tuesday,
+      ...wednesday,
+      ...thursday,
+      ...friday,
+      ...saturday,
+      ...sunday,
+    ]);
+    teacherOfSchedule.availableSlots = [
+      ...new Set(teacherOfSchedule.availableSlots),
+    ];
+    (await teacherOfSchedule).save((err, docs) => {
+      if (err) {
+        return res.status(500).json({
+          error: "error in updating teacher",
+        });
+      }
+      schedule.isDeleted = true;
+      schedule.save((err, deletedSchedule) => {
+        if (err) {
+          return res.status(500).json({
+            error: "error in updating teacher",
+          });
+        }
+        return res.status(200).json({
+          message: "Schedule Deleted Successfully",
+        });
+      });
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Error in Deleting Schedule",
+    });
+  }
+};
+
+exports.getScheduleById = (req, res) => {
+  const { id } = req.params;
+  Schedule.findById(id)
+    .then((data) => {
+      return res.status(200).json({
+        message: "Schedule Retrieved Successfully",
+        result: data,
+      });
+    })
+    .catch((err) => {
+      return res.status(500).json({
+        error: "Internal server error",
+        result: null,
       });
     });
 };

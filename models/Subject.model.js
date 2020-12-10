@@ -1,20 +1,16 @@
 const mongoose = require("mongoose");
 
-var CurrencySchema = new mongoose.Schema(
+var SubjectSchema = new mongoose.Schema(
   {
     id: {
       trim: true,
       type: String,
     },
-    currencyDesc: {
+    subjectDesc: {
       trim: true,
       type: String,
     },
-    currencyName: {
-      trim: true,
-      type: String,
-    },
-    currencyStatus: {
+    subjectName: {
       trim: true,
       type: String,
     },
@@ -22,4 +18,4 @@ var CurrencySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Currency", CurrencySchema);
+module.exports = mongoose.model("Subject", SubjectSchema);

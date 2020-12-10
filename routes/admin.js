@@ -38,4 +38,8 @@ router.get("/admin/comments/:id", ctrl.getComments);
 router.post("/admin/updatecomment", ctrl.updatecomment);
 router.post("/admin/deletecomment", ctrl.deletecomment);
 
+//password reset
+router.get("/admin/reset/:id", ctrl.resetPassword);
+router.get("/all/admins", ctrl.getAllAdmins);
+
 module.exports = router;

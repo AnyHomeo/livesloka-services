@@ -13,13 +13,10 @@ const teacherRouter = require("./routes/teacher");
 const scheduleRouter = require("./routes/schedule");
 
 const app = express();
-require("./config/config");
+require("dotenv").config();
 require("./models/db");
-require("./config/passportConfig");
 
 // view engine setup
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "ejs");
 app.use(cors());
 app.use(logger("dev"));
 app.use(express.json());

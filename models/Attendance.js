@@ -7,12 +7,15 @@ var AttendanceSchema = new mongoose.Schema(
       ref: "Customer",
     },
     date: {
+      trim: true,
       type: String,
     },
     time: {
+      trim: true,
       type: String,
     },
     timeZone: {
+      trim: true,
       type: String,
     },
   },

@@ -1,6 +1,4 @@
-let slots = ["MONDAY-11:00 AM-11:30 AM", "MONDAY-11:30 AM-12:00 PM"];
-
-const getStartAndEndTime = (slots) => {
+module.exports.getStartAndEndTime = (slots) => {
   let startTimeArr = [];
   let endTimeArr = [];
   slots.forEach((slot) => {
@@ -78,5 +76,3 @@ const getStartAndEndTime = (slots) => {
   console.log(final);
   return final;
 };
-
-getStartAndEndTime(slots);
