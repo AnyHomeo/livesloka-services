@@ -138,7 +138,7 @@ module.exports.getCorrespondingData = (req, res) => {
     const Model = require(`../models/${req.params.name}.model`);
     // console.log(Object.keys(Model.schema.paths));
     Model.find({})
-      .select(" -_id -__v -createdAt -updatedAt ")
+      .select("-__v -createdAt -updatedAt ")
       .then((result) => {
         res.status("200").send({
           message: req.params.name + " retrieved successfully",
@@ -226,15 +226,16 @@ module.exports.addField = (req, res) => {
             username: result.TeacherName,
             userId: result.id,
             roleId: 2,
-          }
-          const newTeacher = new admin(body)
-          newTeacher.save()
+          };
+          const newTeacher = new admin(body);
+          newTeacher
+            .save()
             .then((result) => {
-              console.log(result)
+              console.log(result);
             })
             .catch((err) => {
               console.log(err);
-            })
+            });
         }
         return res.status("200").send({
           message: name + " added successfully",

@@ -246,10 +246,9 @@ exports.getOccupancyDashboardData = async (req, res) => {
     let allTeachers = await TeacherModel.find().select(
       "id TeacherName availableSlots scheduledSlots category"
     );
-    let allSchedules = await Schedule.find().populate(
-      "students",
-      "firstName email"
-    );
+    let allSchedules = await Schedule.find({
+      isDeleted: { $ne: true },
+    }).populate("students", "firstName email");
     let finalObject = {};
     allCategories.forEach((category) => {
       finalObject[category.categoryName] = {};
