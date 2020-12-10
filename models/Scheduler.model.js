@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const SchedulerSchema = new mongoose.Schema({
   teacher: {
     type: String,
+    trim: true,
     required: "Teacher is Required",
   },
 
@@ -22,14 +23,19 @@ const SchedulerSchema = new mongoose.Schema({
     sunday: Array,
   },
   meetingLink: {
+    trim: true,
     type: String,
     required: "Meeting Link Is Required",
   },
   meetingAccount: {
+    trim: true,
     type: String,
     required: "Meeting Account is Required",
   },
-  demo: Boolean,
+  demo: {
+    type: Boolean,
+    default: false,
+  },
   isDeleted: {
     type: Boolean,
     default: false,

@@ -3,15 +3,19 @@ const mongoose = require("mongoose");
 var CurrencySchema = new mongoose.Schema(
   {
     id: {
+      trim: true,
       type: String,
     },
     currencyDesc: {
+      trim: true,
       type: String,
     },
     currencyName: {
+      trim: true,
       type: String,
     },
     currencyStatus: {
+      trim: true,
       type: String,
     },
   },

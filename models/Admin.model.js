@@ -6,26 +6,32 @@ var adminSchema = new mongoose.Schema(
   {
     username: {
       type: String,
+      trim: true,
     },
     userId: {
+      trim: true,
       type: String,
       required: "email or userid is required",
     },
     roleId: {
+      trim: true,
       type: Number,
     },
     firstTimeLogin: {
       type: String,
       default: "Y",
+      trim: true,
     },
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",
+      trim: true,
     },
     password: {
       type: String,
       required: "Password can't be empty",
       default: "livesloka",
+      trim: true,
       minlength: [3, "Password must be atleast 4 character long"],
     },
     settings: mongoose.Schema.Types.Mixed,

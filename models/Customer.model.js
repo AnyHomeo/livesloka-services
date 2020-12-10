@@ -3,32 +3,92 @@ const mongoose = require("mongoose");
 const Customer = new mongoose.Schema(
   {
     id: Number,
-    firstName: String,
-    lastName: String,
-    email: String,
-    whatsAppnumber: String,
-    phone: String,
-    meetingLink: String,
-    classId: String,
-    categoryId: String,
+    firstName: {
+      trim: true,
+      type: String,
+    },
+    lastName: {
+      trim: true,
+      type: String,
+    },
+    email: {
+      trim: true,
+      type: String,
+      lowercase: true,
+    },
+    whatsAppnumber: {
+      trim: true,
+      type: String,
+    },
+    phone: {
+      trim: true,
+      type: String,
+    },
+    meetingLink: {
+      trim: true,
+      type: String,
+    },
+    classId: {
+      trim: true,
+      type: String,
+    },
+    className: {
+      trim: true,
+      type: String,
+    },
+    categoryId: {
+      trim: true,
+      type: String,
+    },
+    numberOfClasses: Number,
     age: Number,
-    gender: String,
-    timeZoneId: String,
+    gender: {
+      trim: true,
+      type: String,
+    },
+    timeZoneId: {
+      trim: true,
+      type: String,
+    },
     numberOfStudents: Number,
-    customerId: String,
-    scheduleDescription: String,
-    countryId: String,
-    placeOfStay: String,
-    classStatusId: String,
+    customerId: {
+      trim: true,
+      type: String,
+    },
+    scheduleDescription: {
+      trim: true,
+      type: String,
+    },
+    countryId: {
+      trim: true,
+      type: String,
+    },
+    placeOfStay: {
+      trim: true,
+      type: String,
+    },
+    classStatusId: {
+      trim: true,
+      type: String,
+    },
     proposedAmount: Number,
-    proposedCurrencyId: String,
+    proposedCurrencyId: {
+      trim: true,
+      type: String,
+    },
     welcomeCall: Boolean,
     welcomeChat: Boolean,
     welcomeEmail: Boolean,
     studyMaterialSent: Boolean,
-    agentId: String,
+    agentId: {
+      trim: true,
+      type: String,
+    },
     oneToOne: Boolean,
-    teacherId: String,
+    teacherId: {
+      trim: true,
+      type: String,
+    },
   },
   { timestamps: true }
 );
