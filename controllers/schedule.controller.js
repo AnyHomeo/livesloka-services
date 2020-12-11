@@ -1,9 +1,10 @@
 const Schedule = require("../models/Scheduler.model");
 const Customer = require("../models/Customer.model");
 const Teacher = require("../models/Teacher.model");
+const Subject = require("../models/Subject.model");
 const { getStartAndEndTime } = require("../scripts/getStartAndEndTime");
 
-exports.addSchedule = (req, res) => {
+exports.addSchedule = async (req, res) => {
   let {
     monday,
     tuesday,
@@ -17,6 +18,8 @@ exports.addSchedule = (req, res) => {
     teacher,
     students,
     demo,
+    startDate,
+    subject,
   } = req.body;
 
   monday = monday ? monday : [];
@@ -26,12 +29,28 @@ exports.addSchedule = (req, res) => {
   friday = friday ? friday : [];
   saturday = saturday ? saturday : [];
   sunday = sunday ? sunday : [];
+  let className = "";
 
+  try {
+    let selectedSubject = await Subject.findOne({ _id: subject }).lean()
+      .subjectName;
+    let selectedTeacher = await Teacher.findOne({ _id: teacher }).lean()
+      .TeacherName;
+    className = `${selectedSubject} ${selectedTeacher} ${startDate} ${
+      demo ? "Demo" : ""
+    }`;
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({
+      error: "Can't Add className",
+    });
+  }
   const schedule = new Schedule({
     meetingAccount,
     meetingLink,
     teacher,
     students,
+    startDate,
     slots: {
       monday,
       tuesday,
@@ -42,6 +61,7 @@ exports.addSchedule = (req, res) => {
       sunday,
     },
     demo,
+    className,
   });
   schedule
     .save()
@@ -70,9 +90,10 @@ exports.addSchedule = (req, res) => {
       if (sunday.length) {
         scheduleDescription += `, Sunday( ${getStartAndEndTime(sunday)} )`;
       }
+
       Customer.updateMany(
         { _id: { $in: students } },
-        { meetingLink, scheduleDescription }
+        { meetingLink, scheduleDescription, className }
       )
         .then((data) => {
           Teacher.findOne({ id: teacher }).then((data) => {
@@ -120,6 +141,7 @@ exports.addSchedule = (req, res) => {
           error: err.errors[Object.keys(err.errors)[0]].properties.message,
         });
       }
+      console.log(err);
       return res.status(500).json({
         error: "Error in saving the schedule",
       });
@@ -131,8 +153,7 @@ exports.deleteScheduleById = async (req, res) => {
   try {
     let schedule = await Schedule.findById(id);
     let teacherOfSchedule = await Teacher.findOne({ id: schedule.teacher });
-    console.log(schedule);
-    let {
+    const {
       monday,
       tuesday,
       wednesday,
@@ -141,19 +162,24 @@ exports.deleteScheduleById = async (req, res) => {
       saturday,
       sunday,
     } = schedule.slots;
-    teacherOfSchedule.availableSlots.concat([
-      ...monday,
-      ...tuesday,
-      ...wednesday,
-      ...thursday,
-      ...friday,
-      ...saturday,
-      ...sunday,
-    ]);
+    let slotsOfSchedule = monday
+      .concat(tuesday)
+      .concat(wednesday)
+      .concat(thursday)
+      .concat(friday)
+      .concat(saturday)
+      .concat(sunday);
+    teacherOfSchedule.availableSlots = teacherOfSchedule.availableSlots.concat(
+      slotsOfSchedule
+    );
     teacherOfSchedule.availableSlots = [
       ...new Set(teacherOfSchedule.availableSlots),
     ];
-    (await teacherOfSchedule).save((err, docs) => {
+    teacherOfSchedule.scheduledSlots = teacherOfSchedule.scheduledSlots.filter(
+      (slot) => !slotsOfSchedule.includes(slot)
+    );
+
+    teacherOfSchedule.save((err, docs) => {
       if (err) {
         return res.status(500).json({
           error: "error in updating teacher",
