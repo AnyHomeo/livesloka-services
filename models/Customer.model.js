@@ -40,7 +40,7 @@ const Customer = new mongoose.Schema(
       trim: true,
       type: String,
     },
-    numberOfClasses: Number,
+    noOfClasses: Number,
     age: Number,
     gender: {
       trim: true,
