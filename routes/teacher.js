@@ -10,6 +10,8 @@ const {
   getAllTEachers,
   getOccupancyDashboardData,
   getAllDaysSlots,
+  GetTeacherMeetings,
+
 } = require("../controllers/teacher.controller");
 
 router.post("/add/available/:id", validateSlot, addSlot);
@@ -19,4 +21,6 @@ router.post("/delete/slot/:id", validateSlot, deleteSlot);
 router.get("/finance", getAllTEachers);
 router.get("/occupancy", getOccupancyDashboardData);
 router.get("/all/slots/:id", getAllDaysSlots);
+
+router.get("/getTeacherMeetings/:id", GetTeacherMeetings)
 module.exports = router;

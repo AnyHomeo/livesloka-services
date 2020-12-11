@@ -327,3 +327,15 @@ exports.getAllDaysSlots = async (req, res) => {
     return res.status(500).json({ error: "error in loading data" });
   }
 };
+
+exports.GetTeacherMeetings = async (req, res) => {
+  Schedule.find({ teacher: req.params.id })
+    .populate('subject')
+    .populate('students')
+    .then((result) => {
+      return res.status(200).json({ message: "Fetched  meetings successfully", result })
+    })
+    .catch((err => {
+      return res.status(400).json({ message: "Fetched meetings  problem", err })
+    }))
+}

@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const AdminModel = require("../models/Admin.model");
+const { model } = require("../models/Admin.model");
 const admin = require("../models/Admin.model");
 const Comment = require("../models/comments.model");
 const CustomerModel = require("../models/Customer.model");
@@ -385,3 +386,15 @@ module.exports.getAllAdmins = (req, res) => {
       });
     });
 };
+
+
+module.exports.getSingleTeacher = (req, res) => {
+
+  AdminModel.find({ userId: req.params.id })
+    .then((result) => {
+      return res.status(200).json({ message: "Fetched successfully", result })
+    })
+    .catch((err => {
+      return res.status(400).json({ message: "Fetched  problem", err })
+    }))
+}

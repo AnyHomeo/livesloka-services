@@ -42,4 +42,5 @@ router.post("/admin/deletecomment", ctrl.deletecomment);
 router.get("/admin/reset/:id", ctrl.resetPassword);
 router.get("/all/admins", ctrl.getAllAdmins);
 
+router.get("/admin/getSingleTeacher/:id", ctrl.getSingleTeacher)
 module.exports = router;

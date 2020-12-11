@@ -10,6 +10,11 @@ var TeacherSchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
+
+    teacherMail: {
+      type: String
+    },
+
     TeacherName: {
       trim: true,
       type: String,
