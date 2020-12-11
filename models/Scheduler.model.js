@@ -6,7 +6,6 @@ const SchedulerSchema = new mongoose.Schema({
     trim: true,
     required: "Teacher is Required",
   },
-
   students: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -31,6 +30,19 @@ const SchedulerSchema = new mongoose.Schema({
     trim: true,
     type: String,
     required: "Meeting Account is Required",
+  },
+  startDate: {
+    trim: true,
+    type: String,
+    required: "Start Date is Required",
+  },
+  subject: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Subject",
+  },
+  className: {
+    type: String,
+    trim: true,
   },
   demo: {
     type: Boolean,
