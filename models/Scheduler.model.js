@@ -39,6 +39,7 @@ const SchedulerSchema = new mongoose.Schema({
   subject: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Subject",
+    required: "Subject is Required",
   },
   className: {
     type: String,

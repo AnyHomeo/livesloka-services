@@ -32,13 +32,11 @@ exports.addSchedule = async (req, res) => {
   let className = "";
 
   try {
-    let selectedSubject = await Subject.findOne({ _id: subject }).lean()
-      .subjectName;
-    let selectedTeacher = await Teacher.findOne({ _id: teacher }).lean()
-      .TeacherName;
-    className = `${selectedSubject} ${selectedTeacher} ${startDate} ${
-      demo ? "Demo" : ""
-    }`;
+    let selectedSubject = await Subject.findOne({ _id: subject }).lean();
+    let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
+    className = `${selectedSubject.subjectName} ${
+      selectedTeacher.TeacherName
+    } ${startDate} ${demo ? "Demo" : ""}`;
   } catch (error) {
     console.log(error);
     return res.status(400).json({
@@ -62,11 +60,12 @@ exports.addSchedule = async (req, res) => {
     },
     demo,
     className,
+    subject,
   });
   schedule
     .save()
     .then((scheduledData) => {
-      let scheduleDescription = "Attend meeting every";
+      let scheduleDescription = "Attend meeting every ";
       if (monday.length) {
         scheduleDescription += `Monday( ${getStartAndEndTime(monday)} )`;
       }
@@ -109,6 +108,8 @@ exports.addSchedule = async (req, res) => {
                   });
                 });
               }
+              data.availableSlots = [...new Set(data.availableSlots)];
+              data.scheduledSlots = [...new Set(data.scheduledSlots)];
               data.save((err, docs) => {
                 if (err) {
                   console.log(err);
@@ -125,10 +126,10 @@ exports.addSchedule = async (req, res) => {
           });
         })
         .catch((err) => {
+          console.log(err);
           return res.status(400).json({
             error: "error in updating students Links and Description",
           });
-          console.log(err);
         });
     })
     .catch((err) => {
@@ -146,6 +147,84 @@ exports.addSchedule = async (req, res) => {
         error: "Error in saving the schedule",
       });
     });
+};
+
+exports.editSchedule = async (req, res) => {
+  const { id } = req.params;
+  const {
+    meetingAccount,
+    meetingLink,
+    teacher,
+    students,
+    startDate,
+    slots,
+    demo,
+    subject,
+  } = req.body;
+  try {
+    let selectedSubject = await Subject.findOne({ _id: subject }).lean();
+    let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
+    req.body.className = `${selectedSubject.subjectName} ${
+      selectedTeacher.TeacherName
+    } ${startDate} ${demo ? "Demo" : ""}`;
+  } catch (error) {
+    console.log(error);
+    return res.status(400).json({
+      error: "Can't Add className",
+    });
+  }
+  Schedule.updateOne({ _id: id }, req.body, (err, response) => {
+    let scheduleDescription = "Attend meeting every ";
+    slots &&
+      Object.keys(slots).forEach((slotDay) => {
+        if (slots[slotDay].length) {
+          scheduleDescription += `${slotDay}( ${getStartAndEndTime(
+            slots[slotDay]
+          )} )`;
+        }
+      });
+    Customer.updateMany(
+      { _id: { $in: students } },
+      { meetingLink, scheduleDescription, className: req.body.className }
+    )
+      .then((data) => {
+        Teacher.findOne({ id: teacher }).then((data) => {
+          if (data) {
+            let { availableSlots } = data;
+            if (availableSlots) {
+              Object.keys(slots).forEach((day) => {
+                let arr = slots[day];
+                arr.forEach((slot) => {
+                  let index = availableSlots.indexOf(slot);
+                  data.availableSlots.splice(index, 1);
+                  data.scheduledSlots.push(slot);
+                });
+              });
+            }
+            data.availableSlots = [...new Set(data.availableSlots)];
+            data.scheduledSlots = [...new Set(data.scheduledSlots)];
+            data.save((err, docs) => {
+              if (err) {
+                console.log(err);
+                return res.status(500).json({
+                  error: "error in updating teacher slots",
+                });
+              } else {
+                return res.json({
+                  message: "schedule updated successfully",
+                });
+              }
+            });
+          }
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        return res.status(400).json({
+          error: "error in updating students Links and Description",
+        });
+      });
+  });
 };
 
 exports.deleteScheduleById = async (req, res) => {
@@ -208,6 +287,7 @@ exports.deleteScheduleById = async (req, res) => {
 exports.getScheduleById = (req, res) => {
   const { id } = req.params;
   Schedule.findById(id)
+    .populate("students", "firstName lastName")
     .then((data) => {
       return res.status(200).json({
         message: "Schedule Retrieved Successfully",

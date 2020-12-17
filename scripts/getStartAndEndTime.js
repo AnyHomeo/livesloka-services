@@ -54,6 +54,7 @@ module.exports.getStartAndEndTime = (slots) => {
   if (endTimeNumber % 1 !== 0) {
     final =
       final +
+      "-" +
       (Math.floor(endTimeNumber) >= 12
         ? `${
             Math.floor(endTimeNumber) !== 12
