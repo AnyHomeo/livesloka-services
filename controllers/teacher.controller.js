@@ -312,10 +312,10 @@ exports.getAllDaysSlots = async (req, res) => {
     let availableSlotsData = await TeacherModel.findOne({ id }).select(
       "availableSlots -_id"
     );
-    let scheduledSlotsData = await Schedule.find({ teacher: id }).populate(
-      "students",
-      "firstName email"
-    );
+    let scheduledSlotsData = await Schedule.find({
+      teacher: id,
+      isDeleted: { $ne: true },
+    }).populate("students", "firstName email");
     return res.status(200).json({
       message: "data retrieved successfully",
       availableSlots: availableSlotsData.availableSlots,
@@ -328,13 +328,17 @@ exports.getAllDaysSlots = async (req, res) => {
 };
 
 exports.GetTeacherMeetings = async (req, res) => {
-  Schedule.find({ teacher: req.params.id })
-    .populate('subject')
-    .populate('students')
+  Schedule.find({ teacher: req.params.id, isDeleted: { $ne: true } })
+    .populate("subject")
+    .populate("students")
     .then((result) => {
-      return res.status(200).json({ message: "Fetched  meetings successfully", result })
+      return res
+        .status(200)
+        .json({ message: "Fetched  meetings successfully", result });
     })
-    .catch((err => {
-      return res.status(400).json({ message: "Fetched meetings  problem", err })
-    }))
-}
+    .catch((err) => {
+      return res
+        .status(400)
+        .json({ message: "Fetched meetings  problem", err });
+    });
+};
