@@ -198,7 +198,7 @@ exports.deleteSlot = (req, res) => {
 };
 
 exports.getAllTEachers = (req, res) => {
-  CustomerModel.find({})
+  CustomerModel.find({ classStatusId: "113975223750050" })
     .then((students) => {
       TeacherModel.find({})
         .then((teachers) => {

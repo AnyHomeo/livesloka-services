@@ -236,6 +236,7 @@ module.exports = {
         .json({ error: "Please provide Params", result: null });
     }
   },
+
   getCustomersAllData: (req, res) => {
     let { params } = req.query;
     params = params.split(",").join(" ");
