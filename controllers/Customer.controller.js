@@ -7,48 +7,58 @@ module.exports = {
     let customerRegData = new CustomerModel(req.body);
     customerRegData
       .save()
-      .then((val) => {
+      .then(async (val) => {
         let user = {};
-        if (req.body.firstName && req.body.lastName) {
-          user.username = req.body.firstName + " " + req.body.lastName;
-        } else if (req.body.firstName) {
-          user.username = req.body.firstName;
-        } else if (req.body.lastName) {
-          user.username = req.body.lastName;
-        } else if (req.body.email) {
-          user.username = req.body.email.split("@")[0];
-        } else {
-          user.username =
-            "Livesloka User " + Math.floor(Math.random() * 1000000 + 1);
-        }
-        if (req.body.email) {
-          user.userId = req.body.email;
-        } else if (req.body.phone) {
-          user.userId = req.body.phone;
-        } else {
-          user.userId = "Livesloka" + Math.floor(Math.random() * 1000000 + 1);
-        }
-        user.roleId = 1;
-        user.customerId = val._id;
-        user.password = "livesloka";
-        let newUserdata = new AdminModel(user);
-        newUserdata
-          .save()
-          .then((newUser) => {
-            return res.status(200).send({
-              status: "OK",
-              message:
-                "Customer data inserted and Login Credentials created Successfully",
-              result: val,
+        try {
+          const data = CustomerModel.findOne({ email: req.body.email });
+          if (data) {
+            return res.json({
+              message: "Customer added, Use old credentials to login",
             });
-          })
-          .catch((err) => {
-            return res.status(500).json({
-              status: "Internal Server Error",
-              error: "Error in creating Username and Password",
-              result: null,
+          } else {
+          }
+        } catch (error) {
+          if (req.body.firstName && req.body.lastName) {
+            user.username = req.body.firstName + " " + req.body.lastName;
+          } else if (req.body.firstName) {
+            user.username = req.body.firstName;
+          } else if (req.body.lastName) {
+            user.username = req.body.lastName;
+          } else if (req.body.email) {
+            user.username = req.body.email.split("@")[0];
+          } else {
+            user.username =
+              "Livesloka User " + Math.floor(Math.random() * 1000000 + 1);
+          }
+          if (req.body.email) {
+            user.userId = req.body.email;
+          } else if (req.body.phone) {
+            user.userId = req.body.phone;
+          } else {
+            user.userId = "Livesloka" + Math.floor(Math.random() * 1000000 + 1);
+          }
+          user.roleId = 1;
+          user.customerId = val._id;
+          user.password = "livesloka";
+          let newUserdata = new AdminModel(user);
+          newUserdata
+            .save()
+            .then((newUser) => {
+              return res.status(200).send({
+                status: "OK",
+                message:
+                  "Customer data inserted and Login Credentials created Successfully",
+                result: val,
+              });
+            })
+            .catch((err) => {
+              return res.status(500).json({
+                status: "Internal Server Error",
+                error: "Error in creating Username and Password",
+                result: null,
+              });
             });
-          });
+        }
       })
       .catch((err) => {
         console.log(err);
