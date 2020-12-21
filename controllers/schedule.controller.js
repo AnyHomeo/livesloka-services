@@ -196,7 +196,9 @@ exports.editSchedule = async (req, res) => {
                 let arr = slots[day];
                 arr.forEach((slot) => {
                   let index = availableSlots.indexOf(slot);
-                  data.availableSlots.splice(index, 1);
+                  if (index != -1) {
+                    data.availableSlots.splice(index, 1);
+                  }
                   data.scheduledSlots.push(slot);
                 });
               });
