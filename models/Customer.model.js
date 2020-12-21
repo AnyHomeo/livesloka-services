@@ -46,6 +46,10 @@ const Customer = new mongoose.Schema(
       trim: true,
       type: String,
     },
+    subjectId: {
+      trim: true,
+      type: String,
+    },
     timeZoneId: {
       trim: true,
       type: String,
