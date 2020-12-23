@@ -225,8 +225,9 @@ module.exports.addField = (req, res) => {
         if (name == "Teacher") {
           let body = {
             username: result.TeacherName,
-            userId: result.id,
+            userId: result.teacherMail || result.teacherName,
             roleId: 2,
+            teacherId: result.id,
           };
           const newTeacher = new admin(body);
           newTeacher
@@ -388,14 +389,12 @@ module.exports.getAllAdmins = (req, res) => {
     });
 };
 
-
 module.exports.getSingleTeacher = (req, res) => {
-
   AdminModel.find({ userId: req.params.id })
     .then((result) => {
-      return res.status(200).json({ message: "Fetched successfully", result })
+      return res.status(200).json({ message: "Fetched successfully", result });
     })
-    .catch((err => {
-      return res.status(400).json({ message: "Fetched  problem", err })
-    }))
-}
+    .catch((err) => {
+      return res.status(400).json({ message: "Fetched  problem", err });
+    });
+};

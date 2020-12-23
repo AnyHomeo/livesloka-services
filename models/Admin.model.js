@@ -27,6 +27,10 @@ var adminSchema = new mongoose.Schema(
       ref: "Customer",
       trim: true,
     },
+    teacherId: {
+      type: String,
+      trim: true,
+    },
     password: {
       type: String,
       required: "Password can't be empty",
