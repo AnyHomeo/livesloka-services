@@ -30,6 +30,9 @@ exports.addSchedule = async (req, res) => {
   saturday = saturday ? saturday : [];
   sunday = sunday ? sunday : [];
   let className = "";
+  meetingLink = meetingLink.startsWith("http")
+    ? meetingLink
+    : "https://" + meetingLink;
 
   try {
     let selectedSubject = await Subject.findOne({ _id: subject }).lean();
@@ -43,6 +46,29 @@ exports.addSchedule = async (req, res) => {
       error: "Can't Add className",
     });
   }
+  let scheduleDescription = "Attend meeting every ";
+  if (monday.length) {
+    scheduleDescription += `Monday( ${getStartAndEndTime(monday)} )`;
+  }
+  if (tuesday.length) {
+    scheduleDescription += `, Tuesday( ${getStartAndEndTime(tuesday)} )`;
+  }
+  if (wednesday.length) {
+    scheduleDescription += `, Wednesday( ${getStartAndEndTime(wednesday)} ) `;
+  }
+  if (thursday.length) {
+    scheduleDescription += `, Thursday( ${getStartAndEndTime(thursday)} )`;
+  }
+  if (friday.length) {
+    scheduleDescription += `, Friday( ${getStartAndEndTime(friday)} ) `;
+  }
+  if (saturday.length) {
+    scheduleDescription += `, Saturday( ${getStartAndEndTime(saturday)} )`;
+  }
+  if (sunday.length) {
+    scheduleDescription += `, Sunday( ${getStartAndEndTime(sunday)} )`;
+  }
+
   const schedule = new Schedule({
     meetingAccount,
     meetingLink,
@@ -61,35 +87,11 @@ exports.addSchedule = async (req, res) => {
     demo,
     className,
     subject,
+    scheduleDescription,
   });
   schedule
     .save()
     .then((scheduledData) => {
-      let scheduleDescription = "Attend meeting every ";
-      if (monday.length) {
-        scheduleDescription += `Monday( ${getStartAndEndTime(monday)} )`;
-      }
-      if (tuesday.length) {
-        scheduleDescription += `, Tuesday( ${getStartAndEndTime(tuesday)} )`;
-      }
-      if (wednesday.length) {
-        scheduleDescription += `, Wednesday( ${getStartAndEndTime(
-          wednesday
-        )} ) `;
-      }
-      if (thursday.length) {
-        scheduleDescription += `, Thursday( ${getStartAndEndTime(thursday)} )`;
-      }
-      if (friday.length) {
-        scheduleDescription += `, Friday( ${getStartAndEndTime(friday)} ) `;
-      }
-      if (saturday.length) {
-        scheduleDescription += `, Saturday( ${getStartAndEndTime(saturday)} )`;
-      }
-      if (sunday.length) {
-        scheduleDescription += `, Sunday( ${getStartAndEndTime(sunday)} )`;
-      }
-
       Customer.updateMany(
         { _id: { $in: students } },
         { meetingLink, scheduleDescription, className }
@@ -151,8 +153,7 @@ exports.addSchedule = async (req, res) => {
 
 exports.editSchedule = async (req, res) => {
   const { id } = req.params;
-  const {
-    meetingAccount,
+  let {
     meetingLink,
     teacher,
     students,
@@ -161,6 +162,14 @@ exports.editSchedule = async (req, res) => {
     demo,
     subject,
   } = req.body;
+
+  meetingLink = meetingLink.startsWith("http")
+    ? meetingLink
+    : "https://" + meetingLink;
+  req.body.meetingLink = meetingLink.startsWith("http")
+    ? meetingLink
+    : "https://" + meetingLink;
+  console.log(meetingLink);
   try {
     let selectedSubject = await Subject.findOne({ _id: subject }).lean();
     let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
@@ -173,60 +182,70 @@ exports.editSchedule = async (req, res) => {
       error: "Can't Add className",
     });
   }
-  Schedule.updateOne({ _id: id }, req.body, (err, response) => {
-    let scheduleDescription = "Attend meeting every ";
-    slots &&
-      Object.keys(slots).forEach((slotDay) => {
-        if (slots[slotDay].length) {
-          scheduleDescription += `${slotDay}( ${getStartAndEndTime(
-            slots[slotDay]
-          )} )`;
-        }
-      });
-    Customer.updateMany(
-      { _id: { $in: students } },
-      { meetingLink, scheduleDescription, className: req.body.className }
-    )
-      .then((data) => {
-        Teacher.findOne({ id: teacher }).then((data) => {
-          if (data) {
-            let { availableSlots } = data;
-            if (availableSlots) {
-              Object.keys(slots).forEach((day) => {
-                let arr = slots[day];
-                arr.forEach((slot) => {
-                  let index = availableSlots.indexOf(slot);
-                  if (index != -1) {
-                    data.availableSlots.splice(index, 1);
-                  }
-                  data.scheduledSlots.push(slot);
-                });
-              });
-            }
-            data.availableSlots = [...new Set(data.availableSlots)];
-            data.scheduledSlots = [...new Set(data.scheduledSlots)];
-            data.save((err, docs) => {
-              if (err) {
-                console.log(err);
-                return res.status(500).json({
-                  error: "error in updating teacher slots",
-                });
-              } else {
-                return res.json({
-                  message: "schedule updated successfully",
+  let scheduleDescription = "Attend meeting every ";
+  slots &&
+    Object.keys(slots).forEach((slotDay) => {
+      if (slots[slotDay].length) {
+        scheduleDescription += `${slotDay}( ${getStartAndEndTime(
+          slots[slotDay]
+        )} )`;
+      }
+    });
+  Schedule.updateOne(
+    { _id: id },
+    { ...req.body, scheduleDescription },
+    (err, response) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).json({
+          error: "Error in updating schedule",
+        });
+      }
+      Customer.updateMany(
+        { _id: { $in: students } },
+        { meetingLink, scheduleDescription, className: req.body.className }
+      )
+        .then((data) => {
+          Teacher.findOne({ id: teacher }).then((data) => {
+            if (data) {
+              let { availableSlots } = data;
+              if (availableSlots) {
+                Object.keys(slots).forEach((day) => {
+                  let arr = slots[day];
+                  arr.forEach((slot) => {
+                    let index = availableSlots.indexOf(slot);
+                    if (index != -1) {
+                      data.availableSlots.splice(index, 1);
+                    }
+                    data.scheduledSlots.push(slot);
+                  });
                 });
               }
-            });
-          }
+              data.availableSlots = [...new Set(data.availableSlots)];
+              data.scheduledSlots = [...new Set(data.scheduledSlots)];
+              data.save((err, docs) => {
+                if (err) {
+                  console.log(err);
+                  return res.status(500).json({
+                    error: "error in updating teacher slots",
+                  });
+                } else {
+                  return res.json({
+                    message: "schedule updated successfully",
+                  });
+                }
+              });
+            }
+          });
+        })
+        .catch((err) => {
+          console.log(err);
+          return res.status(400).json({
+            error: "error in updating students Links and Description",
+          });
         });
-      })
-      .catch((err) => {
-        console.log(err);
-        return res.status(400).json({
-          error: "error in updating students Links and Description",
-        });
-      });
-  });
+    }
+  );
 };
 
 exports.deleteScheduleById = async (req, res) => {

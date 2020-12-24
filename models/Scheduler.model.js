@@ -41,6 +41,10 @@ const SchedulerSchema = new mongoose.Schema({
     ref: "Subject",
     required: "Subject is Required",
   },
+  scheduleDescription: {
+    type: String,
+    trim: true,
+  },
   className: {
     type: String,
     trim: true,

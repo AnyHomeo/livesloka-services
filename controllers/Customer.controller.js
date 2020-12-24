@@ -1,6 +1,8 @@
 const CustomerModel = require("../models/Customer.model");
 const AdminModel = require("../models/Admin.model");
 const AttendanceModel = require("../models/Attendance");
+const SubjectsModel = require("../models/Subject.model");
+const ScheduleModel = require("../models/Scheduler.model");
 
 module.exports = {
   async registerCustomer(req, res) {
@@ -10,55 +12,57 @@ module.exports = {
       .then(async (val) => {
         let user = {};
         try {
-          const data = CustomerModel.findOne({ email: req.body.email });
+          const data = await AdminModel.findOne({ userId: val.email });
           if (data) {
             return res.json({
+              status: "OK",
               message: "Customer added, Use old credentials to login",
+              result: val,
             });
           } else {
-          }
-        } catch (error) {
-          if (req.body.firstName && req.body.lastName) {
-            user.username = req.body.firstName + " " + req.body.lastName;
-          } else if (req.body.firstName) {
-            user.username = req.body.firstName;
-          } else if (req.body.lastName) {
-            user.username = req.body.lastName;
-          } else if (req.body.email) {
-            user.username = req.body.email.split("@")[0];
-          } else {
-            user.username =
-              "Livesloka User " + Math.floor(Math.random() * 1000000 + 1);
-          }
-          if (req.body.email) {
-            user.userId = req.body.email;
-          } else if (req.body.phone) {
-            user.userId = req.body.phone;
-          } else {
-            user.userId = "Livesloka" + Math.floor(Math.random() * 1000000 + 1);
-          }
-          user.roleId = 1;
-          user.customerId = val._id;
-          user.password = "livesloka";
-          let newUserdata = new AdminModel(user);
-          newUserdata
-            .save()
-            .then((newUser) => {
-              return res.status(200).send({
-                status: "OK",
-                message:
-                  "Customer data inserted and Login Credentials created Successfully",
-                result: val,
+            if (req.body.firstName && req.body.lastName) {
+              user.username = req.body.firstName + " " + req.body.lastName;
+            } else if (req.body.firstName) {
+              user.username = req.body.firstName;
+            } else if (req.body.lastName) {
+              user.username = req.body.lastName;
+            } else if (req.body.email) {
+              user.username = req.body.email.split("@")[0];
+            } else {
+              user.username =
+                "Livesloka User " + Math.floor(Math.random() * 1000000 + 1);
+            }
+            if (req.body.email) {
+              user.userId = req.body.email;
+            } else if (req.body.phone) {
+              user.userId = req.body.phone;
+            } else {
+              user.userId =
+                "Livesloka" + Math.floor(Math.random() * 1000000 + 1);
+            }
+            user.roleId = 1;
+            user.customerId = val._id;
+            user.password = "livesloka";
+            let newUserdata = new AdminModel(user);
+            newUserdata
+              .save()
+              .then((newUser) => {
+                return res.status(200).send({
+                  status: "OK",
+                  message:
+                    "Customer data inserted and Login Credentials created Successfully",
+                  result: val,
+                });
+              })
+              .catch((err) => {
+                return res.status(500).json({
+                  status: "Internal Server Error",
+                  error: "Error in creating Username and Password",
+                  result: null,
+                });
               });
-            })
-            .catch((err) => {
-              return res.status(500).json({
-                status: "Internal Server Error",
-                error: "Error in creating Username and Password",
-                result: null,
-              });
-            });
-        }
+          }
+        } catch (error) {}
       })
       .catch((err) => {
         console.log(err);
@@ -78,7 +82,7 @@ module.exports = {
         res.status(200).json({
           message: "Customer data retrieved",
           status: "OK",
-          result: result,
+          result,
         });
       })
       .catch((err) => {
@@ -187,22 +191,60 @@ module.exports = {
     }
   },
 
-  getCustomersAllData: (req, res) => {
-    let { params } = req.query;
-    params = params.split(",").join(" ");
-    CustomerModel.find()
-      .select(params)
-      .then((data) => {
-        return res.status(200).json({
-          message: "retrieved students successfully",
-          result: data,
+  getCustomersAllData: async (req, res) => {
+    try {
+      let { params } = req.query;
+      const subjects = await SubjectsModel.find().select("subjectName id");
+      params = params.split(",").join(" ");
+      CustomerModel.find()
+        .select(params)
+        .lean()
+        .then((data) => {
+          data = data.map((customer) => {
+            if (customer.subjectId) {
+              return {
+                ...customer,
+                subject: subjects.filter(
+                  (subject) => subject.id == customer.subjectId
+                )[0],
+              };
+            } else {
+              return customer;
+            }
+          });
+          return res.status(200).json({
+            message: "retrieved students successfully",
+            result: data,
+          });
+        })
+        .catch((err) => {
+          console.log(err);
+          return res.status(500).json({
+            message: "Error in retrieving data",
+          });
         });
-      })
-      .catch((err) => {
-        console.log(err);
-        return res.status(500).json({
-          message: "Error in retrieving data",
-        });
+    } catch (error) {}
+  },
+
+  getAllSchedulesByMail: async (req, res) => {
+    try {
+      const { email } = req.body;
+      let customers = await CustomerModel.find({ email })
+        .select("_id scheduleDescription")
+        .lean();
+      let customerIds = customers.map((customer) => customer._id);
+      let schedules = await ScheduleModel.find({
+        isDeleted: { $ne: true },
+        students: { $in: customerIds },
       });
+      return res.json({
+        result: schedules,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.json({
+        error: "Error in retrieving the data",
+      });
+    }
   },
 };

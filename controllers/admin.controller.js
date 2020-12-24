@@ -181,11 +181,62 @@ module.exports.updateCorrespondingData = (req, res) => {
     vell
       .updateOne({ id: req.body.id }, req.body)
       .then((result) => {
-        res.status(200).json({
-          status: "OK",
-          message: `${req.params.name} updated successfully`,
-          result,
-        });
+        if (req.params.name == "Teacher") {
+          AdminModel.findOne({ teacherId: req.body.id })
+            .then((data) => {
+              if (data) {
+                data.userId = req.body.teacherMail;
+                data.save((err, docs) => {
+                  if (err) {
+                    return res.status(500).json({
+                      error: "Error in updating userId",
+                    });
+                  } else if (docs) {
+                    return res.json({
+                      status: "OK",
+                      message: "teacher Updated successfully",
+                      result,
+                    });
+                  }
+                });
+              } else {
+                let body = {
+                  username: req.body.TeacherName,
+                  userId: req.body.teacherMail || req.body.teacherName,
+                  roleId: 2,
+                  teacherId: req.body.id,
+                };
+                const newTeacher = new admin(body);
+                newTeacher
+                  .save()
+                  .then((result) => {
+                    return res.json({
+                      message: "teacher Updated successfully",
+                      status: "OK",
+                      result,
+                    });
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                    return res.status(500).json({
+                      error: "Error in Creating userId",
+                    });
+                  });
+              }
+            })
+            .catch((err) => {
+              console.log(err);
+              return res.status(500).json({
+                error: "Something went wrong",
+              });
+            });
+        } else {
+          return res.status(200).json({
+            status: "OK",
+            message: `${req.params.name} updated successfully`,
+            result,
+          });
+        }
       })
       .catch((err) => {
         res.status(500);
