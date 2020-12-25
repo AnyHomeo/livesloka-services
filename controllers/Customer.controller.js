@@ -247,4 +247,21 @@ module.exports = {
       });
     }
   },
+
+  getRequestedData: async (req, res) => {
+    try {
+      let { email, q } = req.query;
+      q = q.split(",").join(" ");
+      const customers = await CustomerModel.find({ email }).select(q);
+      return res.json({
+        message: "Data retrieved sucessfully",
+        result: customers,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        error: "Internal Server error",
+      });
+    }
+  },
 };
