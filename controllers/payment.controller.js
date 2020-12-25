@@ -20,7 +20,7 @@ exports.makePayment = async (req, res) => {
     console.log(user.proposedCurrencyId);
     const currency = await Currency.findOne({ id: user.proposedCurrencyId });
     console.log(user);
-    if (user.proposedAmount) {
+    if (user.proposedAmount && currency) {
       let price = user.proposedAmount.toString();
       console.log(price);
       const payment_json = {
@@ -73,7 +73,7 @@ exports.makePayment = async (req, res) => {
       });
     } else {
       return res.status(500).json({
-        error: "Please Contact Admin!",
+        error: "Please Contact Admin! to add Amount or Currency type",
       });
     }
   } catch (error) {
