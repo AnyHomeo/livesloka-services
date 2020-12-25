@@ -53,8 +53,10 @@ exports.makePayment = async (req, res) => {
           },
         ],
       };
+      console.log(payment_json);
       paypal.payment.create(payment_json, function (error, payment) {
         if (error) {
+          console.log(error);
           res.status(500).json({
             error:
               "error in creating payment, Try again after Sometime or Contact Admin",
