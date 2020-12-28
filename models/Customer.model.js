@@ -11,9 +11,8 @@ const Customer = new mongoose.Schema(
       trim: true,
       type: String,
     },
-    isPaymentDone: {
-      type: Boolean,
-      default: false,
+    paymentDate: {
+      type: Number,
     },
     email: {
       trim: true,

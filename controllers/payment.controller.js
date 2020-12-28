@@ -124,8 +124,6 @@ exports.onSuccess = async (req, res) => {
         newPayment
           .save()
           .then(async (data) => {
-            customer.isPaymentDone = true;
-            await customer.save();
             return res.redirect(
               `${process.env.USER_CLIENT_URL}/payment-success`
             );

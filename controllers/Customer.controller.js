@@ -3,6 +3,7 @@ const AdminModel = require("../models/Admin.model");
 const AttendanceModel = require("../models/Attendance");
 const SubjectsModel = require("../models/Subject.model");
 const ScheduleModel = require("../models/Scheduler.model");
+const PaymentModel = require("../models/Payments");
 
 module.exports = {
   async registerCustomer(req, res) {
@@ -230,15 +231,67 @@ module.exports = {
     try {
       const { email } = req.body;
       let customers = await CustomerModel.find({ email })
-        .select("_id scheduleDescription")
+        .select("_id scheduleDescription noOfClasses paymentDate")
         .lean();
       let customerIds = customers.map((customer) => customer._id);
       let schedules = await ScheduleModel.find({
         isDeleted: { $ne: true },
         students: { $in: customerIds },
       });
+
+      let mainSchedules = await Promise.all(
+        customers.map(async (customer) => {
+          let schedule = await ScheduleModel.findOne({
+            isDeleted: { $ne: true },
+            students: { $in: [customer._id] },
+          }).lean();
+          let latestPayment = await PaymentModel.findOne({
+            status: "SUCCESS",
+            customerId: customer._id,
+          }).sort({ createdAt: -1 });
+          if (latestPayment) {
+            let attendance = await AttendanceModel.countDocuments({
+              _id: {
+                $gt: latestPayment._id,
+              },
+              scheduleId: schedule._id,
+            }).sort({ createdAt: -1 });
+            if (!customer.noOfClasses == "0" || !!customer.noOfClasses) {
+              return {
+                ...schedule,
+                customerId: customer._id,
+                isPaymentButtonEnabled:
+                  attendance >= parseInt(customer.noOfClasses),
+              };
+            } else if (customer.paymentDate) {
+              let parsedLatestPaymentDate = Date.parse(
+                latestPayment.createdAt.toString()
+              );
+              let year = new Date().getFullYear();
+              let month = new Date().getMonth();
+              let dateThisMonth = new Date(
+                year,
+                month,
+                parseInt(customer.paymentDate)
+              ).getTime();
+              return {
+                ...schedule,
+                customerId: customer._id,
+                isPaymentButtonEnabled: dateThisMonth > parsedLatestPaymentDate,
+              };
+            }
+          } else {
+            return {
+              ...schedule,
+              customerId: customer._id,
+              isPaymentButtonEnabled: true,
+            };
+          }
+        })
+      );
+
       return res.json({
-        result: schedules,
+        result: mainSchedules,
       });
     } catch (error) {
       console.log(error);
