@@ -20,6 +20,7 @@ exports.addSchedule = async (req, res) => {
     demo,
     startDate,
     subject,
+    classname,
   } = req.body;
 
   monday = monday ? monday : [];
@@ -37,9 +38,13 @@ exports.addSchedule = async (req, res) => {
   try {
     let selectedSubject = await Subject.findOne({ _id: subject }).lean();
     let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
-    className = `${selectedSubject.subjectName} ${
-      selectedTeacher.TeacherName
-    } ${startDate} ${demo ? "Demo" : ""}`;
+    if (classname) {
+      className = classname;
+    }
+    else {
+      className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
+        } ${startDate} ${demo ? "Demo" : ""}`;
+    }
   } catch (error) {
     console.log(error);
     return res.status(400).json({
@@ -92,6 +97,7 @@ exports.addSchedule = async (req, res) => {
   schedule
     .save()
     .then((scheduledData) => {
+      console.log(scheduledData);
       Customer.updateMany(
         { _id: { $in: students } },
         { meetingLink, scheduleDescription, className }
@@ -173,9 +179,8 @@ exports.editSchedule = async (req, res) => {
   try {
     let selectedSubject = await Subject.findOne({ _id: subject }).lean();
     let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
-    req.body.className = `${selectedSubject.subjectName} ${
-      selectedTeacher.TeacherName
-    } ${startDate} ${demo ? "Demo" : ""}`;
+    req.body.className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
+      } ${startDate} ${demo ? "Demo" : ""}`;
   } catch (error) {
     console.log(error);
     return res.status(400).json({
