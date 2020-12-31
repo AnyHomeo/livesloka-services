@@ -96,6 +96,14 @@ const Customer = new mongoose.Schema(
       trim: true,
       type: String,
     },
+    numberOfClassesBought: {
+      type: Number,
+      default: 0,
+    },
+    paidTill: {
+      type: String,
+      trim: true,
+    },
   },
   { timestamps: true }
 );
