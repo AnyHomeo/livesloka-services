@@ -38,10 +38,11 @@ const getAttendance = (req, res) => {
 };
 
 const postAttendance = (req, res) => {
-  const { scheduleId, date, customers } = req.body;
+  const { scheduleId, date, customers, requestedStudents } = req.body;
   Attendance.findOne({ scheduleId, date }).then((alreadyGivenAttendance) => {
     if (alreadyGivenAttendance) {
       alreadyGivenAttendance.customers = customers;
+      alreadyGivenAttendance.requestedStudents = requestedStudents;
       alreadyGivenAttendance.save((err, savedAttendance) => {
         if (err) {
           console.log(err);
