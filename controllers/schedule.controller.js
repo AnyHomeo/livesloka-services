@@ -167,6 +167,7 @@ exports.editSchedule = async (req, res) => {
     slots,
     demo,
     subject,
+    className,
   } = req.body;
 
   meetingLink = meetingLink.startsWith("http")
@@ -179,9 +180,13 @@ exports.editSchedule = async (req, res) => {
   try {
     let selectedSubject = await Subject.findOne({ _id: subject }).lean();
     let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
-    req.body.className = `${selectedSubject.subjectName} ${
-      selectedTeacher.TeacherName
-    } ${startDate} ${demo ? "Demo" : ""}`;
+    if (className) {
+      req.body.className = className
+    }
+    else {
+      req.body.className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
+        } ${startDate} ${demo ? "Demo" : ""}`;
+    }
   } catch (error) {
     console.log(error);
     return res.status(400).json({
