@@ -90,8 +90,28 @@ const getAllAttendanceByScheduleIdAndDate = (req, res) => {
     });
 };
 
+const getAttendanceByScheduleId = (req, res) => {
+  const { scheduleId } = req.params;
+  Attendance.find({ scheduleId })
+    .populate("customers", "firstName")
+    .populate("requestedStudents", "firstName")
+    .then((data) => {
+      return res.json({
+        message: "Attendance retrieved successfully",
+        result: data,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
+      return res.status(500).json({
+        error: "error in retrieving Attendance",
+      });
+    });
+};
+
 module.exports = {
   getAttendance,
   postAttendance,
   getAllAttendanceByScheduleIdAndDate,
+  getAttendanceByScheduleId,
 };

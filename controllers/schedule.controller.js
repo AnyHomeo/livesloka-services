@@ -40,10 +40,10 @@ exports.addSchedule = async (req, res) => {
     let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
     if (classname) {
       className = classname;
-    }
-    else {
-      className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
-        } ${startDate} ${demo ? "Demo" : ""}`;
+    } else {
+      className = `${selectedSubject.subjectName} ${
+        selectedTeacher.TeacherName
+      } ${startDate} ${demo ? "Demo" : ""}`;
     }
   } catch (error) {
     console.log(error);
@@ -179,8 +179,9 @@ exports.editSchedule = async (req, res) => {
   try {
     let selectedSubject = await Subject.findOne({ _id: subject }).lean();
     let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
-    req.body.className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
-      } ${startDate} ${demo ? "Demo" : ""}`;
+    req.body.className = `${selectedSubject.subjectName} ${
+      selectedTeacher.TeacherName
+    } ${startDate} ${demo ? "Demo" : ""}`;
   } catch (error) {
     console.log(error);
     return res.status(400).json({
@@ -324,6 +325,26 @@ exports.getScheduleById = (req, res) => {
       return res.status(500).json({
         error: "Internal server error",
         result: null,
+      });
+    });
+};
+
+exports.getAllSchedules = (req, res) => {
+  let { params } = req.query;
+  params = params ? params.split(",").join(" ") : "";
+  Schedule.find({
+    isDeleted: false,
+  })
+    .select(params)
+    .then((allSchedules) => {
+      return res.json({
+        result: allSchedules,
+      });
+    })
+    .catch((error) => {
+      console.log(error);
+      return res.status(500).json({
+        error: "Internal Server error",
       });
     });
 };
