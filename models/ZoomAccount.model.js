@@ -18,10 +18,6 @@ var ZoomAccountSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    zoomJwt: {
-      type: String,
-      trim: true,
-    },
     zoomApi: {
       type: String,
       trim: true,
