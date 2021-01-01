@@ -27,7 +27,7 @@ module.exports.zoomlink = async (req, res) => {
     password: "12345",
   };
 
-  fetch("https://api.zoom.us/v2/users/srisaikamal2000@gmail.com/meetings", {
+  fetch("https://api.zoom.us/v2/users/ramkishore@livekumon.com/meetings", {
     method: "post",
     body: JSON.stringify(formData),
     headers: {
