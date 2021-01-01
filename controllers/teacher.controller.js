@@ -248,7 +248,10 @@ exports.getOccupancyDashboardData = async (req, res) => {
     );
     let allSchedules = await Schedule.find({
       isDeleted: { $ne: true },
-    }).populate("students", "firstName email");
+    })
+      .populate("students", "firstName email")
+      .populate("meetingAccount", "ZoomAccountName");
+
     let finalObject = {};
     allCategories.forEach((category) => {
       finalObject[category.categoryName] = {};
