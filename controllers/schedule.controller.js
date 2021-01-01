@@ -3,6 +3,7 @@ const Customer = require("../models/Customer.model");
 const Teacher = require("../models/Teacher.model");
 const Subject = require("../models/Subject.model");
 const { getStartAndEndTime } = require("../scripts/getStartAndEndTime");
+const ZoomAccountModel = require("../models/ZoomAccount.model");
 
 exports.addSchedule = async (req, res) => {
   let {
@@ -20,8 +21,17 @@ exports.addSchedule = async (req, res) => {
     demo,
     startDate,
     subject,
-    classname,
+    Jwtid,
+    timeSlotState,
   } = req.body;
+
+  console.log(Jwtid, timeSlotState);
+
+  let timeSlotData = [];
+
+  timeSlotState.map((slot) => {
+    timeSlotData.push(slot.split("!@#$%^&*($%^")[0]);
+  });
 
   monday = monday ? monday : [];
   tuesday = tuesday ? tuesday : [];
@@ -40,10 +50,10 @@ exports.addSchedule = async (req, res) => {
     let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
     if (classname) {
       className = classname;
-    }
-    else {
-      className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
-        } ${startDate} ${demo ? "Demo" : ""}`;
+    } else {
+      className = `${selectedSubject.subjectName} ${
+        selectedTeacher.TeacherName
+      } ${startDate} ${demo ? "Demo" : ""}`;
     }
   } catch (error) {
     console.log(error);
@@ -96,8 +106,11 @@ exports.addSchedule = async (req, res) => {
   });
   schedule
     .save()
-    .then((scheduledData) => {
-      console.log(scheduledData);
+    .then(async (scheduledData) => {
+      ZoomAccountModel.findOne({ _id: Jwtid }).then(async (data) => {
+        data.timeSlots = [...data.timeSlots, ...timeSlotData];
+        await data.save();
+      });
       Customer.updateMany(
         { _id: { $in: students } },
         { meetingLink, scheduleDescription, className }
@@ -167,6 +180,7 @@ exports.editSchedule = async (req, res) => {
     slots,
     demo,
     subject,
+    className,
   } = req.body;
 
   meetingLink = meetingLink.startsWith("http")
@@ -179,8 +193,13 @@ exports.editSchedule = async (req, res) => {
   try {
     let selectedSubject = await Subject.findOne({ _id: subject }).lean();
     let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
-    req.body.className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
+    if (className) {
+      req.body.className = className;
+    } else {
+      req.body.className = `${selectedSubject.subjectName} ${
+        selectedTeacher.TeacherName
       } ${startDate} ${demo ? "Demo" : ""}`;
+    }
   } catch (error) {
     console.log(error);
     return res.status(400).json({
@@ -324,6 +343,26 @@ exports.getScheduleById = (req, res) => {
       return res.status(500).json({
         error: "Internal server error",
         result: null,
+      });
+    });
+};
+
+exports.getAllSchedules = (req, res) => {
+  let { params } = req.query;
+  params = params ? params.split(",").join(" ") : "";
+  Schedule.find({
+    isDeleted: false,
+  })
+    .select(params)
+    .then((allSchedules) => {
+      return res.json({
+        result: allSchedules,
+      });
+    })
+    .catch((error) => {
+      console.log(error);
+      return res.status(500).json({
+        error: "Internal Server error",
       });
     });
 };
