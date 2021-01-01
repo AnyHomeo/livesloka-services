@@ -12,6 +12,7 @@ const settingsRouter = require("./routes/settings");
 const teacherRouter = require("./routes/teacher");
 const scheduleRouter = require("./routes/schedule");
 const paymentRouter = require("./routes/payment");
+const zoomlink = require("./routes/zoomlink");
 
 const app = express();
 require("dotenv").config();
@@ -32,6 +33,7 @@ app.use("/settings", settingsRouter);
 app.use("/teacher", teacherRouter);
 app.use("/schedule", scheduleRouter);
 app.use("/payment", paymentRouter);
+app.use("/link", zoomlink);
 
 const server = require("http").createServer(app);
 const PORT = process.env.PORT || 5000;
