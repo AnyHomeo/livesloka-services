@@ -34,6 +34,10 @@ var ZoomAccountSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    zoomEmail: {
+      type: String,
+      trim: true,
+    },
     timeSlots: {
       type: Array,
       default: [],

@@ -11,6 +11,8 @@ module.exports.zoomlink = async (req, res) => {
   console.log(timeSlotData);
   let token = "";
   let jwtId = "";
+  let zoomEmail = "";
+  let zoomPassword = "";
   try {
     const getJwtTokenDetails = await ZoomAccount.findOne({
       timeSlots: {
@@ -19,15 +21,17 @@ module.exports.zoomlink = async (req, res) => {
     });
     token = getJwtTokenDetails.zoomJwt;
     jwtId = getJwtTokenDetails._id;
+    zoomEmail = getJwtTokenDetails.zoomEmail;
+    zoomPassword = getJwtTokenDetails.zoomPassword;
   } catch (error) {
     console.log(error);
   }
   const formData = {
     topic: "Meeting",
-    password: "12345",
+    password: zoomPassword,
   };
 
-  fetch("https://api.zoom.us/v2/users/ramkishore@livekumon.com/meetings", {
+  fetch(`https://api.zoom.us/v2/users/${zoomEmail}/meetings`, {
     method: "post",
     body: JSON.stringify(formData),
     headers: {
