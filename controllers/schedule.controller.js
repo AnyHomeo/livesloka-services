@@ -3,6 +3,7 @@ const Customer = require("../models/Customer.model");
 const Teacher = require("../models/Teacher.model");
 const Subject = require("../models/Subject.model");
 const { getStartAndEndTime } = require("../scripts/getStartAndEndTime");
+const ZoomAccountModel = require("../models/ZoomAccount.model");
 
 exports.addSchedule = async (req, res) => {
   let {
@@ -20,7 +21,17 @@ exports.addSchedule = async (req, res) => {
     demo,
     startDate,
     subject,
+    Jwtid,
+    timeSlotState,
   } = req.body;
+
+  console.log(Jwtid, timeSlotState);
+
+  let timeSlotData = [];
+
+  timeSlotState.map((slot) => {
+    timeSlotData.push(slot.split("!@#$%^&*($%^")[0]);
+  });
 
   monday = monday ? monday : [];
   tuesday = tuesday ? tuesday : [];
@@ -91,7 +102,11 @@ exports.addSchedule = async (req, res) => {
   });
   schedule
     .save()
-    .then((scheduledData) => {
+    .then(async (scheduledData) => {
+      ZoomAccountModel.findOne({ _id: Jwtid }).then(async (data) => {
+        data.timeSlots = [...data.timeSlots, ...timeSlotData];
+        await data.save();
+      });
       Customer.updateMany(
         { _id: { $in: students } },
         { meetingLink, scheduleDescription, className }
