@@ -267,7 +267,6 @@ module.exports = {
             students: { $in: [customer._id] },
             isDeleted: { $ne: true },
           }).lean();
-          console.log(customer.paidTill);
           return {
             ...actualSchedule,
             isJoinButtonDisabled,

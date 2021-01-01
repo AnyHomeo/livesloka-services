@@ -38,10 +38,17 @@ const getAttendance = (req, res) => {
 };
 
 const postAttendance = (req, res) => {
-  const { scheduleId, date, customers, requestedStudents } = req.body;
+  const {
+    scheduleId,
+    date,
+    customers,
+    requestedStudents,
+    absentees,
+  } = req.body;
   Attendance.findOne({ scheduleId, date }).then((alreadyGivenAttendance) => {
     if (alreadyGivenAttendance) {
       alreadyGivenAttendance.customers = customers;
+      alreadyGivenAttendance.absentees = absentees;
       alreadyGivenAttendance.requestedStudents = requestedStudents;
       alreadyGivenAttendance.save((err, savedAttendance) => {
         if (err) {
@@ -93,8 +100,9 @@ const getAllAttendanceByScheduleIdAndDate = (req, res) => {
 const getAttendanceByScheduleId = (req, res) => {
   const { scheduleId } = req.params;
   Attendance.find({ scheduleId })
-    .populate("customers", "firstName")
-    .populate("requestedStudents", "firstName")
+    .populate("customers", "firstName email")
+    .populate("requestedStudents", "firstName email")
+    .populate("absentees", "firstName email")
     .then((data) => {
       return res.json({
         message: "Attendance retrieved successfully",
