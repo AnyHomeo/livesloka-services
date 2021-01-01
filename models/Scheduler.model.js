@@ -29,7 +29,8 @@ const SchedulerSchema = new mongoose.Schema(
     },
     meetingAccount: {
       trim: true,
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ZoomAccount",
       required: "Meeting Account is Required",
     },
     startDate: {
