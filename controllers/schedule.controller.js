@@ -23,7 +23,7 @@ exports.addSchedule = async (req, res) => {
     subject,
     Jwtid,
     timeSlotState,
-    className,
+    classname,
   } = req.body;
 
   console.log(Jwtid, timeSlotState);
