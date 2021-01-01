@@ -250,8 +250,8 @@ exports.getOccupancyDashboardData = async (req, res) => {
       isDeleted: { $ne: true },
     })
       .populate("students", "firstName email")
-      .populate("meetingAccount");
-    console.log(allSchedules);
+      .populate("meetingAccount", "ZoomAccountName");
+
     let finalObject = {};
     allCategories.forEach((category) => {
       finalObject[category.categoryName] = {};
