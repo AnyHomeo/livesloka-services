@@ -8,6 +8,18 @@ var AttendanceSchema = new mongoose.Schema(
         ref: "Customer",
       },
     ],
+    absentees: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Customer",
+      },
+    ],
+    requestedStudents: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Customer",
+      },
+    ],
     date: {
       trim: true,
       type: String,

@@ -2,6 +2,7 @@ const paypal = require("paypal-rest-sdk");
 const Customer = require("../models/Customer.model");
 const Payment = require("../models/Payments");
 const Currency = require("../models/Currency.model");
+const { addMonths } = require("../scripts");
 
 paypal.configure({
   mode: "sandbox", //sandbox or live
@@ -14,6 +15,7 @@ paypal.configure({
 exports.makePayment = async (req, res) => {
   try {
     const { id } = req.body;
+    console.log(id);
     const user = await Customer.findById(id).select(
       "firstName lastName className proposedAmount proposedCurrencyId"
     );
@@ -89,7 +91,7 @@ exports.onSuccess = async (req, res) => {
     const { id } = req.params;
     const { PayerID, paymentId } = req.query;
     const customer = await Customer.findById(id).select(
-      "firstName lastName className proposedAmount proposedCurrencyId"
+      "firstName lastName className proposedAmount proposedCurrencyId noOfClasses paymentDate numberOfClassesBought paidTill"
     );
     const currency = await Currency.findOne({
       id: customer.proposedCurrencyId,
@@ -106,7 +108,7 @@ exports.onSuccess = async (req, res) => {
       ],
     };
 
-    paypal.payment.execute(paymentId, execute_payment_json, function (
+    paypal.payment.execute(paymentId, execute_payment_json, async function (
       error,
       payment
     ) {
@@ -116,6 +118,24 @@ exports.onSuccess = async (req, res) => {
           error: "Something went wrong!",
         });
       } else {
+        console.log(customer.noOfClasses, customer.paymentDate);
+        if (customer.noOfClasses != 0 && !!customer.noOfClasses) {
+          customer.numberOfClassesBought =
+            customer.numberOfClassesBought + customer.noOfClasses;
+        } else if (customer.paymentDate) {
+          if (customer.paidTill) {
+            customer.paidTill = addMonths(customer.paidTill, 1);
+          } else {
+            const year = new Date().getFullYear();
+            const month = new Date().getMonth() + 1;
+            console.log(`${customer.paymentDate}-${month}-${year}`);
+            customer.paidTill = addMonths(
+              `${customer.paymentDate}-${month}-${year}`,
+              1
+            );
+          }
+        }
+        await customer.save();
         const newPayment = new Payment({
           customerId: id,
           status: "SUCCESS",

@@ -4,6 +4,7 @@ const AttendanceModel = require("../models/Attendance");
 const SubjectsModel = require("../models/Subject.model");
 const ScheduleModel = require("../models/Scheduler.model");
 const PaymentModel = require("../models/Payments");
+const moment = require("moment");
 
 module.exports = {
   async registerCustomer(req, res) {
@@ -231,62 +232,49 @@ module.exports = {
     try {
       const { email } = req.body;
       let customers = await CustomerModel.find({ email })
-        .select("_id scheduleDescription noOfClasses paymentDate")
+        .select(
+          "_id scheduleDescription noOfClasses paymentDate paidTill numberOfClassesBought"
+        )
         .lean();
       let customerIds = customers.map((customer) => customer._id);
-      let schedules = await ScheduleModel.find({
-        isDeleted: { $ne: true },
-        students: { $in: customerIds },
-      });
 
       let mainSchedules = await Promise.all(
         customers.map(async (customer) => {
-          let schedule = await ScheduleModel.findOne({
-            isDeleted: { $ne: true },
+          let schedules = await ScheduleModel.find({
             students: { $in: [customer._id] },
-          }).lean();
-          let latestPayment = await PaymentModel.findOne({
-            status: "SUCCESS",
-            customerId: customer._id,
+          });
+          let scheduleIds = schedules.map((schedule) => schedule._id);
+          let noOfClassesCompleted = await AttendanceModel.countDocuments({
+            scheduleId: { $in: scheduleIds },
+            requestedStudents: { $nin: [customer._id] },
           }).sort({ createdAt: -1 });
-          if (latestPayment) {
-            let attendance = await AttendanceModel.countDocuments({
-              _id: {
-                $gt: latestPayment._id,
-              },
-              scheduleId: schedule._id,
-            }).sort({ createdAt: -1 });
-            if (!customer.noOfClasses == "0" || !!customer.noOfClasses) {
-              return {
-                ...schedule,
-                customerId: customer._id,
-                isPaymentButtonEnabled:
-                  attendance >= parseInt(customer.noOfClasses),
-              };
-            } else if (customer.paymentDate) {
-              let parsedLatestPaymentDate = Date.parse(
-                latestPayment.createdAt.toString()
-              );
-              let year = new Date().getFullYear();
-              let month = new Date().getMonth();
-              let dateThisMonth = new Date(
-                year,
-                month,
-                parseInt(customer.paymentDate)
-              ).getTime();
-              return {
-                ...schedule,
-                customerId: customer._id,
-                isPaymentButtonEnabled: dateThisMonth > parsedLatestPaymentDate,
-              };
-            }
-          } else {
-            return {
-              ...schedule,
-              customerId: customer._id,
-              isPaymentButtonEnabled: true,
-            };
+          let isJoinButtonDisabled = true;
+          if (customer.paidTill) {
+            let dateArr = customer.paidTill.split("-").map((v) => parseInt(v));
+            let dateToday = moment()
+              .format("DD-MM-YYYY")
+              .split("-")
+              .map((v) => parseInt(v));
+            isJoinButtonDisabled =
+              dateArr[2] > dateToday[2] &&
+              dateArr[1] > dateToday[1] &&
+              dateArr[0] > dateToday[0];
+          } else if (customer.numberOfClassesBought) {
+            isJoinButtonDisabled =
+              noOfClassesCompleted >= customer.numberOfClassesBought;
           }
+          let actualSchedule = await ScheduleModel.findOne({
+            students: { $in: [customer._id] },
+            isDeleted: { $ne: true },
+          }).lean();
+          return {
+            ...actualSchedule,
+            isJoinButtonDisabled,
+            customerId: customer._id,
+            noOfClassesCompleted,
+            numberOfClassesBought: customer.numberOfClassesBought,
+            paidTill: customer.paidTill,
+          };
         })
       );
 
