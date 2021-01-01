@@ -1,3 +1,4 @@
+require("dotenv").config();
 const paypal = require("paypal-rest-sdk");
 const Customer = require("../models/Customer.model");
 const Payment = require("../models/Payments");
@@ -5,11 +6,9 @@ const Currency = require("../models/Currency.model");
 const { addMonths } = require("../scripts");
 
 paypal.configure({
-  mode: "sandbox", //sandbox or live
-  client_id:
-    "AS5jSU8LKbjLHa4iSYkVeEO_YTdPAa7AibsO3KTPAO_8TYKR_MeDUmelMNaqnEN6LrJjs__N_eqpJWrr",
-  client_secret:
-    "ELUSBgoGk_DVV2lrEYCnvx8mS04ArLtXo9i8Rl0DLszWYvigOTddFFmw8umMsDOhyyeJDHkPF5z-_cEB",
+  mode: process.env.PAYPAL_MODE, //sandbox or live
+  client_id: process.env.PAYPAL_CLIENT_ID,
+  client_secret: process.env.PAYPAL_CLIENT_SECRET,
 });
 
 exports.makePayment = async (req, res) => {
