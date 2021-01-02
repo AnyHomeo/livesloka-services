@@ -15,9 +15,9 @@ const getAttendance = (req, res) => {
         userAttendance.forEach((attendance) => {
           let dateArr = attendance.date.split("-").map((num) => parseInt(num));
           if (
-            dateArr[0] >= filterDateArr[0] &&
+            dateArr[2] >= filterDateArr[2] &&
             dateArr[1] >= filterDateArr[1] &&
-            dateArr[2] >= filterDateArr[2]
+            dateArr[0] >= filterDateArr[0]
           ) {
             filteredData.push(attendance);
           }
