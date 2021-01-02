@@ -246,6 +246,7 @@ module.exports = {
           let scheduleIds = schedules.map((schedule) => schedule._id);
           let noOfClassesCompleted = await AttendanceModel.countDocuments({
             scheduleId: { $in: scheduleIds },
+            requestedStudents: { $nin: [customer._id] },
           }).sort({ createdAt: -1 });
           let isJoinButtonDisabled = true;
           if (customer.paidTill) {
@@ -266,7 +267,6 @@ module.exports = {
             students: { $in: [customer._id] },
             isDeleted: { $ne: true },
           }).lean();
-          console.log(customer.paidTill);
           return {
             ...actualSchedule,
             isJoinButtonDisabled,

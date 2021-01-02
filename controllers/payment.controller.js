@@ -1,3 +1,4 @@
+require("dotenv").config();
 const paypal = require("paypal-rest-sdk");
 const Customer = require("../models/Customer.model");
 const Payment = require("../models/Payments");
@@ -5,26 +6,20 @@ const Currency = require("../models/Currency.model");
 const { addMonths } = require("../scripts");
 
 paypal.configure({
-  mode: "sandbox", //sandbox or live
-  client_id:
-    "AS5jSU8LKbjLHa4iSYkVeEO_YTdPAa7AibsO3KTPAO_8TYKR_MeDUmelMNaqnEN6LrJjs__N_eqpJWrr",
-  client_secret:
-    "ELUSBgoGk_DVV2lrEYCnvx8mS04ArLtXo9i8Rl0DLszWYvigOTddFFmw8umMsDOhyyeJDHkPF5z-_cEB",
+  mode: process.env.PAYPAL_MODE, //sandbox or live
+  client_id: process.env.PAYPAL_CLIENT_ID,
+  client_secret: process.env.PAYPAL_CLIENT_SECRET,
 });
 
 exports.makePayment = async (req, res) => {
   try {
     const { id } = req.body;
-    console.log(id);
     const user = await Customer.findById(id).select(
       "firstName lastName className proposedAmount proposedCurrencyId"
     );
-    console.log(user.proposedCurrencyId);
     const currency = await Currency.findOne({ id: user.proposedCurrencyId });
-    console.log(user);
-    if (user.proposedAmount && currency) {
+    if (user.proposedAmount) {
       let price = user.proposedAmount.toString();
-      console.log(price);
       const payment_json = {
         intent: "sale",
         payer: {
@@ -41,13 +36,13 @@ exports.makePayment = async (req, res) => {
                 {
                   name: user.className || "Livesloka class",
                   price,
-                  currency: currency.currencyName || "INR",
+                  currency: currency.currencyName || "USD",
                   quantity: 1,
                 },
               ],
             },
             amount: {
-              currency: currency.currencyName || "INR",
+              currency: currency.currencyName || "USD",
               total: price,
             },
             description:
@@ -55,7 +50,6 @@ exports.makePayment = async (req, res) => {
           },
         ],
       };
-      console.log(payment_json);
       paypal.payment.create(payment_json, function (error, payment) {
         if (error) {
           console.log(error);
@@ -101,7 +95,7 @@ exports.onSuccess = async (req, res) => {
       transactions: [
         {
           amount: {
-            currency: currency.currencyName || "INR",
+            currency: currency.currencyName || "USD",
             total: customer.proposedAmount.toString(),
           },
         },
@@ -118,7 +112,6 @@ exports.onSuccess = async (req, res) => {
           error: "Something went wrong!",
         });
       } else {
-        console.log(customer.noOfClasses, customer.paymentDate);
         if (customer.noOfClasses != 0 && !!customer.noOfClasses) {
           customer.numberOfClassesBought =
             customer.numberOfClassesBought + customer.noOfClasses;
@@ -128,7 +121,6 @@ exports.onSuccess = async (req, res) => {
           } else {
             const year = new Date().getFullYear();
             const month = new Date().getMonth() + 1;
-            console.log(`${customer.paymentDate}-${month}-${year}`);
             customer.paidTill = addMonths(
               `${customer.paymentDate}-${month}-${year}`,
               1

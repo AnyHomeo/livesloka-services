@@ -14,6 +14,30 @@ var ZoomAccountSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    zoomJwt: {
+      type: String,
+      trim: true,
+    },
+    zoomApi: {
+      type: String,
+      trim: true,
+    },
+    zoomSecret: {
+      type: String,
+      trim: true,
+    },
+    zoomPassword: {
+      type: String,
+      trim: true,
+    },
+    zoomEmail: {
+      type: String,
+      trim: true,
+    },
+    timeSlots: {
+      type: Array,
+      default: [],
+    },
   },
   { timestamps: true }
 );

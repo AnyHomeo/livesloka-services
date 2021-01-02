@@ -6,6 +6,7 @@ const timzone = require("../models/timeZone.model")
 const { getStartAndEndTime } = require("../scripts/getStartAndEndTime");
 const date = require('date-and-time');
 const allZones = require('../models/timeZone.json')
+const ZoomAccountModel = require("../models/ZoomAccount.model");
 
 exports.addScheduleNameChanged = async (req, res) => {
   let {
@@ -23,10 +24,17 @@ exports.addScheduleNameChanged = async (req, res) => {
     demo,
     startDate,
     subject,
+    Jwtid,
+    timeSlotState,
     classname,
   } = req.body;
 
   console.log(req.body)
+  let timeSlotData = [];
+
+  timeSlotState.map((slot) => {
+    timeSlotData.push(slot.split("!@#$%^&*($%^")[0]);
+  });
 
   monday = monday ? monday : [];
   tuesday = tuesday ? tuesday : [];
@@ -45,8 +53,7 @@ exports.addScheduleNameChanged = async (req, res) => {
     let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
     if (classname) {
       className = classname;
-    }
-    else {
+    } else {
       className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
         } ${startDate} ${demo ? "Demo" : ""}`;
     }
@@ -101,8 +108,11 @@ exports.addScheduleNameChanged = async (req, res) => {
   });
   schedule
     .save()
-    .then((scheduledData) => {
-      console.log(scheduledData);
+    .then(async (scheduledData) => {
+      ZoomAccountModel.findOne({ _id: Jwtid }).then(async (data) => {
+        data.timeSlots = [...data.timeSlots, ...timeSlotData];
+        await data.save();
+      });
       Customer.updateMany(
         { _id: { $in: students } },
         { meetingLink, scheduleDescription, className }
@@ -690,14 +700,12 @@ exports.editSchedule = async (req, res) => {
   req.body.meetingLink = meetingLink.startsWith("http")
     ? meetingLink
     : "https://" + meetingLink;
-  console.log(meetingLink);
   try {
     let selectedSubject = await Subject.findOne({ _id: subject }).lean();
     let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
     if (className) {
-      req.body.className = className
-    }
-    else {
+      req.body.className = className;
+    } else {
       req.body.className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
         } ${startDate} ${demo ? "Demo" : ""}`;
     }
@@ -844,6 +852,26 @@ exports.getScheduleById = (req, res) => {
       return res.status(500).json({
         error: "Internal server error",
         result: null,
+      });
+    });
+};
+
+exports.getAllSchedules = (req, res) => {
+  let { params } = req.query;
+  params = params ? params.split(",").join(" ") : "";
+  Schedule.find({
+    isDeleted: false,
+  })
+    .select(params)
+    .then((allSchedules) => {
+      return res.json({
+        result: allSchedules,
+      });
+    })
+    .catch((error) => {
+      console.log(error);
+      return res.status(500).json({
+        error: "Internal Server error",
       });
     });
 };

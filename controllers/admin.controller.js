@@ -108,7 +108,6 @@ module.exports.getComments = (req, res) => {
 };
 
 module.exports.updatecomment = (req, res) => {
-  console.log(req.body);
   Comment.updateOne({ _id: req.body._id }, req.body)
     .then((result) => {
       res
@@ -121,7 +120,6 @@ module.exports.updatecomment = (req, res) => {
 };
 
 module.exports.deletecomment = (req, res) => {
-  console.log(req.body);
   Comment.deleteOne({ _id: req.body._id })
     .then((result) => {
       res
@@ -271,8 +269,6 @@ module.exports.addField = (req, res) => {
     model
       .save()
       .then((result) => {
-        console.log(result);
-        console.log(name);
         if (name == "Teacher") {
           let body = {
             username: result.TeacherName,
