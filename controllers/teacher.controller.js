@@ -208,7 +208,6 @@ exports.getAllTEachers = (req, res) => {
           for (i = 0; i < teachersLen; i++) {
             let currentTeacher = teachers[i];
             obje[currentTeacher.TeacherName] = [];
-            console.log(currentTeacher.TeacherName);
             for (j = 0; j < studentslen; j++) {
               let currentStud = students[j];
               let obj = {};

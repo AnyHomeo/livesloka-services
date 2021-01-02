@@ -26,8 +26,6 @@ exports.addSchedule = async (req, res) => {
     classname,
   } = req.body;
 
-  console.log(Jwtid, timeSlotState);
-
   let timeSlotData = [];
 
   timeSlotState.map((slot) => {
@@ -190,7 +188,6 @@ exports.editSchedule = async (req, res) => {
   req.body.meetingLink = meetingLink.startsWith("http")
     ? meetingLink
     : "https://" + meetingLink;
-  console.log(meetingLink);
   try {
     let selectedSubject = await Subject.findOne({ _id: subject }).lean();
     let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();

@@ -14,16 +14,12 @@ paypal.configure({
 exports.makePayment = async (req, res) => {
   try {
     const { id } = req.body;
-    console.log(id);
     const user = await Customer.findById(id).select(
       "firstName lastName className proposedAmount proposedCurrencyId"
     );
-    console.log(user.proposedCurrencyId);
     const currency = await Currency.findOne({ id: user.proposedCurrencyId });
-    console.log(user);
     if (user.proposedAmount) {
       let price = user.proposedAmount.toString();
-      console.log(price);
       const payment_json = {
         intent: "sale",
         payer: {
@@ -54,7 +50,6 @@ exports.makePayment = async (req, res) => {
           },
         ],
       };
-      console.log(payment_json);
       paypal.payment.create(payment_json, function (error, payment) {
         if (error) {
           console.log(error);
@@ -117,7 +112,6 @@ exports.onSuccess = async (req, res) => {
           error: "Something went wrong!",
         });
       } else {
-        console.log(customer.noOfClasses, customer.paymentDate);
         if (customer.noOfClasses != 0 && !!customer.noOfClasses) {
           customer.numberOfClassesBought =
             customer.numberOfClassesBought + customer.noOfClasses;
@@ -127,7 +121,6 @@ exports.onSuccess = async (req, res) => {
           } else {
             const year = new Date().getFullYear();
             const month = new Date().getMonth() + 1;
-            console.log(`${customer.paymentDate}-${month}-${year}`);
             customer.paidTill = addMonths(
               `${customer.paymentDate}-${month}-${year}`,
               1

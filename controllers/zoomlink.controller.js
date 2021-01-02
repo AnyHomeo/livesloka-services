@@ -8,7 +8,6 @@ module.exports.zoomlink = async (req, res) => {
   req.body.map((slot) => {
     timeSlotData.push(slot.split("!@#$%^&*($%^")[0]);
   });
-  console.log(timeSlotData);
   let token = "";
   let jwtId = "";
   let zoomEmail = "";
@@ -41,7 +40,6 @@ module.exports.zoomlink = async (req, res) => {
   })
     .then((res) => res.json())
     .then((json) => {
-      console.log(json);
       if (json.code === 1001) {
         return res.status(400).json({
           message: "Error while creating meeting link",
@@ -60,7 +58,6 @@ module.exports.zoomDetails = async (req, res) => {
 
   try {
     const zoomaccountDetails = await ZoomAccountModel.findById(id);
-    console.log(zoomaccountDetails);
 
     if (zoomaccountDetails === null) {
       return res.status(400).json({
