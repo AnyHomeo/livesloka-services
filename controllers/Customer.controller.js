@@ -274,6 +274,7 @@ module.exports = {
             noOfClassesCompleted,
             numberOfClassesBought: customer.numberOfClassesBought,
             paidTill: customer.paidTill,
+            scheduleDescription: customer.scheduleDescription,
           };
         })
       );
