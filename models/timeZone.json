@@ -62,7 +62,7 @@
     },
     {
       "value": "Pacific Daylight Time",
-      "abbr": "PDT",
+      "abbr": "PST",
       "offset": -7,
       "isdst": true,
       "text": "(UTC-07:00) Pacific Time (US & Canada)",
@@ -1135,7 +1135,7 @@
     },
     {
       "value": "Singapore Standard Time",
-      "abbr": "MPST",
+      "abbr": "SGT",
       "offset": 8,
       "isdst": false,
       "text": "(UTC+08:00) Kuala Lumpur, Singapore",
@@ -1151,7 +1151,7 @@
     },
     {
       "value": "W. Australia Standard Time",
-      "abbr": "WAST",
+      "abbr": "AWST",
       "offset": 8,
       "isdst": false,
       "text": "(UTC+08:00) Perth",
@@ -1235,17 +1235,6 @@
       "text": "(UTC+09:30) Darwin",
       "utc": [
         "Australia/Darwin"
-      ]
-    },
-    {
-      "value": "E. Australia Standard Time",
-      "abbr": "EAST",
-      "offset": 10,
-      "isdst": false,
-      "text": "(UTC+10:00) Brisbane",
-      "utc": [
-        "Australia/Brisbane",
-        "Australia/Lindeman"
       ]
     },
     {

@@ -203,6 +203,7 @@ const slotPreproccesor = (slots) => {
 
   let slotS = slots;
 
+
   Object.keys(slotS).map((slot) => {
     let evalstamps = [];
     if (slotS[slot].length > 0) {
@@ -326,6 +327,9 @@ function consecutive(array) {
 }
 
 const SlotConverter = (data, timezon) => {
+
+  data = slotPreproccesor(data);
+  console.log(data);
   let slotie = [];
   let trgtName = timeZoneNameGetter(timezon);
   console.log(trgtName);
@@ -461,7 +465,6 @@ const SlotConverter = (data, timezon) => {
           }
 
         }
-
         else {
           console.log("tempp is ", temp)
           //console.log(":what")
@@ -504,6 +507,8 @@ const postProcess = (data, cn) => {
 }
 
 const scheduleDescriptionGenerator = (dataSlots) => {
+  slots = slotPreproccesor(dataSlots);
+  console.log(dataSlots);
   let scheduleDes = "Attend meeting every";
   Object.keys(dataSlots).map((ds) => {
     if (dataSlots[ds].length > 0) {
@@ -532,7 +537,7 @@ exports.addSchedule = async (req, res) => {
     classname,
   } = req.body;
 
-  let slots = {
+  let slotees = {
     monday,
     tuesday,
     wednesday,
@@ -541,8 +546,6 @@ exports.addSchedule = async (req, res) => {
     saturday,
     sunday,
   }
-  slots = slotPreproccesor(slots);
-  console.log(slots)
 
 
   monday = monday ? monday : [];
@@ -573,7 +576,7 @@ exports.addSchedule = async (req, res) => {
       error: "Can't Add className",
     });
   }
-  let scheduleDescription = scheduleDescriptionGenerator(slots);
+  let scheduleDescription = scheduleDescriptionGenerator(slotees);
 
 
   const schedule = new Schedule({
@@ -582,7 +585,15 @@ exports.addSchedule = async (req, res) => {
     teacher,
     students,
     startDate,
-    slots,
+    slots: {
+      monday,
+      tuesday,
+      wednesday,
+      thursday,
+      friday,
+      saturday,
+      sunday
+    },
     demo,
     className,
     subject,
