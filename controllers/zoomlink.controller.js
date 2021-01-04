@@ -49,7 +49,7 @@ module.exports.zoomlink = async (req, res) => {
       }
       return res.status(200).json({
         message: "Meeting created successfully",
-        result: { link: json.join_url, id: jwtId },
+        result: { link: json.join_url, id: jwtId, email: zoomEmail },
       });
     })
     .catch((err) => console.log(err));
