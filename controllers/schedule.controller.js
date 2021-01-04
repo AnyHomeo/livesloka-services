@@ -199,9 +199,9 @@ const timeZoneNameGetter = (name) => {
   return selectedZone[0].utc[0];
 }
 
-const slotPreproccesor = (slots) => {
+const slotPreproccesor = (sluts) => {
 
-  let slotS = slots;
+  let slotS = sluts;
 
 
   Object.keys(slotS).map((slot) => {
@@ -210,7 +210,6 @@ const slotPreproccesor = (slots) => {
       //console.log(slotS[slot]);
       if (slotS[slot].length > 1) {
         for (slotindex = 0; slotindex < slotS[slot].length; slotindex++) {
-          console.log(slotS[slot][slotindex]);
           let stamp = slotS[slot][slotindex].split("-")
           //console.log(stamp)
           for (stampIndex = 1; stampIndex < stamp.length; stampIndex++) {
@@ -220,18 +219,17 @@ const slotPreproccesor = (slots) => {
               if (timValue[1].startsWith("00")) {
                 if (timValue[0].startsWith("0")) {
                   timValue[0] = timValue[0].substring(1);
-                  console.log(timValue[0]);
                 }
                 evalstamps.push(timValue[0])
               }
               else {
-                console.log("from ", timValue[0]);
+
                 timValue[0] = Number(timValue[0]) + 0.5;
                 timValue[0] = String(timValue[0]);
                 //console.log("to ", timValue)
                 if (timValue[0].startsWith("0")) {
                   timValue[0] = timValue[0].substring(1);
-                  console.log("final", timValue[0]);
+
                 }
                 evalstamps.push(timValue[0])
               }
@@ -262,11 +260,11 @@ const slotPreproccesor = (slots) => {
       let maxtime = arrayMax(evalstamps);
       let convertedStamps = covertIntToTimes([mintime, maxtime]);
       let finalStr = `${slot.toUpperCase()}-${convertedStamps[0]}-${convertedStamps[1]}`
-      slots[slot] = [finalStr];
+      sluts[slot] = [finalStr];
       //console.log(slots[slot]);
     }
   })
-  return slots;
+  return sluts;
 
 }
 
@@ -329,10 +327,8 @@ function consecutive(array) {
 const SlotConverter = (data, timezon) => {
 
   data = slotPreproccesor(data);
-  console.log(data);
   let slotie = [];
   let trgtName = timeZoneNameGetter(timezon);
-  console.log(trgtName);
   Object.keys(data).map(key => {
 
     if (data[key].length > 0) {
@@ -340,7 +336,6 @@ const SlotConverter = (data, timezon) => {
         let temp = data[key][j].split("-");
 
         if (temp[0] === 'MONDAY') {
-          console.log("tempp is ", temp)
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
               let tim = convertTZ(`Jan 11 2021 ${temp[k]} GMT+0530 (India Standard Time)`, trgtName)
@@ -353,14 +348,14 @@ const SlotConverter = (data, timezon) => {
               let ti = convertTime12to24(temp[k]);
               let tim = convertTZ(`Jan 11 2021 ${ti} GMT+0530 (India Standard Time)`, trgtName)
               let d = date.format(tim, 'dddd-hh:mm A ');
-              console.log(d);
+
               slotie.push(d);
             }
           }
 
         }
         else if (temp[0] === 'TUESDAY') {
-          console.log("tempp is ", temp)
+
           //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
@@ -374,14 +369,14 @@ const SlotConverter = (data, timezon) => {
               let ti = convertTime12to24(temp[k]);
               let tim = convertTZ(`Jan 12 2021 ${ti} GMT+0530 (India Standard Time)`, trgtName)
               let d = date.format(tim, 'dddd-hh:mm A ');
-              console.log(d);
+
               slotie.push(d);
             }
           }
 
         }
         else if (temp[0] === 'WEDNESDAY') {
-          console.log("tempp is ", temp)
+
           //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
@@ -395,14 +390,14 @@ const SlotConverter = (data, timezon) => {
               let ti = convertTime12to24(temp[k]);
               let tim = convertTZ(`Jan 13 2021 ${ti} GMT+0530 (India Standard Time)`, trgtName)
               let d = date.format(tim, 'dddd-hh:mm A ');
-              console.log(d);
+
               slotie.push(d);
             }
           }
 
         }
         else if (temp[0] === 'THRUSDAY') {
-          console.log("tempp is ", temp)
+
           //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
@@ -416,14 +411,14 @@ const SlotConverter = (data, timezon) => {
               let ti = convertTime12to24(temp[k]);
               let tim = convertTZ(`Jan 14 2021 ${ti} GMT+0530 (India Standard Time)`, trgtName)
               let d = date.format(tim, 'dddd-hh:mm A ');
-              console.log(d);
+              ;
               slotie.push(d);
             }
           }
 
         }
         else if (temp[0] === 'FRIDAY') {
-          console.log("tempp is ", temp)
+
           //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
@@ -437,7 +432,7 @@ const SlotConverter = (data, timezon) => {
               let ti = convertTime12to24(temp[k]);
               let tim = convertTZ(`Jan 15 2021 ${ti} GMT+0530 (India Standard Time)`, trgtName)
               let d = date.format(tim, 'dddd-hh:mm A ');
-              console.log(d);
+
               slotie.push(d);
             }
           }
@@ -445,7 +440,7 @@ const SlotConverter = (data, timezon) => {
         }
 
         else if (temp[0] === 'SATURDAY') {
-          console.log("tempp is ", temp)
+
           //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
@@ -459,14 +454,14 @@ const SlotConverter = (data, timezon) => {
               let ti = convertTime12to24(temp[k]);
               let tim = convertTZ(`Jan 16 2021 ${ti} GMT+0530 (India Standard Time)`, trgtName)
               let d = date.format(tim, 'dddd-hh:mm A ');
-              console.log(d);
+
               slotie.push(d);
             }
           }
 
         }
         else {
-          console.log("tempp is ", temp)
+
           //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
@@ -480,7 +475,7 @@ const SlotConverter = (data, timezon) => {
               let ti = convertTime12to24(temp[k]);
               let tim = convertTZ(`Jan 17 2021 ${ti} GMT+0530 (India Standard Time)`, trgtName)
               let d = date.format(tim, 'dddd-hh:mm A ');
-              console.log(d);
+
               slotie.push(d);
             }
           }
@@ -502,12 +497,13 @@ const postProcess = (data, cn) => {
     schdarr.push(schd);
   }
   var schString = schdarr.join(" and ");
-  schString = `Attend ${cn}  ${schString}`
+  schString = ` ${cn}  ${schString}`
   return schString;
 }
 
 const scheduleDescriptionGenerator = (dataSlots) => {
-  slots = slotPreproccesor(dataSlots);
+  console.log("from schedulerDEsc");
+  dataslots = slotPreproccesor(dataSlots);
   console.log(dataSlots);
   let scheduleDes = "Attend meeting every";
   Object.keys(dataSlots).map((ds) => {
@@ -546,8 +542,6 @@ exports.addSchedule = async (req, res) => {
     saturday,
     sunday,
   }
-
-
   monday = monday ? monday : [];
   tuesday = tuesday ? tuesday : [];
   wednesday = wednesday ? wednesday : [];
@@ -705,6 +699,28 @@ exports.editSchedule = async (req, res) => {
     className,
   } = req.body;
 
+  let {
+    monday,
+    tuesday,
+    wednesday,
+    thursday,
+    friday,
+    saturday,
+    sunday
+  } = req.body.slots;
+
+  let slotschange = {
+    monday,
+    tuesday,
+    wednesday,
+    thursday,
+    friday,
+    saturday,
+    sunday
+  }
+
+  console.log(slotschange);
+
   meetingLink = meetingLink.startsWith("http")
     ? meetingLink
     : "https://" + meetingLink;
@@ -726,62 +742,92 @@ exports.editSchedule = async (req, res) => {
       error: "Can't Add className",
     });
   }
-  let scheduleDescription = "Attend meeting every ";
-  slots &&
-    Object.keys(slots).forEach((slotDay) => {
-      if (slots[slotDay].length) {
-        scheduleDescription += `${slotDay}( ${getStartAndEndTime(
-          slots[slotDay]
-        )} )`;
-      }
-    });
+  let scheduleDescription = scheduleDescriptionGenerator(slotschange);
+
+  console.log("problem happeings");
+  console.log(slots);
+  console.log(slotschange);
+
   Schedule.updateOne(
     { _id: id },
     { ...req.body, scheduleDescription },
     (err, response) => {
+      console.log("from respose ", response);
       if (err) {
         console.log(err);
         return res.status(500).json({
           error: "Error in updating schedule",
         });
       }
-      Customer.updateMany(
-        { _id: { $in: students } },
-        { meetingLink, scheduleDescription, className: req.body.className }
-      )
-        .then((data) => {
-          Teacher.findOne({ id: teacher }).then((data) => {
-            if (data) {
-              let { availableSlots } = data;
-              if (availableSlots) {
-                Object.keys(slots).forEach((day) => {
-                  let arr = slots[day];
-                  arr.forEach((slot) => {
-                    let index = availableSlots.indexOf(slot);
-                    if (index != -1) {
-                      data.availableSlots.splice(index, 1);
-                    }
-                    data.scheduledSlots.push(slot);
-                  });
-                });
-              }
-              data.availableSlots = [...new Set(data.availableSlots)];
-              data.scheduledSlots = [...new Set(data.scheduledSlots)];
-              data.save((err, docs) => {
-                if (err) {
-                  console.log(err);
-                  return res.status(500).json({
-                    error: "error in updating teacher slots",
-                  });
-                } else {
-                  return res.json({
-                    message: "schedule updated successfully",
-                  });
+      let Subjectname = '';
+      Subject.findOne({ _id: subject })
+        .then((subject) => {
+          Subjectname = Subjectname + subject.subjectName;
+          console.log(Subjectname);
+        })
+        .catch((error) => { console.log(error) })
+      for (x = 0; x < students.length; x++) {
+        Customer.findOne({ _id: students[x] })
+          .then((data) => {
+
+            let stud_id = data._id;
+            let { timeZoneId } = data;
+
+            timzone.findOne({ id: timeZoneId })
+              .then((dat) => {
+                console.log("for student", x);
+                let rec = SlotConverter(slots, dat.timeZoneName);
+                let schdDescription = postProcess(rec, Subjectname);
+                console.log("finally : ==", schdDescription);
+                Customer.updateOne(
+                  { _id: stud_id },
+                  {
+                    $set:
+                      { scheduleDescription: schdDescription }
+                  }
+                )
+                  .then((succ) => { console.log("succ") })
+                  .catch((err) => { console.log(err) }) // error in updating customer with desc
+                //Teacher Find statments 
+              })
+              .catch((err) => { console.log(err); }) // error in fetching the timezones from database
+          })
+          .catch((error) => {
+            console.log(error);
+            //return res.status(400).json({ msg: "error in updating students Links and Description", err });
+          }) // error in fetching the students from DB
+      }
+      Teacher.findOne({ id: teacher }).then((data) => {
+        if (data) {
+          let { availableSlots } = data;
+          if (availableSlots) {
+            Object.keys(slots).forEach((day) => {
+              let arr = slots[day];
+              arr.forEach((slot) => {
+                let index = availableSlots.indexOf(slot);
+                if (index != -1) {
+                  data.availableSlots.splice(index, 1);
                 }
+                data.scheduledSlots.push(slot);
+              });
+            });
+          }
+          data.availableSlots = [...new Set(data.availableSlots)];
+          data.scheduledSlots = [...new Set(data.scheduledSlots)];
+          data.save((err, docs) => {
+            if (err) {
+              console.log(err);
+              return res.status(500).json({
+                error: "error in updating teacher slots",
+              });
+            } else {
+              return res.json({
+                message: "schedule updated successfully",
               });
             }
           });
-        })
+        }
+      })
         .catch((err) => {
           console.log(err);
           return res.status(400).json({
