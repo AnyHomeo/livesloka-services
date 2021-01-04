@@ -2,10 +2,10 @@ const Schedule = require("../models/Scheduler.model");
 const Customer = require("../models/Customer.model");
 const Teacher = require("../models/Teacher.model");
 const Subject = require("../models/Subject.model");
-const timzone = require("../models/timeZone.model")
+const timzone = require("../models/timeZone.model");
 const { getStartAndEndTime } = require("../scripts/getStartAndEndTime");
-const date = require('date-and-time');
-const allZones = require('../models/timeZone.json')
+const date = require("date-and-time");
+const allZones = require("../models/timeZone.json");
 const ZoomAccountModel = require("../models/ZoomAccount.model");
 
 exports.addScheduleNameChanged = async (req, res) => {
@@ -29,7 +29,7 @@ exports.addScheduleNameChanged = async (req, res) => {
     classname,
   } = req.body;
 
-  console.log(req.body)
+  console.log(req.body);
   let timeSlotData = [];
 
   timeSlotState.map((slot) => {
@@ -173,36 +173,39 @@ exports.addScheduleNameChanged = async (req, res) => {
 };
 
 function convertTZ(date, tzString) {
-  return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
+  return new Date(
+    (typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {
+      timeZone: tzString,
+    })
+  );
 }
 
 const convertTime12to24 = (time12h) => {
-  const [time, modifier] = time12h.split(' ');
+  const [time, modifier] = time12h.split(" ");
 
-  let [hours, minutes] = time.split(':');
+  let [hours, minutes] = time.split(":");
 
-  if (hours === '12') {
-    hours = '00';
+  if (hours === "12") {
+    hours = "00";
   }
 
-  if (modifier === 'PM') {
+  if (modifier === "PM") {
     hours = parseInt(hours, 10) + 12;
   }
 
   return `${hours}:${minutes}`;
-}
+};
 
 const timeZoneNameGetter = (name) => {
   console.log(name);
-  var selectedZone = allZones.filter(rec => rec.abbr === name);
+  var selectedZone = allZones.filter((rec) => rec.abbr === name);
   //console.log(selectedZone);
   return selectedZone[0].utc[0];
-}
+};
 
 const slotPreproccesor = (sluts) => {
 
   let slotS = sluts;
-
 
   Object.keys(slotS).map((slot) => {
     let evalstamps = [];
@@ -213,9 +216,8 @@ const slotPreproccesor = (sluts) => {
           let stamp = slotS[slot][slotindex].split("-")
           //console.log(stamp)
           for (stampIndex = 1; stampIndex < stamp.length; stampIndex++) {
-
             if (stamp[stampIndex].endsWith("AM")) {
-              var timValue = stamp[stampIndex].split(":")
+              var timValue = stamp[stampIndex].split(":");
               if (timValue[1].startsWith("00")) {
                 if (timValue[0].startsWith("0")) {
                   timValue[0] = timValue[0].substring(1);
@@ -231,31 +233,27 @@ const slotPreproccesor = (sluts) => {
                   timValue[0] = timValue[0].substring(1);
 
                 }
-                evalstamps.push(timValue[0])
+                evalstamps.push(timValue[0]);
               }
-            }
-
-            else if (stamp[stampIndex].endsWith("PM")) {
+            } else if (stamp[stampIndex].endsWith("PM")) {
               var timValue = convertTime12to24(stamp[stampIndex]);
-              timValue = timValue.split(":")
+              timValue = timValue.split(":");
 
               if (timValue[1].startsWith("00")) {
                 evalstamps.push(timValue[0]);
-              }
-              else {
+              } else {
                 timValue[0] = Number(timValue[0]) + 0.5;
                 timValue[0] = String(timValue[0]);
                 evalstamps.push(timValue[0]);
               }
             }
-
           }
         }
       }
     }
-    evalstamps = evalstamps.map(es => Number(es));
+    evalstamps = evalstamps.map((es) => Number(es));
     if (evalstamps.length > 0 && consecutive(evalstamps)) {
-      console.log("ok")
+      console.log("ok");
       let mintime = arrayMin(evalstamps);
       let maxtime = arrayMax(evalstamps);
       let convertedStamps = covertIntToTimes([mintime, maxtime]);
@@ -269,51 +267,51 @@ const slotPreproccesor = (sluts) => {
 }
 
 const covertIntToTimes = (arr) => {
-  return convertedTimez = arr.map(el => {
+  return (convertedTimez = arr.map((el) => {
     if (el > 12) {
       if (String(el).endsWith(".5")) {
         el = el - 12.5;
-        return `${el}:30 PM`
-      }
-      else {
+        return `${el}:30 PM`;
+      } else {
         el = el - 12;
-        return `${el}:00 PM`
+        return `${el}:00 PM`;
       }
-    }
-    else {
+    } else {
       if (String(el).endsWith(".5")) {
         el = el - 0.5;
-        return `${el}:30 AM`
-      }
-      else {
-        return `${el}:00 AM`
+        return `${el}:30 AM`;
+      } else {
+        return `${el}:00 AM`;
       }
     }
-  })
-}
+  }));
+};
 
 function arrayMin(arr) {
-  var len = arr.length, min = Infinity;
+  var len = arr.length,
+    min = Infinity;
   while (len--) {
     if (arr[len] < min) {
       min = arr[len];
     }
   }
   return min;
-};
+}
 
 function arrayMax(arr) {
-  var len = arr.length, max = -Infinity;
+  var len = arr.length,
+    max = -Infinity;
   while (len--) {
     if (arr[len] > max) {
       max = arr[len];
     }
   }
   return max;
-};
+}
 
 function consecutive(array) {
-  var i = 2, d;
+  var i = 2,
+    d;
   while (i < array.length) {
     d = array[i - 1] - array[i - 2];
     if (Math.abs(d) === 1 && d === array[i] - array[i - 1]) {
@@ -325,7 +323,6 @@ function consecutive(array) {
 }
 
 const SlotConverter = (data, timezon) => {
-
   data = slotPreproccesor(data);
   let slotie = [];
   let trgtName = timeZoneNameGetter(timezon);
@@ -338,13 +335,14 @@ const SlotConverter = (data, timezon) => {
         if (temp[0] === 'MONDAY') {
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
-              let tim = convertTZ(`Jan 11 2021 ${temp[k]} GMT+0530 (India Standard Time)`, trgtName)
-              let d = date.format(tim, 'dddd-hh:mm A ');
+              let tim = convertTZ(
+                `Jan 11 2021 ${temp[k]} GMT+0530 (India Standard Time)`,
+                trgtName
+              );
+              let d = date.format(tim, "dddd-hh:mm A ");
               // console.log(d);
               slotie.push(d);
-
-            }
-            else {
+            } else {
               let ti = convertTime12to24(temp[k]);
               let tim = convertTZ(`Jan 11 2021 ${ti} GMT+0530 (India Standard Time)`, trgtName)
               let d = date.format(tim, 'dddd-hh:mm A ');
@@ -359,13 +357,14 @@ const SlotConverter = (data, timezon) => {
           //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
-              let tim = convertTZ(`Jan 12 2021 ${temp[k]} GMT+0530 (India Standard Time)`, trgtName)
-              let d = date.format(tim, 'dddd-hh:mm A ');
+              let tim = convertTZ(
+                `Jan 12 2021 ${temp[k]} GMT+0530 (India Standard Time)`,
+                trgtName
+              );
+              let d = date.format(tim, "dddd-hh:mm A ");
               // console.log(d);
               slotie.push(d);
-
-            }
-            else {
+            } else {
               let ti = convertTime12to24(temp[k]);
               let tim = convertTZ(`Jan 12 2021 ${ti} GMT+0530 (India Standard Time)`, trgtName)
               let d = date.format(tim, 'dddd-hh:mm A ');
@@ -380,13 +379,14 @@ const SlotConverter = (data, timezon) => {
           //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
-              let tim = convertTZ(`Jan 13 2021 ${temp[k]} GMT+0530 (India Standard Time)`, trgtName)
-              let d = date.format(tim, 'dddd-hh:mm A ');
+              let tim = convertTZ(
+                `Jan 13 2021 ${temp[k]} GMT+0530 (India Standard Time)`,
+                trgtName
+              );
+              let d = date.format(tim, "dddd-hh:mm A ");
               // console.log(d);
               slotie.push(d);
-
-            }
-            else {
+            } else {
               let ti = convertTime12to24(temp[k]);
               let tim = convertTZ(`Jan 13 2021 ${ti} GMT+0530 (India Standard Time)`, trgtName)
               let d = date.format(tim, 'dddd-hh:mm A ');
@@ -401,13 +401,14 @@ const SlotConverter = (data, timezon) => {
           //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
-              let tim = convertTZ(`Jan 14 2021 ${temp[k]} GMT+0530 (India Standard Time)`, trgtName)
-              let d = date.format(tim, 'dddd-hh:mm A ');
+              let tim = convertTZ(
+                `Jan 14 2021 ${temp[k]} GMT+0530 (India Standard Time)`,
+                trgtName
+              );
+              let d = date.format(tim, "dddd-hh:mm A ");
               // console.log(d);
               slotie.push(d);
-
-            }
-            else {
+            } else {
               let ti = convertTime12to24(temp[k]);
               let tim = convertTZ(`Jan 14 2021 ${ti} GMT+0530 (India Standard Time)`, trgtName)
               let d = date.format(tim, 'dddd-hh:mm A ');
@@ -422,13 +423,14 @@ const SlotConverter = (data, timezon) => {
           //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
-              let tim = convertTZ(`Jan 15 2021 ${temp[k]} GMT+0530 (India Standard Time)`, trgtName)
-              let d = date.format(tim, 'dddd-hh:mm A ');
+              let tim = convertTZ(
+                `Jan 15 2021 ${temp[k]} GMT+0530 (India Standard Time)`,
+                trgtName
+              );
+              let d = date.format(tim, "dddd-hh:mm A ");
               // console.log(d);
               slotie.push(d);
-
-            }
-            else {
+            } else {
               let ti = convertTime12to24(temp[k]);
               let tim = convertTZ(`Jan 15 2021 ${ti} GMT+0530 (India Standard Time)`, trgtName)
               let d = date.format(tim, 'dddd-hh:mm A ');
@@ -444,13 +446,14 @@ const SlotConverter = (data, timezon) => {
           //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
-              let tim = convertTZ(`Jan 16 2021 ${temp[k]} GMT+0530 (India Standard Time)`, trgtName)
-              let d = date.format(tim, 'dddd-hh:mm A ');
+              let tim = convertTZ(
+                `Jan 16 2021 ${temp[k]} GMT+0530 (India Standard Time)`,
+                trgtName
+              );
+              let d = date.format(tim, "dddd-hh:mm A ");
               // console.log(d);
               slotie.push(d);
-
-            }
-            else {
+            } else {
               let ti = convertTime12to24(temp[k]);
               let tim = convertTZ(`Jan 16 2021 ${ti} GMT+0530 (India Standard Time)`, trgtName)
               let d = date.format(tim, 'dddd-hh:mm A ');
@@ -465,13 +468,14 @@ const SlotConverter = (data, timezon) => {
           //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
-              let tim = convertTZ(`Jan 17 2021 ${temp[k]} GMT+0530 (India Standard Time)`, trgtName)
-              let d = date.format(tim, 'dddd-hh:mm A ');
+              let tim = convertTZ(
+                `Jan 17 2021 ${temp[k]} GMT+0530 (India Standard Time)`,
+                trgtName
+              );
+              let d = date.format(tim, "dddd-hh:mm A ");
               // console.log(d);
               slotie.push(d);
-
-            }
-            else {
+            } else {
               let ti = convertTime12to24(temp[k]);
               let tim = convertTZ(`Jan 17 2021 ${ti} GMT+0530 (India Standard Time)`, trgtName)
               let d = date.format(tim, 'dddd-hh:mm A ');
@@ -479,18 +483,16 @@ const SlotConverter = (data, timezon) => {
               slotie.push(d);
             }
           }
-
         }
-
       }
     }
-  })
+  });
   return slotie;
-}
+};
 
 const postProcess = (data, cn) => {
   let schdarr = [];
-  let schd = '';
+  let schd = "";
   for (q = 0; q < data.length;) {
     schd = data[q] + "to " + data[q + 1];
     q = q + 2;
@@ -499,7 +501,7 @@ const postProcess = (data, cn) => {
   var schString = schdarr.join(" and ");
   schString = ` ${cn}  ${schString}`
   return schString;
-}
+};
 
 const scheduleDescriptionGenerator = (dataSlots) => {
   console.log("from schedulerDEsc");
@@ -510,9 +512,9 @@ const scheduleDescriptionGenerator = (dataSlots) => {
     if (dataSlots[ds].length > 0) {
       scheduleDes = scheduleDes + " " + "(" + dataSlots[ds] + ")";
     }
-  })
+  });
   return scheduleDes;
-}
+};
 
 exports.addSchedule = async (req, res) => {
   let {
@@ -559,8 +561,7 @@ exports.addSchedule = async (req, res) => {
     let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
     if (classname) {
       className = classname;
-    }
-    else {
+    } else {
       className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
         } ${startDate} ${demo ? "Demo" : ""}`;
     }
@@ -571,7 +572,6 @@ exports.addSchedule = async (req, res) => {
     });
   }
   let scheduleDescription = scheduleDescriptionGenerator(slotees);
-
 
   const schedule = new Schedule({
     meetingAccount,
@@ -586,7 +586,7 @@ exports.addSchedule = async (req, res) => {
       thursday,
       friday,
       saturday,
-      sunday
+      sunday,
     },
     demo,
     className,
@@ -597,22 +597,24 @@ exports.addSchedule = async (req, res) => {
   schedule
     .save()
     .then((scheduledData) => {
-      let Subjectname = '';
+      let Subjectname = "";
       Subject.findOne({ _id: scheduledData.subject })
         .then((subject) => {
           Subjectname = Subjectname + subject.subjectName;
           console.log(Subjectname);
         })
-        .catch((error) => { console.log(error) })
+        .catch((error) => {
+          console.log(error);
+        });
 
       for (x = 0; x < students.length; x++) {
         Customer.findOne({ _id: students[x] })
           .then((data) => {
-
             let stud_id = data._id;
             let { timeZoneId } = data;
 
-            timzone.findOne({ id: timeZoneId })
+            timzone
+              .findOne({ id: timeZoneId })
               .then((dat) => {
                 console.log("for student", x);
                 let rec = SlotConverter(scheduledData.slots, dat.timeZoneName);
@@ -621,20 +623,25 @@ exports.addSchedule = async (req, res) => {
                 Customer.updateOne(
                   { _id: stud_id },
                   {
-                    $set:
-                      { scheduleDescription: schdDescription }
+                    $set: { scheduleDescription: schdDescription },
                   }
                 )
-                  .then((succ) => { console.log("succ") })
-                  .catch((err) => { console.log(err) }) // error in updating customer with desc
-                //Teacher Find statments 
+                  .then((succ) => {
+                    console.log("succ");
+                  })
+                  .catch((err) => {
+                    console.log(err);
+                  }); // error in updating customer with desc
+                //Teacher Find statments
               })
-              .catch((err) => { console.log(err); }) // error in fetching the timezones from database
+              .catch((err) => {
+                console.log(err);
+              }); // error in fetching the timezones from database
           })
           .catch((error) => {
             console.log(error);
             //return res.status(400).json({ msg: "error in updating students Links and Description", err });
-          }) // error in fetching the students from DB
+          }); // error in fetching the students from DB
       }
 
       Teacher.findOne({ id: teacher }).then((data) => {
@@ -682,9 +689,7 @@ exports.addSchedule = async (req, res) => {
         error: "Error in saving the schedule",
       });
     });
-
 };
-
 
 exports.editSchedule = async (req, res) => {
   const { id } = req.params;
@@ -834,8 +839,7 @@ exports.editSchedule = async (req, res) => {
             error: "error in updating students Links and Description",
           });
         });
-    }
-  );
+    });
 };
 
 exports.deleteScheduleById = async (req, res) => {
