@@ -14,16 +14,12 @@ paypal.configure({
 exports.makePayment = async (req, res) => {
   try {
     const { id } = req.body;
-    console.log(id);
     const user = await Customer.findById(id).select(
       "firstName lastName className proposedAmount proposedCurrencyId"
     );
-    console.log(user.proposedCurrencyId);
     const currency = await Currency.findOne({ id: user.proposedCurrencyId });
-    console.log(user);
-    if (user.proposedAmount && currency) {
+    if (user.proposedAmount) {
       let price = user.proposedAmount.toString();
-      console.log(price);
       const payment_json = {
         intent: "sale",
         payer: {
@@ -40,13 +36,13 @@ exports.makePayment = async (req, res) => {
                 {
                   name: user.className || "Livesloka class",
                   price,
-                  currency: currency.currencyName || "INR",
+                  currency: currency.currencyName || "USD",
                   quantity: 1,
                 },
               ],
             },
             amount: {
-              currency: currency.currencyName || "INR",
+              currency: currency.currencyName || "USD",
               total: price,
             },
             description:
@@ -54,7 +50,6 @@ exports.makePayment = async (req, res) => {
           },
         ],
       };
-      console.log(payment_json);
       paypal.payment.create(payment_json, function (error, payment) {
         if (error) {
           console.log(error);
@@ -100,7 +95,7 @@ exports.onSuccess = async (req, res) => {
       transactions: [
         {
           amount: {
-            currency: currency.currencyName || "INR",
+            currency: currency.currencyName || "USD",
             total: customer.proposedAmount.toString(),
           },
         },

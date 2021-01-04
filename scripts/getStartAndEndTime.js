@@ -74,6 +74,5 @@ module.exports.getStartAndEndTime = (slots) => {
           }:00 PM`
         : `${Math.floor(endTimeNumber)}:00 AM`);
   }
-  console.log(final);
   return final;
 };

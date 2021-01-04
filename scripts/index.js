@@ -7,6 +7,5 @@ exports.addMonths = (date, months) => {
   if (date.getDate() !== d) {
     date.setDate(0);
   }
-  console.log(date);
   return moment(date).format("DD-MM-YYYY");
 };
