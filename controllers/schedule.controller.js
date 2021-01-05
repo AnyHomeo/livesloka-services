@@ -645,7 +645,7 @@ exports.addSchedule = async (req, res) => {
                 Customer.updateOne(
                   { _id: stud_id },
                   {
-                    $set: { scheduleDescription: schdDescription },
+                    $set: { scheduleDescription: schdDescription, meetingLink },
                   }
                 )
                   .then((succ) => {
@@ -832,8 +832,23 @@ exports.editSchedule = async (req, res) => {
       }
       const { _id, zoomEmail, zoomJwt, zoomPassword } = availableZoomAccount;
       const formData = {
-        topic: "Livesloka Class",
+        topic: "Livesloka Online Class",
+        type: 3,
         password: zoomPassword,
+        settings: {
+          host_video: true,
+          participant_video: true,
+          join_before_host: true,
+          jbh_time: 0,
+          mute_upon_entry: true,
+          watermark: false,
+          use_pmi: false,
+          approval_type: 2,
+          audio: "both",
+          auto_recording: "none",
+          waiting_room: false,
+          meeting_authentication: false,
+        },
       };
       fetch(`https://api.zoom.us/v2/users/${zoomEmail}/meetings`, {
         method: "post",
@@ -906,7 +921,10 @@ exports.editSchedule = async (req, res) => {
                         Customer.updateOne(
                           { _id: stud_id },
                           {
-                            $set: { scheduleDescription: schdDescription },
+                            $set: {
+                              scheduleDescription: schdDescription,
+                              meetingLink: json.join_url,
+                            },
                           }
                         )
                           .then((succ) => {
