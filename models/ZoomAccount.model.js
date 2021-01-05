@@ -38,6 +38,10 @@ var ZoomAccountSchema = new mongoose.Schema(
       type: Array,
       default: [],
     },
+    color: {
+      type: "String",
+      default: "blue",
+    },
   },
   { timestamps: true }
 );
