@@ -654,10 +654,7 @@ exports.editSchedule = async (req, res) => {
         }
       )
         .then((res) => {
-          return res.json();
-        })
-        .then((data) => {
-          console.log(data);
+          console.log(res);
         })
         .catch((Err) => {
           console.log(Err);
@@ -836,7 +833,25 @@ exports.deleteScheduleById = async (req, res) => {
     teacherOfSchedule.scheduledSlots = teacherOfSchedule.scheduledSlots.filter(
       (slot) => !slotsOfSchedule.includes(slot)
     );
-    const { meetingAccount } = schedule;
+    const { meetingAccount, meetingLink } = schedule;
+    fetch(
+      `https://api.zoom.us/v2/meetings/${
+        meetingLink.split("/")[4].split("?")[0]
+      }`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${zoomJwt}`,
+        },
+      }
+    )
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((Err) => {
+        console.log(Err);
+      });
     const ZoomAccountDetails = await ZoomAccountModel.findById(meetingAccount);
     slotsOfSchedule.forEach((slot) => {
       let slotIndex = ZoomAccountDetails.timeSlots.indexOf(slot);
@@ -925,6 +940,48 @@ exports.getAllSchedulesByZoomAccountId = async (req, res) => {
     console.log(error);
     return res.status(500).json({
       error: "Error in retreiving data",
+    });
+  }
+};
+
+exports.getAllScheduleswithZoomAccountSorted = async (req, res) => {
+  try {
+    const { day } = req.query;
+    const schedules = await SchedulerModel.find({
+      isDeleted: { $ne: true },
+      ["slots." + day + ".0"]: { $exists: true },
+    })
+      .sort({ meetingAccount: -1 })
+      .select("meetingAccount className slots." + day)
+      .lean();
+
+    const allZoomAccounts = await ZoomAccountModel.find()
+      .select("color ZoomAccountName")
+      .lean();
+
+    let finalSortedData = {};
+    allZoomAccounts.forEach((zoomAccount) => {
+      finalSortedData[zoomAccount.ZoomAccountName] = {};
+      finalSortedData[zoomAccount.ZoomAccountName] = {
+        ...zoomAccount,
+        schedules: [],
+      };
+      schedules.forEach((schedule) => {
+        if (schedule.meetingAccount.toString() === zoomAccount._id.toString()) {
+          schedule.slots = schedule.slots[day];
+          finalSortedData[zoomAccount.ZoomAccountName].schedules.push(schedule);
+        }
+      });
+    });
+
+    return res.json({
+      message: "Everything is cool",
+      result: finalSortedData,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Something went wrong",
     });
   }
 };
