@@ -90,8 +90,9 @@ const slotPreproccesor = (sluts) => {
       let mintime = arrayMin(evalstamps);
       let maxtime = arrayMax(evalstamps);
       let convertedStamps = covertIntToTimes([mintime, maxtime]);
-      let finalStr = `${slot.toUpperCase()}-${convertedStamps[0]}-${convertedStamps[1]
-        }`;
+      let finalStr = `${slot.toUpperCase()}-${convertedStamps[0]}-${
+        convertedStamps[1]
+      }`;
       sluts[slot] = [finalStr];
       //console.log(slots[slot]);
     }
@@ -224,10 +225,7 @@ const SlotConverter = (data, timezon) => {
               slotie.push(d);
             }
           }
-
-        }
-        else if (temp[0] === 'THURSDAY') {
-
+        } else if (temp[0] === "THURSDAY") {
           //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
@@ -318,7 +316,7 @@ const postProcess = (data, cn) => {
   let schdarr = [];
   let schd = "";
   console.log("from postprocess", data);
-  for (q = 0; q < data.length;) {
+  for (q = 0; q < data.length; ) {
     schd = data[q] + "to " + data[q + 1].slice(-9);
     q = q + 2;
     schdarr.push(schd);
@@ -385,8 +383,9 @@ exports.addSchedule = async (req, res) => {
     if (classname) {
       className = classname;
     } else {
-      className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
-        } ${startDate} ${demo ? "Demo" : ""}`;
+      className = `${selectedSubject.subjectName} ${
+        selectedTeacher.TeacherName
+      } ${startDate} ${demo ? "Demo" : ""}`;
     }
   } catch (error) {
     console.log(error);
@@ -568,8 +567,9 @@ exports.editSchedule = async (req, res) => {
     if (className) {
       req.body.className = className;
     } else {
-      req.body.className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
-        } ${startDate} ${demo ? "Demo" : ""}`;
+      req.body.className = `${selectedSubject.subjectName} ${
+        selectedTeacher.TeacherName
+      } ${startDate} ${demo ? "Demo" : ""}`;
     }
   } catch (error) {
     console.log(error);
@@ -644,7 +644,8 @@ exports.editSchedule = async (req, res) => {
         meetingLink.split("/")[4].split("?")[0]
       );
       fetch(
-        `https://api.zoom.us/v2/meetings/${meetingLink.split("/")[4].split("?")[0]
+        `https://api.zoom.us/v2/meetings/${
+          meetingLink.split("/")[4].split("?")[0]
         }`,
         {
           method: "DELETE",
@@ -835,6 +836,8 @@ exports.deleteScheduleById = async (req, res) => {
       (slot) => !slotsOfSchedule.includes(slot)
     );
     const { meetingAccount, meetingLink } = schedule;
+    const meetingAccountData = await ZoomAccountModel.findById(meetingAccount);
+
     fetch(
       `https://api.zoom.us/v2/meetings/${
         meetingLink.split("/")[4].split("?")[0]
@@ -843,7 +846,7 @@ exports.deleteScheduleById = async (req, res) => {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${zoomJwt}`,
+          Authorization: `Bearer ${meetingAccountData.zoomJwt}`,
         },
       }
     )
