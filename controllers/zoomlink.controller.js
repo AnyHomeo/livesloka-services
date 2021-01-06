@@ -26,8 +26,23 @@ module.exports.zoomlink = async (req, res) => {
     console.log(error);
   }
   const formData = {
-    topic: "Meeting",
+    topic: "Livesloka Online Class",
+    type: 3,
     password: zoomPassword,
+    settings: {
+      host_video: true,
+      participant_video: true,
+      join_before_host: true,
+      jbh_time: 0,
+      mute_upon_entry: true,
+      watermark: false,
+      use_pmi: false,
+      approval_type: 2,
+      audio: "both",
+      auto_recording: "none",
+      waiting_room: false,
+      meeting_authentication: false,
+    },
   };
 
   fetch(`https://api.zoom.us/v2/users/${zoomEmail}/meetings`, {
@@ -47,7 +62,7 @@ module.exports.zoomlink = async (req, res) => {
       }
       return res.status(200).json({
         message: "Meeting created successfully",
-        result: { link: json.join_url, id: jwtId },
+        result: { link: json.join_url, id: jwtId, email: zoomEmail },
       });
     })
     .catch((err) => console.log(err));
