@@ -90,9 +90,8 @@ const slotPreproccesor = (sluts) => {
       let mintime = arrayMin(evalstamps);
       let maxtime = arrayMax(evalstamps);
       let convertedStamps = covertIntToTimes([mintime, maxtime]);
-      let finalStr = `${slot.toUpperCase()}-${convertedStamps[0]}-${
-        convertedStamps[1]
-      }`;
+      let finalStr = `${slot.toUpperCase()}-${convertedStamps[0]}-${convertedStamps[1]
+        }`;
       sluts[slot] = [finalStr];
       //console.log(slots[slot]);
     }
@@ -225,15 +224,11 @@ const SlotConverter = (data, timezon) => {
               slotie.push(d);
             }
           }
-<<<<<<< HEAD
 
         }
         else if (temp[0] === 'THURSDAY') {
 
           //console.log(":what")
-=======
-        } else if (temp[0] === "THURSDAY") {
->>>>>>> 53091fabe6e80df29a75849d91bd9529f301314b
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
               let tim = convertTZ(
@@ -322,14 +317,9 @@ const SlotConverter = (data, timezon) => {
 const postProcess = (data, cn) => {
   let schdarr = [];
   let schd = "";
-<<<<<<< HEAD
   console.log("from postprocess", data);
   for (q = 0; q < data.length;) {
     schd = data[q] + "to " + data[q + 1].slice(-9);
-=======
-  for (q = 0; q < data.length; ) {
-    schd = data[q] + "to " + data[q + 1];
->>>>>>> 53091fabe6e80df29a75849d91bd9529f301314b
     q = q + 2;
     schdarr.push(schd);
   }
@@ -395,9 +385,8 @@ exports.addSchedule = async (req, res) => {
     if (classname) {
       className = classname;
     } else {
-      className = `${selectedSubject.subjectName} ${
-        selectedTeacher.TeacherName
-      } ${startDate} ${demo ? "Demo" : ""}`;
+      className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
+        } ${startDate} ${demo ? "Demo" : ""}`;
     }
   } catch (error) {
     console.log(error);
@@ -579,9 +568,8 @@ exports.editSchedule = async (req, res) => {
     if (className) {
       req.body.className = className;
     } else {
-      req.body.className = `${selectedSubject.subjectName} ${
-        selectedTeacher.TeacherName
-      } ${startDate} ${demo ? "Demo" : ""}`;
+      req.body.className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
+        } ${startDate} ${demo ? "Demo" : ""}`;
     }
   } catch (error) {
     console.log(error);
@@ -656,8 +644,7 @@ exports.editSchedule = async (req, res) => {
         meetingLink.split("/")[4].split("?")[0]
       );
       fetch(
-        `https://api.zoom.us/v2/meetings/${
-          meetingLink.split("/")[4].split("?")[0]
+        `https://api.zoom.us/v2/meetings/${meetingLink.split("/")[4].split("?")[0]
         }`,
         {
           method: "DELETE",
