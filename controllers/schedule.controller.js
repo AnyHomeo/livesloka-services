@@ -3,7 +3,6 @@ const Customer = require("../models/Customer.model");
 const Teacher = require("../models/Teacher.model");
 const Subject = require("../models/Subject.model");
 const timzone = require("../models/timeZone.model");
-const { getStartAndEndTime } = require("../scripts/getStartAndEndTime");
 const date = require("date-and-time");
 const allZones = require("../models/timeZone.json");
 const ZoomAccountModel = require("../models/ZoomAccount.model");
@@ -174,7 +173,6 @@ const SlotConverter = (data, timezon) => {
                 trgtName
               );
               let d = date.format(tim, "dddd-hh:mm A ");
-              // console.log(d);
               slotie.push(d);
             } else {
               let ti = convertTime12to24(temp[k]);
@@ -188,7 +186,6 @@ const SlotConverter = (data, timezon) => {
             }
           }
         } else if (temp[0] === "TUESDAY") {
-          //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
               let tim = convertTZ(
@@ -196,7 +193,6 @@ const SlotConverter = (data, timezon) => {
                 trgtName
               );
               let d = date.format(tim, "dddd-hh:mm A ");
-              // console.log(d);
               slotie.push(d);
             } else {
               let ti = convertTime12to24(temp[k]);
@@ -210,7 +206,6 @@ const SlotConverter = (data, timezon) => {
             }
           }
         } else if (temp[0] === "WEDNESDAY") {
-          //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
               let tim = convertTZ(
@@ -218,7 +213,6 @@ const SlotConverter = (data, timezon) => {
                 trgtName
               );
               let d = date.format(tim, "dddd-hh:mm A ");
-              // console.log(d);
               slotie.push(d);
             } else {
               let ti = convertTime12to24(temp[k]);
@@ -232,7 +226,6 @@ const SlotConverter = (data, timezon) => {
             }
           }
         } else if (temp[0] === "THURSDAY") {
-          //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
               let tim = convertTZ(
@@ -240,7 +233,6 @@ const SlotConverter = (data, timezon) => {
                 trgtName
               );
               let d = date.format(tim, "dddd-hh:mm A ");
-              // console.log(d);
               slotie.push(d);
             } else {
               let ti = convertTime12to24(temp[k]);
@@ -253,7 +245,6 @@ const SlotConverter = (data, timezon) => {
             }
           }
         } else if (temp[0] === "FRIDAY") {
-          //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
               let tim = convertTZ(
@@ -261,7 +252,6 @@ const SlotConverter = (data, timezon) => {
                 trgtName
               );
               let d = date.format(tim, "dddd-hh:mm A ");
-              // console.log(d);
               slotie.push(d);
             } else {
               let ti = convertTime12to24(temp[k]);
@@ -275,7 +265,6 @@ const SlotConverter = (data, timezon) => {
             }
           }
         } else if (temp[0] === "SATURDAY") {
-          //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
               let tim = convertTZ(
@@ -283,7 +272,6 @@ const SlotConverter = (data, timezon) => {
                 trgtName
               );
               let d = date.format(tim, "dddd-hh:mm A ");
-              // console.log(d);
               slotie.push(d);
             } else {
               let ti = convertTime12to24(temp[k]);
@@ -297,7 +285,6 @@ const SlotConverter = (data, timezon) => {
             }
           }
         } else {
-          //console.log(":what")
           for (k = 1; k < temp.length; k++) {
             if (temp[k].endsWith("AM")) {
               let tim = convertTZ(
@@ -305,7 +292,6 @@ const SlotConverter = (data, timezon) => {
                 trgtName
               );
               let d = date.format(tim, "dddd-hh:mm A ");
-              // console.log(d);
               slotie.push(d);
             } else {
               let ti = convertTime12to24(temp[k]);
@@ -339,9 +325,7 @@ const postProcess = (data, cn) => {
 };
 
 const scheduleDescriptionGenerator = (dataSlots) => {
-  console.log("from schedulerDEsc");
   dataslots = slotPreproccesor(dataSlots);
-  console.log(dataSlots);
   let scheduleDes = "Attend meeting every";
   Object.keys(dataSlots).map((ds) => {
     if (dataSlots[ds].length > 0) {
@@ -429,7 +413,6 @@ exports.addSchedule = async (req, res) => {
     subject,
     scheduleDescription,
   });
-  console.log(schedule);
   schedule
     .save()
     .then((scheduledData) => {
@@ -443,23 +426,27 @@ exports.addSchedule = async (req, res) => {
         ...sunday,
       ];
 
-      ZoomAccountModel.findById(meetingAccount).then((zoomAccountData) => {
-        zoomAccountData.timeSlots = [...zoomAccountData.timeSlots, ...allSlots];
-        zoomAccountData
-          .save()
-          .then((data) => {
-            console.log("timeslots updated successfully");
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      });
+      ZoomAccountModel.findById(meetingAccount).then(
+        async (zoomAccountData) => {
+          zoomAccountData.timeSlots = [
+            ...zoomAccountData.timeSlots,
+            ...allSlots,
+          ];
+          try {
+            await zoomAccountData.save();
+          } catch (error) {
+            console.log(error);
+            return res.status(500).json({
+              error: "error in saving zoom account",
+            });
+          }
+        }
+      );
 
       let Subjectname = "";
       Subject.findOne({ _id: scheduledData.subject })
         .then((subject) => {
           Subjectname = Subjectname + subject.subjectName;
-          console.log(Subjectname);
         })
         .catch((error) => {
           console.log(error);
@@ -472,24 +459,15 @@ exports.addSchedule = async (req, res) => {
             let { timeZoneId } = data;
             timzone
               .findOne({ id: timeZoneId })
-              .then((dat) => {
-                console.log("for student", x);
+              .then(async (dat) => {
                 let rec = SlotConverter(scheduledData.slots, dat.timeZoneName);
                 let schdDescription = postProcess(rec, Subjectname);
-                console.log("finally : ==", schdDescription);
-                Customer.updateOne(
+                await Customer.updateOne(
                   { _id: stud_id },
                   {
                     $set: { scheduleDescription: schdDescription, meetingLink },
                   }
-                )
-                  .then((succ) => {
-                    console.log("succ");
-                  })
-                  .catch((err) => {
-                    console.log(err);
-                  }); // error in updating customer with desc
-                //Teacher Find statments
+                );
               })
               .catch((err) => {
                 console.log(err);
@@ -551,7 +529,6 @@ exports.addSchedule = async (req, res) => {
 exports.editSchedule = async (req, res) => {
   const { id } = req.params;
   let {
-    meetingLink,
     teacher,
     students,
     startDate,
@@ -582,14 +559,6 @@ exports.editSchedule = async (req, res) => {
     sunday,
   };
 
-  console.log(slotschange);
-
-  meetingLink = meetingLink.startsWith("http")
-    ? meetingLink
-    : "https://" + meetingLink;
-  req.body.meetingLink = meetingLink.startsWith("http")
-    ? meetingLink
-    : "https://" + meetingLink;
   try {
     let selectedSubject = await Subject.findOne({ _id: subject }).lean();
     let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
@@ -666,6 +635,33 @@ exports.editSchedule = async (req, res) => {
         });
       }
       const { _id, zoomEmail, zoomJwt, zoomPassword } = availableZoomAccount;
+      const { meetingLink } = oldSchedule;
+      console.log(
+        meetingLink,
+        meetingLink.split("/"),
+        meetingLink.split("/")[4].split("?")[0]
+      );
+      fetch(
+        `https://api.zoom.us/v2/meetings/${
+          meetingLink.split("/")[4].split("?")[0]
+        }`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${zoomJwt}`,
+          },
+        }
+      )
+        .then((res) => {
+          return res.json();
+        })
+        .then((data) => {
+          console.log(data);
+        })
+        .catch((Err) => {
+          console.log(Err);
+        });
       const formData = {
         topic: "Livesloka Online Class",
         type: 3,
@@ -695,7 +691,6 @@ exports.editSchedule = async (req, res) => {
       })
         .then((res) => res.json())
         .then((json) => {
-          console.log(json);
           if (json.code === 1001) {
             return res.status(400).json({
               message: "Error while creating meeting link",
@@ -707,9 +702,7 @@ exports.editSchedule = async (req, res) => {
             { _id: id },
             { ...req.body, scheduleDescription },
             (err, response) => {
-              console.log("from respose ", response);
               if (err) {
-                console.log(err);
                 return res.status(500).json({
                   error: "Error in updating schedule",
                 });
@@ -735,7 +728,6 @@ exports.editSchedule = async (req, res) => {
               Subject.findOne({ _id: subject })
                 .then((subject) => {
                   Subjectname = Subjectname + subject.subjectName;
-                  console.log(Subjectname);
                 })
                 .catch((error) => {
                   console.log(error);
@@ -748,12 +740,10 @@ exports.editSchedule = async (req, res) => {
 
                     timzone
                       .findOne({ id: timeZoneId })
-                      .then((dat) => {
-                        console.log("for student", x);
+                      .then(async (dat) => {
                         let rec = SlotConverter(slots, dat.timeZoneName);
                         let schdDescription = postProcess(rec, Subjectname);
-                        console.log("finally : ==", schdDescription);
-                        Customer.updateOne(
+                        await Customer.updateOne(
                           { _id: stud_id },
                           {
                             $set: {
@@ -761,14 +751,7 @@ exports.editSchedule = async (req, res) => {
                               meetingLink: json.join_url,
                             },
                           }
-                        )
-                          .then((succ) => {
-                            console.log("succ");
-                          })
-                          .catch((err) => {
-                            console.log(err);
-                          }); // error in updating customer with desc
-                        //Teacher Find statments
+                        );
                       })
                       .catch((err) => {
                         console.log(err);
@@ -855,7 +838,6 @@ exports.deleteScheduleById = async (req, res) => {
     );
     const { meetingAccount } = schedule;
     const ZoomAccountDetails = await ZoomAccountModel.findById(meetingAccount);
-    console.log(ZoomAccountDetails);
     slotsOfSchedule.forEach((slot) => {
       let slotIndex = ZoomAccountDetails.timeSlots.indexOf(slot);
       if (slotIndex != -1) {
