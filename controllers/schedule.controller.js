@@ -396,7 +396,7 @@ const SlotConverter = (data, timezon) => {
           }
 
         }
-        else if (temp[0] === 'THRUSDAY') {
+        else if (temp[0] === 'THURSDAY') {
 
           //console.log(":what")
           for (k = 1; k < temp.length; k++) {
@@ -493,8 +493,9 @@ const SlotConverter = (data, timezon) => {
 const postProcess = (data, cn) => {
   let schdarr = [];
   let schd = "";
+  console.log("from postprocess", data);
   for (q = 0; q < data.length;) {
-    schd = data[q] + "to " + data[q + 1];
+    schd = data[q] + "to " + data[q + 1].slice(-9);
     q = q + 2;
     schdarr.push(schd);
   }
