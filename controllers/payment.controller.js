@@ -205,3 +205,22 @@ exports.getTransactions = async (req, res) => {
     console.log(error);
   }
 };
+
+exports.getAllTransactions = async (req, res) => {
+  try {
+    const allTransactions = await Payment.find().populate("customerId");
+    console.log(allTransactions);
+
+    if (allTransactions === null) {
+      return res.status(400).json({
+        message: "Not found",
+      });
+    } else
+      return res.status(200).json({
+        message: "Retrived successfully",
+        result: allTransactions,
+      });
+  } catch (error) {
+    console.log(error);
+  }
+};
