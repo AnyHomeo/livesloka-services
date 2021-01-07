@@ -208,7 +208,9 @@ exports.getTransactions = async (req, res) => {
 
 exports.getAllTransactions = async (req, res) => {
   try {
-    const allTransactions = await Payment.find().populate("customerId");
+    const allTransactions = await Payment.find()
+      .populate("customerId")
+      .sort({ createdAt: -1 });
     console.log(allTransactions);
 
     if (allTransactions === null) {
