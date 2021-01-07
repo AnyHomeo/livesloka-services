@@ -4,7 +4,12 @@ const AttendanceModel = require("../models/Attendance");
 const SubjectsModel = require("../models/Subject.model");
 const ScheduleModel = require("../models/Scheduler.model");
 const PaymentModel = require("../models/Payments");
+const TimeZoneModel = require("../models/timeZone.model");
 const moment = require("moment");
+const SubjectModel = require("../models/Subject.model");
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
 
 module.exports = {
   async registerCustomer(req, res) {
@@ -78,7 +83,7 @@ module.exports = {
 
   async details(req, res) {
     CustomerModel.find({})
-      .select(" -customerId ")
+      .select("-customerId")
       .sort({ createdAt: -1 })
       .then((result) => {
         res.status(200).json({
@@ -88,6 +93,7 @@ module.exports = {
         });
       })
       .catch((err) => {
+        console.log(err);
         res.status(400).json({ message: "something went Wrong", err });
       });
   },
@@ -233,21 +239,11 @@ module.exports = {
       const { email } = req.body;
       let customers = await CustomerModel.find({ email })
         .select(
-          "_id scheduleDescription noOfClasses paymentDate paidTill numberOfClassesBought"
+          "_id scheduleDescription noOfClasses paymentDate paidTill numberOfClassesBought isJoinButtonEnabledByAdmin"
         )
         .lean();
-      let customerIds = customers.map((customer) => customer._id);
-
       let mainSchedules = await Promise.all(
         customers.map(async (customer) => {
-          let schedules = await ScheduleModel.find({
-            students: { $in: [customer._id] },
-          });
-          let scheduleIds = schedules.map((schedule) => schedule._id);
-          let noOfClassesCompleted = await AttendanceModel.countDocuments({
-            scheduleId: { $in: scheduleIds },
-            requestedStudents: { $nin: [customer._id] },
-          }).sort({ createdAt: -1 });
           let isJoinButtonDisabled = true;
           if (customer.paidTill) {
             let dateArr = customer.paidTill.split("-").map((v) => parseInt(v));
@@ -256,25 +252,33 @@ module.exports = {
               .split("-")
               .map((v) => parseInt(v));
             isJoinButtonDisabled =
-              dateArr[2] > dateToday[2] &&
-              dateArr[1] > dateToday[1] &&
-              dateArr[0] > dateToday[0];
-          } else if (customer.numberOfClassesBought) {
-            isJoinButtonDisabled =
-              noOfClassesCompleted >= customer.numberOfClassesBought;
+              (dateArr[2] > dateToday[2] &&
+                dateArr[1] > dateToday[1] &&
+                dateArr[0] > dateToday[0]) ||
+              !customer.isJoinButtonEnabledByAdmin;
+          } else {
+            isJoinButtonDisabled = customer.numberOfClassesBought <= 0;
+          }
+          if (customer.isJoinButtonEnabledByAdmin) {
+            isJoinButtonDisabled = false;
           }
           let actualSchedule = await ScheduleModel.findOne({
             students: { $in: [customer._id] },
             isDeleted: { $ne: true },
           }).lean();
+          let subject = await SubjectModel.findOne({
+            _id: actualSchedule.subject,
+          });
+          console.log(actualSchedule.subject);
+          console.log(subject);
           return {
             ...actualSchedule,
             isJoinButtonDisabled,
             customerId: customer._id,
-            noOfClassesCompleted,
             numberOfClassesBought: customer.numberOfClassesBought,
             paidTill: customer.paidTill,
             scheduleDescription: customer.scheduleDescription,
+            subject,
           };
         })
       );
@@ -303,6 +307,55 @@ module.exports = {
       console.log(error);
       return res.status(500).json({
         error: "Internal Server error",
+      });
+    }
+  },
+
+  insertDataFromWix: async (req, res) => {
+    try {
+      const { data } = req.body;
+      data["field:comp-kh8kc6mf"] =
+        typeof data["field:comp-kh8kc6mf"] === "string"
+          ? data["field:comp-kh8kc6mf"].toUpperCase()
+          : ".";
+      let timeZoneSelected = await TimeZoneModel.findOne({
+        timeZoneName: data["field:comp-kh8kc6mf"],
+      }).lean();
+      let selectedSubjectNames = data["field:comp-kh8nvj7n"]
+        .split(",")
+        .map((name) => name.trim());
+      let selectedSubjects = await SubjectModel.find({
+        subjectName: { $in: selectedSubjectNames },
+      }).lean();
+      let user = {
+        firstName: data["field:comp-k8h6ltbn"],
+        lastName: data["field:comp-kbj52w90"],
+        timeZoneId: timeZoneSelected ? timeZoneSelected.id : "",
+        whatsAppnumber: data["field:comp-kbfpi4zl"],
+        email: data["field:comp-kcdgzuaj"],
+        gender:
+          typeof data["field:comp-kig8mhkn"] === "string"
+            ? data["field:comp-kig8mhkn"].toLowerCase()
+            : "",
+        age: data["field:comp-kh8nsqzv"],
+      };
+      let finalUserInsertableData = selectedSubjects.map((subject) => {
+        return {
+          ...user,
+          subjectId: subject.id,
+        };
+      });
+      CustomerModel.insertMany(finalUserInsertableData, (err, docs) => {
+        if (err) {
+          console.log(err);
+        } else {
+          return res.json({ Success: true });
+        }
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        error: "Error in Inserting Customers",
       });
     }
   },

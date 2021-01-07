@@ -7,6 +7,10 @@ const Customer = new mongoose.Schema(
       trim: true,
       type: String,
     },
+    isJoinButtonEnabledByAdmin: {
+      type: Boolean,
+      default: false,
+    },
     lastName: {
       trim: true,
       type: String,
@@ -105,7 +109,9 @@ const Customer = new mongoose.Schema(
       trim: true,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 module.exports = mongoose.model("Customer", Customer);

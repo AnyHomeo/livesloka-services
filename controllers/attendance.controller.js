@@ -1,4 +1,5 @@
 const Attendance = require("../models/Attendance");
+const CustomerModel = require("../models/Customer.model");
 
 const getAttendance = (req, res) => {
   const { id } = req.params;
@@ -47,6 +48,22 @@ const postAttendance = (req, res) => {
   } = req.body;
   Attendance.findOne({ scheduleId, date }).then((alreadyGivenAttendance) => {
     if (alreadyGivenAttendance) {
+      let newlyRequestedStudents = [];
+      requestedStudents.forEach((student) => {
+        if (!alreadyGivenAttendance.requestedStudents.includes(student)) {
+          newlyRequestedStudents.push(student);
+        }
+      });
+      CustomerModel.updateMany(
+        { _id: { $in: newlyRequestedStudents } },
+        { $inc: { numberOfClassesBought: 1 } }
+      )
+        .then((data) => {
+          console.log(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
       alreadyGivenAttendance.customers = customers;
       alreadyGivenAttendance.absentees = absentees;
       alreadyGivenAttendance.requestedStudents = requestedStudents;
@@ -63,6 +80,16 @@ const postAttendance = (req, res) => {
         }
       });
     } else {
+      CustomerModel.updateMany(
+        { _id: { $in: [...customers, ...absentees] } },
+        { $inc: { numberOfClassesBought: -1 } }
+      )
+        .then((data) => {
+          console.log(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
       const attendance = new Attendance(req.body);
       attendance.save((err, doc) => {
         if (err) {

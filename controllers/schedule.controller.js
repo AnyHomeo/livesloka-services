@@ -464,10 +464,12 @@ exports.addSchedule = async (req, res) => {
               .then(async (dat) => {
                 let rec = SlotConverter(scheduledData.slots, dat.timeZoneName);
                 let schdDescription = postProcess(rec, Subjectname);
+
                 await Customer.updateOne(
                   { _id: stud_id },
                   {
                     $set: { scheduleDescription: schdDescription, meetingLink },
+                    $inc: { numberOfClassesBought: demo ? 1 : 0 },
                   }
                 );
               })
@@ -477,7 +479,6 @@ exports.addSchedule = async (req, res) => {
           })
           .catch((error) => {
             console.log(error);
-            //return res.status(400).json({ msg: "error in updating students Links and Description", err });
           }); // error in fetching the students from DB
       }
 
