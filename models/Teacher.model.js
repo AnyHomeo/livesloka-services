@@ -37,6 +37,19 @@ var TeacherSchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
+    Commission_Amount: {
+      type: String,
+      default: "0"
+    },
+    Bank_account: {
+      type: String,
+    },
+    Phone_number: {
+      type: String,
+    },
+    Bank_full_name: {
+      type: String,
+    }
   },
   { timestamps: true }
 );
