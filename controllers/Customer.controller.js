@@ -7,9 +7,6 @@ const PaymentModel = require("../models/Payments");
 const TimeZoneModel = require("../models/timeZone.model");
 const moment = require("moment");
 const SubjectModel = require("../models/Subject.model");
-function capitalizeFirstLetter(string) {
-  return string.charAt(0).toUpperCase() + string.slice(1);
-}
 
 module.exports = {
   async registerCustomer(req, res) {
@@ -69,7 +66,9 @@ module.exports = {
                 });
               });
           }
-        } catch (error) {}
+        } catch (error) {
+          console.log(error);
+        }
       })
       .catch((err) => {
         console.log(err);
@@ -269,8 +268,6 @@ module.exports = {
           let subject = await SubjectModel.findOne({
             _id: actualSchedule.subject,
           });
-          console.log(actualSchedule.subject);
-          console.log(subject);
           return {
             ...actualSchedule,
             isJoinButtonDisabled,
@@ -328,8 +325,8 @@ module.exports = {
         subjectName: { $in: selectedSubjectNames },
       }).lean();
       let user = {
-        firstName: data["field:comp-k8h6ltbn"],
-        lastName: data["field:comp-kbj52w90"],
+        lastName: data["field:comp-k8h6ltbn"],
+        firstName: data["field:comp-kbj52w90"],
         timeZoneId: timeZoneSelected ? timeZoneSelected.id : "",
         whatsAppnumber: data["field:comp-kbfpi4zl"],
         email: data["field:comp-kcdgzuaj"],
@@ -343,13 +340,33 @@ module.exports = {
         return {
           ...user,
           subjectId: subject.id,
+          firstName: `${user.firstName} ${subject.subjectName}`,
         };
       });
-      CustomerModel.insertMany(finalUserInsertableData, (err, docs) => {
+      CustomerModel.insertMany(finalUserInsertableData, async (err, docs) => {
         if (err) {
           console.log(err);
         } else {
-          return res.json({ Success: true });
+          const userIfExists = await AdminModel.findOne({
+            userId: data["field:comp-kcdgzuaj"],
+          });
+          if (!userIfExists) {
+            const newUser = new AdminModel({
+              userId: data["field:comp-kcdgzuaj"],
+              password: "livesloka",
+              roleId: 1,
+              customerId: docs[0]._id,
+              username: data["field:comp-kbj52w90"],
+            });
+            newUser.save().then((savedDoc) => {
+              return res.json({
+                Success: true,
+                message: "Login credentials created successfully",
+              });
+            });
+          } else {
+            return res.json({ Success: true });
+          }
         }
       });
     } catch (error) {
