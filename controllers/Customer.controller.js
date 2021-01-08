@@ -265,18 +265,22 @@ module.exports = {
             students: { $in: [customer._id] },
             isDeleted: { $ne: true },
           }).lean();
-          let subject = await SubjectModel.findOne({
-            _id: actualSchedule.subject,
-          });
-          return {
-            ...actualSchedule,
-            isJoinButtonDisabled,
-            customerId: customer._id,
-            numberOfClassesBought: customer.numberOfClassesBought,
-            paidTill: customer.paidTill,
-            scheduleDescription: customer.scheduleDescription,
-            subject,
-          };
+          if (actualSchedule) {
+            let subject = await SubjectModel.findOne({
+              _id: actualSchedule.subject,
+            });
+            return {
+              ...actualSchedule,
+              isJoinButtonDisabled,
+              customerId: customer._id,
+              numberOfClassesBought: customer.numberOfClassesBought,
+              paidTill: customer.paidTill,
+              scheduleDescription: customer.scheduleDescription,
+              subject,
+            };
+          } else {
+            return null;
+          }
         })
       );
 
