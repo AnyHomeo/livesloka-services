@@ -11,6 +11,8 @@ const {
   getOccupancyDashboardData,
   getAllDaysSlots,
   GetTeacherMeetings,
+  GetTeacherAttendance,
+  GetSalaries
 
 } = require("../controllers/teacher.controller");
 
@@ -23,4 +25,5 @@ router.get("/occupancy", getOccupancyDashboardData);
 router.get("/all/slots/:id", getAllDaysSlots);
 
 router.get("/getTeacherMeetings/:id", GetTeacherMeetings)
+router.get("/getTeacherAttendence/:id", GetSalaries)
 module.exports = router;

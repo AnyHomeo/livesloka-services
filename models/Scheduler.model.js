@@ -55,6 +55,14 @@ const SchedulerSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    OneToOne: {
+      type: Boolean,
+      default: false,
+    },
+    oneToMany: {
+      type: Boolean,
+      default: false,
+    },
     isDeleted: {
       type: Boolean,
       default: false,

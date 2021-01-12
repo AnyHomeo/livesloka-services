@@ -46,8 +46,9 @@ const postAttendance = (req, res) => {
     requestedStudents,
     absentees,
   } = req.body;
-  Attendance.findOne({ scheduleId, date }).then((alreadyGivenAttendance) => {
+  Attendance.findOne({ $and: [{ scheduleId }, { date }] }).then((alreadyGivenAttendance) => {
     if (alreadyGivenAttendance) {
+      console.log(alreadyGivenAttendance)
       let newlyRequestedStudents = [];
       requestedStudents.forEach((student) => {
         if (!alreadyGivenAttendance.requestedStudents.includes(student)) {
@@ -59,7 +60,7 @@ const postAttendance = (req, res) => {
         { $inc: { numberOfClassesBought: 1 } }
       )
         .then((data) => {
-          console.log(data);
+          // console.log(data);
         })
         .catch((err) => {
           console.log(err);
@@ -85,18 +86,21 @@ const postAttendance = (req, res) => {
         { $inc: { numberOfClassesBought: -1 } }
       )
         .then((data) => {
-          console.log(data);
+          // console.log(data);
         })
         .catch((err) => {
           console.log(err);
         });
       const attendance = new Attendance(req.body);
+      console.log(attendance);
       attendance.save((err, doc) => {
         if (err) {
+          console.log(err);
           return res.status(500).json({
             error: "Error in Taking Attendance",
           });
         } else {
+          console.log(doc);
           return res.json({
             message: "Attendance Added successfully",
           });
