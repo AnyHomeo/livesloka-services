@@ -46,26 +46,6 @@ const postAttendance = (req, res) => {
     requestedStudents,
     absentees,
   } = req.body;
-<<<<<<< HEAD
-  Attendance.findOne({ $and: [{ scheduleId }, { date }] }).then((alreadyGivenAttendance) => {
-    if (alreadyGivenAttendance) {
-      console.log(alreadyGivenAttendance)
-      let newlyRequestedStudents = [];
-      requestedStudents.forEach((student) => {
-        if (!alreadyGivenAttendance.requestedStudents.includes(student)) {
-          newlyRequestedStudents.push(student);
-        }
-      });
-      CustomerModel.updateMany(
-        { _id: { $in: newlyRequestedStudents } },
-        { $inc: { numberOfClassesBought: 1 } }
-      )
-        .then((data) => {
-          // console.log(data);
-        })
-        .catch((err) => {
-          console.log(err);
-=======
   Attendance.findOne({ scheduleId, date })
     .then((alreadyGivenAttendance) => {
       if (alreadyGivenAttendance) {
@@ -74,7 +54,6 @@ const postAttendance = (req, res) => {
           if (!alreadyGivenAttendance.requestedStudents.includes(student)) {
             newlyRequestedStudents.push(student);
           }
->>>>>>> cb91a46b121609f581e24790fae7782ef0853ce9
         });
         CustomerModel.updateMany(
           { _id: { $in: newlyRequestedStudents } },
@@ -86,38 +65,6 @@ const postAttendance = (req, res) => {
           .catch((err) => {
             console.log(err);
           });
-<<<<<<< HEAD
-        }
-      });
-    } else {
-      CustomerModel.updateMany(
-        { _id: { $in: [...customers, ...absentees] } },
-        { $inc: { numberOfClassesBought: -1 } }
-      )
-        .then((data) => {
-          // console.log(data);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-      const attendance = new Attendance(req.body);
-      console.log(attendance);
-      attendance.save((err, doc) => {
-        if (err) {
-          console.log(err);
-          return res.status(500).json({
-            error: "Error in Taking Attendance",
-          });
-        } else {
-          console.log(doc);
-          return res.json({
-            message: "Attendance Added successfully",
-          });
-        }
-      });
-    }
-  });
-=======
         alreadyGivenAttendance.customers = customers;
         alreadyGivenAttendance.absentees = absentees;
         alreadyGivenAttendance.requestedStudents = requestedStudents;
@@ -164,7 +111,6 @@ const postAttendance = (req, res) => {
     .catch((err) => {
       console.log(err);
     });
->>>>>>> cb91a46b121609f581e24790fae7782ef0853ce9
 };
 
 const getAllAttendanceByScheduleIdAndDate = (req, res) => {

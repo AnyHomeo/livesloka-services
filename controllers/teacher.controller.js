@@ -411,65 +411,36 @@ exports.GetTeacherAttendance = async (req, res) => {
 }
 
 // exports.GetSalaries = async (req, res) => {
-//   let Saldet = [];
-//   TeacherModel.find({})
-//     .then((TeacherData) => {
-//       let eachTeacherArr = [];
-//       for (let eachTeacher = 0; eachTeacher < TeacherData.length; eachTeacher++) {
+//   try {
+//     const allTeachers = await TeacherModel.find({});
+//     let allTeacherIds = allTeachers.map((teacher) => teacher.id)
+//     // console.log(allTeacherIds);
+//     let teacherAttends = await Attendence.find({ teacherId: { $in: allTeacherIds }, }).populate('scheduleId')
+//     // console.log(teacherAttends);
+//     let finalObj = {};
+//     allTeachers.forEach(teacher => {
+//       finalObj[teacher.TeacherName] = {};
+//       let attendeceofTeacher = teacherAttends.filter((att) => teacher.id === att.teacherId)
+//       finalObj[teacher.TeacherName].allAttendece = attendeceofTeacher;
+//       let allclasses = finalObj[teacher.TeacherName].allAttendece.map(el => {
+//         return el.scheduleId.className
+//       })  
+//       allclasses = [... new Set(allclasses)];
+//       finalObj[teacher.TeacherName].ClassName = {};
+//       allclasses.forEach(eachClass => {
+//         finalObj[teacher.TeacherName].ClassName[eachClass] = attendeceofTeacher.filter(at => at.scheduleId.className === eachClass)
+//        let eachClassDetails = attendeceofTeacher.filter(at => at.scheduleId.className === eachClass)
 
-//         let presentTeacher = TeacherData[eachTeacher]
-//         Attendence.find({ teacherId: presentTeacher.id })
-//           .populate('scheduleId')
-//           .then((attedData) => {
-//             // console.log("from ", attedData);
+//       })
+//       finalObj[teacher.TeacherName].allAttendece = undefined;
+//     })  
+//     console.log(finalObj);
 
-//             if (attedData.length > 0) {
-//               for (attedInd = 0; attedInd < attedData.length; attedInd++) {
-//                 // console.log("el", el)
-//                 let el = attedData[attedInd];
-//                 let eachObj = {};
-//                 eachObj['TeacherName'] = presentTeacher.TeacherName;
-//                 eachObj['ClassName'] = el.scheduleId.className;
-//                 eachObj['No.Students'] = el.customers.length;
-//                 if (el.customers.length > 1) {
-//                   eachObj['Commission'] = presentTeacher.Commission_Amount_Many;
-//                 }
-//                 else {
-//                   eachObj['Commission'] = presentTeacher.Commission_Amount_One;
-//                 }
-//                 let presentSchId = el.scheduleId._id;
-//                 let count = [];
-//                 attedData.forEach(el => {
-//                   if (el.scheduleId._id = presentSchId) {
-//                     count.push(el);
-//                   }
-//                 });
-//                 eachObj['No. days'] = count.length;
-//                 eachObj['salary'] = eachObj['No.Students'] * eachObj['Commission'] * eachObj['No. days'];
-//                 eachTeacherArr.push(eachObj);
-//               }
-//             }
-//             // if (eachTeacherArr.length > 0) {
-//             //   console.log(eachTeacherArr);
-//             //   Saldet.push(eachTeacherArr);
-//             //   viewDet(Saldet)
-//             // }
-//             //console.log("fom ", Saldet);
-
-//             // if (eachTeacherArr.length > 0) {
-//             //   console.log(eachTeacherArr);
-//             // }
-//             // Saldet['1'] = eachTeacherArr;
-//             // console.log(Saldet);
-//             //console.log(eachTeacherArr);
-//             Saldet.push(eachTeacherArr);
-//             console.log("Inside", Saldet);
-//           })
-//           .catch((err) => { console.log(err) })
-//       }
-//       console.log("from ", Saldet);
-//     })
-//     .catch(err => { console.log(err) })
+//     return res.status(200).json({ message: "ok", finalObj });
+//   } catch (error) {
+//     console.log(error)
+//     return res.status(500).json({ error });
+//   }
 // }
 
 exports.GetSalaries = async (req, res) => {
@@ -478,23 +449,47 @@ exports.GetSalaries = async (req, res) => {
     let allTeacherIds = allTeachers.map((teacher) => teacher.id)
     // console.log(allTeacherIds);
     let teacherAttends = await Attendence.find({ teacherId: { $in: allTeacherIds }, }).populate('scheduleId')
-    // console.log(teacherAttends);
-    let finalObj = {};
+    console.log(teacherAttends);
+    let finalObj = [];
     allTeachers.forEach(teacher => {
-      finalObj[teacher.TeacherName] = {};
+      let objj = {
+        details: []
+      };
+      objj['TeacherName'] = teacher.TeacherName;
       let attendeceofTeacher = teacherAttends.filter((att) => teacher.id === att.teacherId)
-      finalObj[teacher.TeacherName].allAttendece = attendeceofTeacher;
-      let allclasses = finalObj[teacher.TeacherName].allAttendece.map(el => {
-        return el.scheduleId.className
+      attendeceofTeacher.forEach(eachAtt => {
+        let obj = {};
+        obj['ClassName'] = eachAtt.scheduleId.className;
+        obj['No.Students'] = eachAtt.customers.length;
+        obj['Number of Days'] = attendeceofTeacher.length;
+        if (eachAtt.scheduleId.OneToOne) {
+          obj['commission'] = teacher.Commission_Amount_One;
+        }
+        else {
+          obj['commission'] = teacher.Commission_Amount_Many;
+        }
+        obj['salary'] = obj['No.Students'] * obj['Number of Days'] * obj['commission'];
+        objj['details'].push(obj)
       })
-      allclasses = [... new Set(allclasses)];
-      finalObj[teacher.TeacherName].ClassName = {};
-      allclasses.forEach(eachClass => {
-        finalObj[teacher.TeacherName].ClassName[eachClass] = attendeceofTeacher.filter(at => at.scheduleId.className === eachClass)
+      objj['salary'] = 0;
+      objj['details'].forEach(ell => {
+        objj['salary'] = objj['salary'] + parseInt(ell.salary);
       })
-      finalObj[teacher.TeacherName].allAttendece = undefined;
+      finalObj.push(objj)
+      // finalObj[teacher.TeacherName].allAttendece = attendeceofTeacher;
+      // let allclasses = finalObj[teacher.TeacherName].allAttendece.map(el => {
+      //   return el.scheduleId.className
+      // })  
+      // allclasses = [... new Set(allclasses)];
+      // finalObj[teacher.TeacherName].ClassName = {};
+      // allclasses.forEach(eachClass => {
+      //   finalObj[teacher.TeacherName].ClassName[eachClass] = attendeceofTeacher.filter(at => at.scheduleId.className === eachClass)
+      //  let eachClassDetails = attendeceofTeacher.filter(at => at.scheduleId.className === eachClass)
+
+      // })
+      // finalObj[teacher.TeacherName].allAttendece = undefined;
     })
-    console.log(finalObj);
+    // console.log(finalObj);
 
     return res.status(200).json({ message: "ok", finalObj });
   } catch (error) {
@@ -502,6 +497,7 @@ exports.GetSalaries = async (req, res) => {
     return res.status(500).json({ error });
   }
 }
+
 
 const viewDet = (data) => {
   console.log("from", data)
