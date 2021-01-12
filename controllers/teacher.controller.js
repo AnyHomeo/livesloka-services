@@ -445,10 +445,17 @@ exports.GetTeacherAttendance = async (req, res) => {
 
 exports.GetSalaries = async (req, res) => {
   try {
+    // let dat = req.params.month;
     const allTeachers = await TeacherModel.find({});
     let allTeacherIds = allTeachers.map((teacher) => teacher.id)
-    // console.log(allTeacherIds);
-    let teacherAttends = await Attendence.find({ teacherId: { $in: allTeacherIds }, }).populate('scheduleId')
+    // console.log(allTeacherIds);{ teacherId: { $in: allTeacherIds } } 
+    let dat = '2021-01'
+    let teacherAttends = await Attendence.find({
+      $and: [
+        { teacherId: { $in: allTeacherIds } },
+        { date: { $regex: dat, $options: 'm' } }
+      ]
+    }).populate('scheduleId')
     console.log(teacherAttends);
     let finalObj = [];
     allTeachers.forEach(teacher => {
