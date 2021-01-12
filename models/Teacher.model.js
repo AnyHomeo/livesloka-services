@@ -37,7 +37,15 @@ var TeacherSchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
-    Commission_Amount: {
+    Commission_Amount_One: {
+      type: String,
+      default: "0"
+    },
+    Commission_Amount_Many: {
+      type: String,
+      default: "0"
+    },
+    Salary_tillNow: {
       type: String,
       default: "0"
     },
