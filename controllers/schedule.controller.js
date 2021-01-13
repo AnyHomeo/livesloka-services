@@ -590,13 +590,39 @@ exports.editSchedule = async (req, res) => {
     }
     const oldSchedule = await Schedule.findOne({ _id: id });
 
-    let slotsToCheckfromOldSchedule = oldSchedule.slots.map((slotDay) =>
-      slotDay.sort()
-    );
-    let slotsToCheckFromNewSchedule = slotschange.map((slotDay) =>
-      slotDay.sort()
-    );
-    if (!equal(slotsToCheckfromOldSchedule, slotsToCheckFromNewSchedule)) {
+    // let slotsToCheckfromOldSchedule = oldSchedule.slots.map((slotDay) =>
+    //   slotDay.sort()
+    // );
+    // let slotsToCheckFromNewSchedule = slotschange.map((slotDay) =>
+    //   slotDay.sort()
+    // );
+    // if (!equal(slotsToCheckfromOldSchedule, slotsToCheckFromNewSchedule)) {
+    let {
+      monday,
+      tuesday,
+      wednesday,
+      thursday,
+      friday,
+      saturday,
+      sunday,
+    } = oldSchedule.slots;
+    let allSlots = [
+      ...monday,
+      ...tuesday,
+      ...wednesday,
+      ...thursday,
+      ...friday,
+      ...saturday,
+      ...sunday,
+    ];
+
+    allSlots.forEach((slot) => {
+      let slotIndex = data.timeSlots.indexOf(slot);
+      if (slotIndex != -1) {
+        data.timeSlots.splice(slotIndex, 1);
+      }
+    });
+    data.save().then(async (updatedAccount) => {
       let {
         monday,
         tuesday,
@@ -605,115 +631,89 @@ exports.editSchedule = async (req, res) => {
         friday,
         saturday,
         sunday,
-      } = oldSchedule.slots;
-      let allSlots = [
-        ...monday,
-        ...tuesday,
-        ...wednesday,
-        ...thursday,
-        ...friday,
-        ...saturday,
-        ...sunday,
-      ];
-
-      allSlots.forEach((slot) => {
-        let slotIndex = data.timeSlots.indexOf(slot);
-        if (slotIndex != -1) {
-          data.timeSlots.splice(slotIndex, 1);
-        }
+      } = slots;
+      let availableZoomAccount = await ZoomAccountModel.findOne({
+        timeSlots: {
+          $nin: [
+            ...monday,
+            ...tuesday,
+            ...wednesday,
+            ...thursday,
+            ...friday,
+            ...saturday,
+            ...sunday,
+          ],
+        },
       });
-      data.save().then(async (updatedAccount) => {
-        let {
-          monday,
-          tuesday,
-          wednesday,
-          thursday,
-          friday,
-          saturday,
-          sunday,
-        } = slots;
-        let availableZoomAccount = await ZoomAccountModel.findOne({
-          timeSlots: {
-            $nin: [
-              ...monday,
-              ...tuesday,
-              ...wednesday,
-              ...thursday,
-              ...friday,
-              ...saturday,
-              ...sunday,
-            ],
-          },
+      if (!availableZoomAccount) {
+        return res.status(400).json({
+          error: "No zoom account available for this Slots",
         });
-        if (!availableZoomAccount) {
-          return res.status(400).json({
-            error: "No zoom account available for this Slots",
-          });
-        }
-        const { _id, zoomEmail, zoomJwt, zoomPassword } = availableZoomAccount;
-        const { meetingLink } = oldSchedule;
-        console.log(
-          meetingLink,
-          meetingLink.split("/"),
+      }
+      const { _id, zoomEmail, zoomJwt, zoomPassword } = availableZoomAccount;
+      const { meetingLink } = oldSchedule;
+      console.log(
+        meetingLink,
+        meetingLink.split("/"),
+        meetingLink.split("/")[4].split("?")[0]
+      );
+      fetch(
+        `https://api.zoom.us/v2/meetings/${
           meetingLink.split("/")[4].split("?")[0]
-        );
-        fetch(
-          `https://api.zoom.us/v2/meetings/${
-            meetingLink.split("/")[4].split("?")[0]
-          }`,
-          {
-            method: "DELETE",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${zoomJwt}`,
-            },
-          }
-        )
-          .then((res) => {
-            console.log(res);
-          })
-          .catch((Err) => {
-            console.log(Err);
-          });
-        const formData = {
-          topic: "Livesloka Online Class",
-          type: 3,
-          password: zoomPassword,
-          settings: {
-            host_video: true,
-            participant_video: true,
-            join_before_host: true,
-            jbh_time: 0,
-            mute_upon_entry: true,
-            watermark: false,
-            use_pmi: false,
-            approval_type: 2,
-            audio: "both",
-            auto_recording: "none",
-            waiting_room: false,
-            meeting_authentication: false,
-          },
-        };
-        fetch(`https://api.zoom.us/v2/users/${zoomEmail}/meetings`, {
-          method: "post",
-          body: JSON.stringify(formData),
+        }`,
+        {
+          method: "DELETE",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${zoomJwt}`,
           },
+        }
+      )
+        .then((res) => {
+          console.log(res);
         })
-          .then((res) => res.json())
-          .then((json) => {
-            if (json.code === 1001) {
-              return res.status(400).json({
-                message: "Error while creating meeting link",
-              });
-            }
-            req.body.meetingLink = json.join_url;
-            req.body.meetingAccount = _id;
-          });
-      });
-    }
+        .catch((Err) => {
+          console.log(Err);
+        });
+      const formData = {
+        topic: "Livesloka Online Class",
+        type: 3,
+        password: zoomPassword,
+        settings: {
+          host_video: true,
+          participant_video: true,
+          join_before_host: true,
+          jbh_time: 0,
+          mute_upon_entry: true,
+          watermark: false,
+          use_pmi: false,
+          approval_type: 2,
+          audio: "both",
+          auto_recording: "none",
+          waiting_room: false,
+          meeting_authentication: false,
+        },
+      };
+      fetch(`https://api.zoom.us/v2/users/${zoomEmail}/meetings`, {
+        method: "post",
+        body: JSON.stringify(formData),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${zoomJwt}`,
+        },
+      })
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.code === 1001) {
+            return res.status(400).json({
+              message: "Error while creating meeting link",
+            });
+          }
+          req.body.meetingLink = json.join_url;
+          req.body.meetingAccount = _id;
+        });
+    });
+    // }
     Schedule.updateOne(
       { _id: id },
       { ...req.body, scheduleDescription },
