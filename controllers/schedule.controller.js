@@ -346,7 +346,7 @@ exports.addSchedule = async (req, res) => {
     friday,
     saturday,
     sunday,
-    //meetingLink,
+    meetingLink,
     meetingAccount,
     teacher,
     students,
