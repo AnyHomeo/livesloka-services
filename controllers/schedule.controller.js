@@ -376,10 +376,9 @@ exports.addSchedule = async (req, res) => {
   saturday = saturday ? saturday : [];
   sunday = sunday ? sunday : [];
   let className = "";
-  // meetingLink = meetingLink.startsWith("http")
-  //   ? meetingLink
-  //   : "https://" + meetingLink;
-  let meetingLink = "http:// + meetingLink +zoom";
+  meetingLink = meetingLink.startsWith("http")
+    ? meetingLink
+    : "https://" + meetingLink;
   try {
     let selectedSubject = await Subject.findOne({ _id: subject }).lean();
     let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
