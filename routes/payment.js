@@ -5,6 +5,7 @@ const {
   onFailurePayment,
   getTransactions,
   getAllTransactions,
+  getDailyDataGraph,
 } = require("../controllers/payment.controller");
 const router = express.Router();
 
@@ -13,4 +14,5 @@ router.get("/success/:id", onSuccess);
 router.get("/cancel/:id", onFailurePayment);
 router.get("/get/transactions/:id", getTransactions);
 router.get("/get/alltransactions/", getAllTransactions);
+router.get("/get/dailydatagraph/", getDailyDataGraph);
 module.exports = router;
