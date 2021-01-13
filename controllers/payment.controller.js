@@ -4,6 +4,7 @@ const Customer = require("../models/Customer.model");
 const Payment = require("../models/Payments");
 const Currency = require("../models/Currency.model");
 const { addMonths } = require("../scripts");
+const moment = require("moment");
 
 paypal.configure({
   mode: process.env.PAYPAL_MODE, //sandbox or live
@@ -222,6 +223,64 @@ exports.getAllTransactions = async (req, res) => {
         message: "Retrived successfully",
         result: allTransactions,
       });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+exports.getDailyDataGraph = async (req, res) => {
+  try {
+    const data = await Payment.find().populate("customerId");
+
+    let dailyData = {};
+    let monthlyData = {};
+    data &&
+      data.forEach((val) => {
+        if (val.paymentData !== null) {
+          const date = moment(val.paymentData.create_time).format(
+            "MMMM D YYYY"
+          );
+          dailyData[date] = dailyData[date] || {
+            responses: [],
+            totalAmount: [],
+            totalSum: [],
+            dates: [],
+          };
+
+          // dailyData[date].responses.push(val);
+          dailyData[date].totalAmount.push(val.customerId.proposedAmount++);
+          dailyData[date].dates.push(
+            moment(val.paymentData.create_time).format("MMMM D YYYY")
+          );
+          dailyData[date].totalSum = dailyData[date].totalAmount.reduce(
+            function (a, b) {
+              return a + b;
+            },
+            0
+          );
+
+          dailyData[date].dates = dailyData[date].dates.filter(function (
+            item,
+            index,
+            inputArray
+          ) {
+            return inputArray.indexOf(item) == index;
+          });
+        }
+      });
+
+    data &&
+      data.forEach((item) => {
+        let month = moment(item.createdAt).format("MMMM YYYY");
+        monthlyData[month] = monthlyData[month] || { count: 0, responses: [] };
+        monthlyData[month].count++;
+        monthlyData[month].responses.push(item);
+      });
+
+    // console.log("Daily data: ", dailyData);
+    return res.status(200).json({
+      result: dailyData,
+    });
   } catch (error) {
     console.log(error);
   }
