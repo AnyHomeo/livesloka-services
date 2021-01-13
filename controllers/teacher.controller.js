@@ -2,7 +2,11 @@ const TeacherModel = require("../models/Teacher.model");
 const CustomerModel = require("../models/Customer.model");
 const Category = require("../models/Category.model");
 const Schedule = require("../models/Scheduler.model");
+const Attendence = require("../models/Attendance");
 const { param } = require("../routes/teacher");
+
+// const { parse } = require("date-fns");
+
 const days = [
   "MONDAY",
   "TUESDAY",
@@ -12,6 +16,7 @@ const days = [
   "SATURDAY",
   "SUNDAY",
 ];
+
 exports.validateSlot = (req, res, next) => {
   if (!req.body.slot) {
     return res.status(400).json({ stage: 1, error: "Invalid Entry" });
@@ -129,7 +134,43 @@ exports.getAvailableSlots = (req, res) => {
     });
 };
 
-exports.getTeachers = (req, res) => {
+const salaryUpdater = (teacherobj) => {
+  //console.log(teacherobj);
+  let id = teacherobj.id;
+  // if (teacherobj.TeacherName === 'Mythili') {
+  //   console.log(teacherobj);
+  // }
+  Attendence.find({ teacherId: id })
+    .populate('scheduleId')
+    .then((data) => {
+      // console.log(data);
+      let salaryarray = [];
+      for (classidx = 0; classidx < data.length; classidx++) {
+        console.log(data[classidx].scheduleId.oneToMany);
+        if (data[classidx].scheduleId.oneToMany) {
+          let salary = data[classidx].customers.length * parseInt(teacherobj.Commission_Amount_Many);
+          salaryarray.push(salary);
+        }
+        else {
+          console.log("one")
+          let salary = data[classidx].customers.length * parseInt(teacherobj.Commission_Amount_One);
+          salaryarray.push(salary);
+        }
+      }
+      if (salaryarray.length > 0) {
+        let aggregate = salaryarray.reduce((a, b) => a + b);
+        TeacherModel.update({ id: teacherobj.id },
+          {
+            $set: { Salary_tillNow: aggregate }
+          })
+          .then((data) => { })
+          .catch((err) => console.log(data))
+      }
+    })
+    .catch((err) => { console.log(err) })
+};
+
+exports.getTeachers = async (req, res) => {
   let { params } = req.query;
   if (!params) {
     return res.status(400).json({
@@ -137,6 +178,13 @@ exports.getTeachers = (req, res) => {
     });
   }
   params = params.split(",").join(" ");
+  TeacherModel.find({})
+    .then((data) => {
+      for (teacherIdx = 0; teacherIdx < data.length; teacherIdx++) {
+        salaryUpdater(data[teacherIdx]);  //data[teacherIdx].Commission_Amount_One,data[teacherIdx].Commission_Amount_One
+      }
+    })
+    .catch((err) => { console.log(err) });
   TeacherModel.find()
     .select(params)
     .then((result) => {
@@ -343,3 +391,121 @@ exports.GetTeacherMeetings = async (req, res) => {
         .json({ message: "Fetched meetings  problem", err });
     });
 };
+
+exports.GetTeacherAttendance = async (req, res) => {
+  console.log(req.params);
+  let id = req.params.id;
+  Attendence.find({ teacherId: id })
+    .populate('scheduleId')
+    .then((data) => {
+      console.log(data);
+      if (data[0].time) {
+        console.log("there")
+      }
+      else {
+        console.log("ok")
+      }
+    })
+    .catch((err) => { console.log(err) })
+
+}
+
+// exports.GetSalaries = async (req, res) => {
+//   try {
+//     const allTeachers = await TeacherModel.find({});
+//     let allTeacherIds = allTeachers.map((teacher) => teacher.id)
+//     // console.log(allTeacherIds);
+//     let teacherAttends = await Attendence.find({ teacherId: { $in: allTeacherIds }, }).populate('scheduleId')
+//     // console.log(teacherAttends);
+//     let finalObj = {};
+//     allTeachers.forEach(teacher => {
+//       finalObj[teacher.TeacherName] = {};
+//       let attendeceofTeacher = teacherAttends.filter((att) => teacher.id === att.teacherId)
+//       finalObj[teacher.TeacherName].allAttendece = attendeceofTeacher;
+//       let allclasses = finalObj[teacher.TeacherName].allAttendece.map(el => {
+//         return el.scheduleId.className
+//       })  
+//       allclasses = [... new Set(allclasses)];
+//       finalObj[teacher.TeacherName].ClassName = {};
+//       allclasses.forEach(eachClass => {
+//         finalObj[teacher.TeacherName].ClassName[eachClass] = attendeceofTeacher.filter(at => at.scheduleId.className === eachClass)
+//        let eachClassDetails = attendeceofTeacher.filter(at => at.scheduleId.className === eachClass)
+
+//       })
+//       finalObj[teacher.TeacherName].allAttendece = undefined;
+//     })  
+//     console.log(finalObj);
+
+//     return res.status(200).json({ message: "ok", finalObj });
+//   } catch (error) {
+//     console.log(error)
+//     return res.status(500).json({ error });
+//   }
+// }
+
+exports.GetSalaries = async (req, res) => {
+  try {
+    // let dat = req.params.month;
+    const allTeachers = await TeacherModel.find({});
+    let allTeacherIds = allTeachers.map((teacher) => teacher.id)
+    // console.log(allTeacherIds);{ teacherId: { $in: allTeacherIds } } 
+    let dat = '2021-01'
+    let teacherAttends = await Attendence.find({
+      $and: [
+        { teacherId: { $in: allTeacherIds } },
+        { date: { $regex: dat, $options: 'm' } }
+      ]
+    }).populate('scheduleId')
+    console.log(teacherAttends);
+    let finalObj = [];
+    allTeachers.forEach(teacher => {
+      let objj = {
+        details: []
+      };
+      objj['TeacherName'] = teacher.TeacherName;
+      let attendeceofTeacher = teacherAttends.filter((att) => teacher.id === att.teacherId)
+      attendeceofTeacher.forEach(eachAtt => {
+        let obj = {};
+        obj['ClassName'] = eachAtt.scheduleId.className;
+        obj['No.Students'] = eachAtt.customers.length;
+        obj['Number of Days'] = attendeceofTeacher.length;
+        if (eachAtt.scheduleId.OneToOne) {
+          obj['commission'] = teacher.Commission_Amount_One;
+        }
+        else {
+          obj['commission'] = teacher.Commission_Amount_Many;
+        }
+        obj['salary'] = obj['No.Students'] * obj['Number of Days'] * obj['commission'];
+        objj['details'].push(obj)
+      })
+      objj['salary'] = 0;
+      objj['details'].forEach(ell => {
+        objj['salary'] = objj['salary'] + parseInt(ell.salary);
+      })
+      finalObj.push(objj)
+      // finalObj[teacher.TeacherName].allAttendece = attendeceofTeacher;
+      // let allclasses = finalObj[teacher.TeacherName].allAttendece.map(el => {
+      //   return el.scheduleId.className
+      // })  
+      // allclasses = [... new Set(allclasses)];
+      // finalObj[teacher.TeacherName].ClassName = {};
+      // allclasses.forEach(eachClass => {
+      //   finalObj[teacher.TeacherName].ClassName[eachClass] = attendeceofTeacher.filter(at => at.scheduleId.className === eachClass)
+      //  let eachClassDetails = attendeceofTeacher.filter(at => at.scheduleId.className === eachClass)
+
+      // })
+      // finalObj[teacher.TeacherName].allAttendece = undefined;
+    })
+    // console.log(finalObj);
+
+    return res.status(200).json({ message: "ok", finalObj });
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ error });
+  }
+}
+
+
+const viewDet = (data) => {
+  console.log("from", data)
+}

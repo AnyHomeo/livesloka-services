@@ -2,6 +2,9 @@ const mongoose = require("mongoose");
 
 var AttendanceSchema = new mongoose.Schema(
   {
+    teacherId: {
+      type: String,
+    },
     customers: [
       {
         type: mongoose.Schema.Types.ObjectId,

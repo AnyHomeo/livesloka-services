@@ -346,15 +346,18 @@ exports.addSchedule = async (req, res) => {
     friday,
     saturday,
     sunday,
-    meetingLink,
+    //meetingLink,
     meetingAccount,
     teacher,
     students,
     demo,
+    OneToOne,
+    OneToMany,
     startDate,
     subject,
     classname,
   } = req.body;
+  console.log(req.body);
 
   let slotees = {
     monday,
@@ -373,10 +376,10 @@ exports.addSchedule = async (req, res) => {
   saturday = saturday ? saturday : [];
   sunday = sunday ? sunday : [];
   let className = "";
-  meetingLink = meetingLink.startsWith("http")
-    ? meetingLink
-    : "https://" + meetingLink;
-
+  // meetingLink = meetingLink.startsWith("http")
+  //   ? meetingLink
+  //   : "https://" + meetingLink;
+  let meetingLink = "http:// + meetingLink +zoom";
   try {
     let selectedSubject = await Subject.findOne({ _id: subject }).lean();
     let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
@@ -411,6 +414,8 @@ exports.addSchedule = async (req, res) => {
       sunday,
     },
     demo,
+    OneToOne,
+    OneToMany,
     className,
     subject,
     scheduleDescription,
