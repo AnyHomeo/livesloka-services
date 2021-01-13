@@ -90,8 +90,9 @@ const slotPreproccesor = (sluts) => {
       let mintime = arrayMin(evalstamps);
       let maxtime = arrayMax(evalstamps);
       let convertedStamps = covertIntToTimes([mintime, maxtime]);
-      let finalStr = `${slot.toUpperCase()}-${convertedStamps[0]}-${convertedStamps[1]
-        }`;
+      let finalStr = `${slot.toUpperCase()}-${convertedStamps[0]}-${
+        convertedStamps[1]
+      }`;
       sluts[slot] = [finalStr];
       //console.log(slots[slot]);
     }
@@ -315,7 +316,7 @@ const postProcess = (data, cn) => {
   let schdarr = [];
   let schd = "";
   console.log("from postprocess", data);
-  for (q = 0; q < data.length;) {
+  for (q = 0; q < data.length; ) {
     schd = data[q] + "to " + data[q + 1].slice(-9);
     q = q + 2;
     schdarr.push(schd);
@@ -356,7 +357,7 @@ exports.addSchedule = async (req, res) => {
     subject,
     classname,
   } = req.body;
-  console.log(req.body)
+  console.log(req.body);
 
   let slotees = {
     monday,
@@ -385,8 +386,9 @@ exports.addSchedule = async (req, res) => {
     if (classname) {
       className = classname;
     } else {
-      className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
-        } ${startDate} ${demo ? "Demo" : ""}`;
+      className = `${selectedSubject.subjectName} ${
+        selectedTeacher.TeacherName
+      } ${startDate} ${demo ? "Demo" : ""}`;
     }
   } catch (error) {
     console.log(error);
@@ -571,8 +573,9 @@ exports.editSchedule = async (req, res) => {
     if (className) {
       req.body.className = className;
     } else {
-      req.body.className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
-        } ${startDate} ${demo ? "Demo" : ""}`;
+      req.body.className = `${selectedSubject.subjectName} ${
+        selectedTeacher.TeacherName
+      } ${startDate} ${demo ? "Demo" : ""}`;
     }
   } catch (error) {
     console.log(error);
@@ -596,6 +599,21 @@ exports.editSchedule = async (req, res) => {
       saturday,
       sunday,
     } = oldSchedule.slots;
+
+    Teacher.findOne({ id: teacher }).then(async (teacherData) => {
+      Object.keys(oldSchedule.slots).forEach((slotDay) => {
+        console.log(oldSchedule.slots[slotDay]);
+        // oldSchedule.slots[slotDay].forEach((slot) => {
+        //   let index = teacherData.scheduledSlots.indexOf(slot);
+        //   console.log(index)
+        //   if (index != -1) {
+        //     teacherData.scheduledSlots.splice(index, 1);
+        //   }
+        // });
+      });
+      await teacherData.save();
+    });
+
     let allSlots = [
       ...monday,
       ...tuesday,
@@ -647,7 +665,8 @@ exports.editSchedule = async (req, res) => {
         meetingLink.split("/")[4].split("?")[0]
       );
       fetch(
-        `https://api.zoom.us/v2/meetings/${meetingLink.split("/")[4].split("?")[0]
+        `https://api.zoom.us/v2/meetings/${
+          meetingLink.split("/")[4].split("?")[0]
         }`,
         {
           method: "DELETE",
@@ -841,7 +860,8 @@ exports.deleteScheduleById = async (req, res) => {
     const meetingAccountData = await ZoomAccountModel.findById(meetingAccount);
 
     fetch(
-      `https://api.zoom.us/v2/meetings/${meetingLink.split("/")[4].split("?")[0]
+      `https://api.zoom.us/v2/meetings/${
+        meetingLink.split("/")[4].split("?")[0]
       }`,
       {
         method: "DELETE",

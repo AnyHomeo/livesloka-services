@@ -8,7 +8,7 @@ const InvoiceModel = require("../models/Invoice.model");
 
 module.exports = {
   authentication(req, res, next) {
-    admin.findOne({ userId: req.body.userId }, (err, user) => {
+    admin.findOne({ userId: req.body.userId.toLowerCase() }, (err, user) => {
       if (!user) {
         return res.status(400).json({ error: "Invalid userId or Password" });
       } else {

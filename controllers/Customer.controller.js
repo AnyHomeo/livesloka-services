@@ -375,9 +375,45 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
-      return res.status(500).json({
-        error: "Error in Inserting Customers",
-      });
+      const { data } = req.body;
+      let user = {
+        lastName: data["field:comp-k8h6ltbn"],
+        firstName: data["field:comp-kbj52w90"],
+        whatsAppnumber: data["field:comp-kbfpi4zl"],
+        email: data["field:comp-kcdgzuaj"],
+        gender: data["field:comp-kig8mhkn"],
+        age: data["field:comp-kh8nsqzv"],
+      };
+      const newCustomer = new CustomerModel(user);
+      newCustomer
+        .save()
+        .then(async (data) => {
+          const userIfExists = await AdminModel.findOne({
+            userId: data["field:comp-kcdgzuaj"],
+          });
+          if (!userIfExists) {
+            const newUser = new AdminModel({
+              userId: data["field:comp-kcdgzuaj"],
+              password: "livesloka",
+              roleId: 1,
+              customerId: docs[0]._id,
+              username: data["field:comp-kbj52w90"],
+            });
+            newUser.save().then((savedDoc) => {
+              return res.json({
+                Success: true,
+                message: "Login credentials created successfully",
+              });
+            });
+          } else {
+            return res.json({ Success: true });
+          }
+        })
+        .catch((err) => {
+          return res.status(500).json({
+            error: "Error in Inserting Customers",
+          });
+        });
     }
   },
 };

@@ -47,7 +47,10 @@ const Customer = new mongoose.Schema(
       trim: true,
       type: String,
     },
-    noOfClasses: Number,
+    noOfClasses: {
+      type: Number,
+      default: 8,
+    },
     age: Number,
     gender: {
       trim: true,
@@ -81,6 +84,7 @@ const Customer = new mongoose.Schema(
     classStatusId: {
       trim: true,
       type: String,
+      default: "108731321313146850",
     },
     proposedAmount: Number,
     proposedCurrencyId: {
