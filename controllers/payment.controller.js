@@ -229,6 +229,7 @@ exports.getDailyDataGraph = async (req, res) => {
 
     let dailyData = {};
     let monthlyData = {};
+
     data &&
       data.forEach((val) => {
         if (val.paymentData !== null) {
@@ -243,7 +244,9 @@ exports.getDailyDataGraph = async (req, res) => {
           };
 
           // dailyData[date].responses.push(val);
-          dailyData[date].totalAmount.push(val.customerId.proposedAmount++);
+          dailyData[date].totalAmount.push(
+            Math.floor(val.paymentData.transactions[0].amount.total)
+          );
           dailyData[date].dates.push(
             moment(val.paymentData.create_time).format("MMMM D YYYY")
           );
