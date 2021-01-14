@@ -103,51 +103,52 @@ exports.onSuccess = async (req, res) => {
       ],
     };
 
-    paypal.payment.execute(paymentId, execute_payment_json, async function (
-      error,
-      payment
-    ) {
-      if (error) {
-        console.log(error);
-        return res.status(400).json({
-          error: "Something went wrong!",
-        });
-      } else {
-        if (customer.noOfClasses != 0 && !!customer.noOfClasses) {
-          customer.numberOfClassesBought =
-            customer.numberOfClassesBought + customer.noOfClasses;
-        } else if (customer.paymentDate) {
-          if (customer.paidTill) {
-            customer.paidTill = addMonths(customer.paidTill, 1);
-          } else {
-            const year = new Date().getFullYear();
-            const month = new Date().getMonth() + 1;
-            customer.paidTill = addMonths(
-              `${customer.paymentDate}-${month}-${year}`,
-              1
-            );
-          }
-        }
-        await customer.save();
-        const newPayment = new Payment({
-          customerId: id,
-          status: "SUCCESS",
-          paymentData: payment,
-        });
-        newPayment
-          .save()
-          .then(async (data) => {
-            return res.redirect(
-              `${process.env.USER_CLIENT_URL}/payment-success`
-            );
-          })
-          .catch((err) => {
-            return res.json({
-              error: "Internal Server Error",
-            });
+    paypal.payment.execute(
+      paymentId,
+      execute_payment_json,
+      async function (error, payment) {
+        if (error) {
+          console.log(error);
+          return res.status(400).json({
+            error: "Something went wrong!",
           });
+        } else {
+          if (customer.noOfClasses != 0 && !!customer.noOfClasses) {
+            customer.numberOfClassesBought =
+              customer.numberOfClassesBought + customer.noOfClasses;
+          } else if (customer.paymentDate) {
+            if (customer.paidTill) {
+              customer.paidTill = addMonths(customer.paidTill, 1);
+            } else {
+              const year = new Date().getFullYear();
+              const month = new Date().getMonth() + 1;
+              customer.paidTill = addMonths(
+                `${customer.paymentDate}-${month}-${year}`,
+                1
+              );
+            }
+          }
+          await customer.save();
+          const newPayment = new Payment({
+            customerId: id,
+            status: "SUCCESS",
+            paymentData: payment,
+          });
+          newPayment
+            .save()
+            .then(async (data) => {
+              return res.redirect(
+                `${process.env.USER_CLIENT_URL}/payment-success`
+              );
+            })
+            .catch((err) => {
+              return res.json({
+                error: "Internal Server Error",
+              });
+            });
+        }
       }
-    });
+    );
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -226,7 +227,6 @@ exports.getAllTransactions = async (req, res) => {
 exports.getDailyDataGraph = async (req, res) => {
   try {
     const data = await Payment.find().populate("customerId");
-
     let dailyData = {};
     let monthlyData = {};
 
