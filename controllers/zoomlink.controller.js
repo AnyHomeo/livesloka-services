@@ -55,7 +55,6 @@ module.exports.zoomlink = async (req, res) => {
   })
     .then((res) => res.json())
     .then((json) => {
-      console.log(json);
       if (json.code === 1001) {
         return res.status(400).json({
           message: "Error while creating meeting link",
