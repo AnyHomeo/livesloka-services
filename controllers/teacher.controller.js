@@ -404,39 +404,6 @@ exports.GetTeacherAttendance = async (req, res) => {
     });
 };
 
-// exports.GetSalaries = async (req, res) => {
-//   try {
-//     const allTeachers = await TeacherModel.find({});
-//     let allTeacherIds = allTeachers.map((teacher) => teacher.id)
-//     // console.log(allTeacherIds);
-//     let teacherAttends = await Attendence.find({ teacherId: { $in: allTeacherIds }, }).populate('scheduleId')
-//     // console.log(teacherAttends);
-//     let finalObj = {};
-//     allTeachers.forEach(teacher => {
-//       finalObj[teacher.TeacherName] = {};
-//       let attendeceofTeacher = teacherAttends.filter((att) => teacher.id === att.teacherId)
-//       finalObj[teacher.TeacherName].allAttendece = attendeceofTeacher;
-//       let allclasses = finalObj[teacher.TeacherName].allAttendece.map(el => {
-//         return el.scheduleId.className
-//       })
-//       allclasses = [... new Set(allclasses)];
-//       finalObj[teacher.TeacherName].ClassName = {};
-//       allclasses.forEach(eachClass => {
-//         finalObj[teacher.TeacherName].ClassName[eachClass] = attendeceofTeacher.filter(at => at.scheduleId.className === eachClass)
-//        let eachClassDetails = attendeceofTeacher.filter(at => at.scheduleId.className === eachClass)
-
-//       })
-//       finalObj[teacher.TeacherName].allAttendece = undefined;
-//     })
-//     console.log(finalObj);
-
-//     return res.status(200).json({ message: "ok", finalObj });
-//   } catch (error) {
-//     console.log(error)
-//     return res.status(500).json({ error });
-//   }
-// }
-
 exports.GetSalaries = async (req, res) => {
   try {
     // let dat = req.params.month;
