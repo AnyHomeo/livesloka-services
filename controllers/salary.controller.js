@@ -55,7 +55,6 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
               noOfDays: 1,
             };
             if (attendance.scheduleId.OneToOne) {
-              console.log(typeof teacher.Commission_Amount_One);
               objToPush.details[className].commission =
                 typeof teacher.Commission_Amount_One === "string"
                   ? parseInt(teacher.Commission_Amount_One)
@@ -65,7 +64,6 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
                   ? parseInt(teacher.Commission_Amount_One)
                   : 0;
             } else {
-              console.log(typeof teacher.Commission_Amount_Many);
               objToPush.details[className].commission =
                 typeof teacher.Commission_Amount_Many === "string"
                   ? parseInt(teacher.Commission_Amount_Many)
