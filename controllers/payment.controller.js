@@ -113,7 +113,6 @@ exports.onSuccess = async (req, res) => {
             error: "Something went wrong!",
           });
         } else {
-          console.log(customer.noOfClasses, customer.paymentDate);
           if (customer.noOfClasses != 0 && !!customer.noOfClasses) {
             customer.numberOfClassesBought =
               customer.numberOfClassesBought + customer.noOfClasses;
@@ -123,7 +122,6 @@ exports.onSuccess = async (req, res) => {
             } else {
               const year = new Date().getFullYear();
               const month = new Date().getMonth() + 1;
-              console.log(`${customer.paymentDate}-${month}-${year}`);
               customer.paidTill = addMonths(
                 `${customer.paymentDate}-${month}-${year}`,
                 1
@@ -191,7 +189,6 @@ exports.getTransactions = async (req, res) => {
 
   try {
     const allTransactions = await Payment.find({ customerId: id });
-    console.log(allTransactions);
 
     if (allTransactions === null) {
       return res.status(400).json({
@@ -212,7 +209,6 @@ exports.getAllTransactions = async (req, res) => {
     const allTransactions = await Payment.find()
       .populate("customerId")
       .sort({ createdAt: -1 });
-    console.log(allTransactions);
 
     if (allTransactions === null) {
       return res.status(400).json({
@@ -230,8 +226,9 @@ exports.getAllTransactions = async (req, res) => {
 
 exports.getDailyDataGraph = async (req, res) => {
   try {
-    const data = await Payment.find().populate("customerId");
-
+    const data = await Payment.find()
+      .sort({ createdAt: 1 })
+      .populate("customerId");
     let dailyData = {};
     let monthlyData = {};
 
@@ -279,8 +276,7 @@ exports.getDailyDataGraph = async (req, res) => {
         monthlyData[month].count++;
         monthlyData[month].responses.push(item);
       });
-
-    // console.log("Daily data: ", dailyData);
+    console.log(dailyData);
     return res.status(200).json({
       result: dailyData,
     });
