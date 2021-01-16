@@ -235,9 +235,7 @@ exports.getDailyDataGraph = async (req, res) => {
     data &&
       data.forEach((val) => {
         if (val.paymentData !== null) {
-          const date = moment(val.paymentData.create_time).format(
-            "MMMM D YYYY"
-          );
+          const date = moment(val.paymentData.create_time).format("MM D YYYY");
           dailyData[date] = dailyData[date] || {
             responses: [],
             totalAmount: [],
@@ -250,7 +248,7 @@ exports.getDailyDataGraph = async (req, res) => {
             Math.floor(val.paymentData.transactions[0].amount.total)
           );
           dailyData[date].dates.push(
-            moment(val.paymentData.create_time).format("MMMM D YYYY")
+            moment(val.paymentData.create_time).format("MM D YYYY")
           );
           dailyData[date].totalSum = dailyData[date].totalAmount.reduce(
             function (a, b) {
