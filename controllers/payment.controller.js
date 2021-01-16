@@ -226,7 +226,9 @@ exports.getAllTransactions = async (req, res) => {
 
 exports.getDailyDataGraph = async (req, res) => {
   try {
-    const data = await Payment.find().populate("customerId");
+    const data = await Payment.find()
+      .sort({ createdAt: 1 })
+      .populate("customerId");
     let dailyData = {};
     let monthlyData = {};
 
@@ -274,7 +276,7 @@ exports.getDailyDataGraph = async (req, res) => {
         monthlyData[month].count++;
         monthlyData[month].responses.push(item);
       });
-
+    console.log(dailyData);
     return res.status(200).json({
       result: dailyData,
     });
