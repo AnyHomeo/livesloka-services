@@ -247,7 +247,7 @@ exports.getDailyDataGraph = async (req, res) => {
 
           // dailyData[date].responses.push(val);
           dailyData[date].totalAmount.push(
-            Math.floor(val.paymentData.transactions[0].amount.total++)
+            Math.floor(val.paymentData.transactions[0].amount.total)
           );
           dailyData[date].dates.push(
             moment(val.paymentData.create_time).format("MMMM D YYYY")
