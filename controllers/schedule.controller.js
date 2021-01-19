@@ -711,7 +711,6 @@ exports.editSchedule = async (req, res) => {
               message: "Error while creating meeting link",
             });
           }
-          req.body.meetingLink = json.join_url;
           req.body.meetingAccount = _id;
         });
       // }
@@ -719,7 +718,7 @@ exports.editSchedule = async (req, res) => {
         { _id: id },
         { ...req.body, scheduleDescription },
         (err, response) => {
-
+          console.log(response);
           if (err) {
             return res.status(500).json({
               error: "Error in updating schedule",
@@ -766,7 +765,7 @@ exports.editSchedule = async (req, res) => {
                       {
                         $set: {
                           scheduleDescription: schdDescription,
-                          meetingLink: json.join_url,
+                          meetingLink: req.body.meetingLink,
                         },
                       }
                     );
