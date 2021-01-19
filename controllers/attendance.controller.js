@@ -75,7 +75,6 @@ const postAttendance = (req, res) => {
               error: "Error in updating Attendance",
             });
           } else {
-            console.log(savedAttendance);
             return res.json({
               message: "Attendance updated successfully",
             });
@@ -100,7 +99,6 @@ const postAttendance = (req, res) => {
               error: "Error in Taking Attendance",
             });
           } else {
-            console.log(doc);
             return res.json({
               message: "Attendance Added successfully",
             });

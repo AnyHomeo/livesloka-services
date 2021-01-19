@@ -64,7 +64,10 @@ const Customer = new mongoose.Schema(
       trim: true,
       type: String,
     },
-    numberOfStudents: Number,
+    numberOfStudents: {
+      type: Number,
+      default: 1,
+    },
     customerId: {
       trim: true,
       type: String,
