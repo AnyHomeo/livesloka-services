@@ -7,17 +7,17 @@ const Uploads = require("../models/uploads.model");
 
 exports.GetTeacherSchedules = async (req, res) => {
     let teacherId = req.params.id;
-    let allSchds = await Schedule.find({ teacher: teacherId })
-    console.log(allSchds.length)
-    ActiveSchds = allSchds.filter(el => el.isDeleted === false)
+    let allSchds = await Schedule.find({ teacher: teacherId });
+    console.log(allSchds.length);
+    ActiveSchds = allSchds.filter((el) => el.isDeleted === false);
     console.log(ActiveSchds.length);
     let obj = [];
-    ActiveSchds.forEach(el => {
+    ActiveSchds.forEach((el) => {
         eachObj = {};
-        eachObj['ScheduleId'] = el._id;
-        eachObj['ClassName'] = el.className;
+        eachObj["ScheduleId"] = el._id;
+        eachObj["ClassName"] = el.className;
         obj.push(eachObj);
-    })
+    });
     console.log(obj);
     try {
         return res.status(200).json({ message: "Teacher Scheduled Fetched", obj });
@@ -25,8 +25,7 @@ exports.GetTeacherSchedules = async (req, res) => {
         console.log(error);
         return res.status(500).json({ error });
     }
-
-}
+};
 
 exports.PostUpload = async (req, res) => {
     console.log(req.body);
