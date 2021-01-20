@@ -115,7 +115,15 @@ const Customer = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    materials: [
+      {
+        className: { type: String },
+        materialSrc: { type: String },
+        date: { type: String }
+      }
+    ]
   },
+
   {
     timestamps: true,
   }

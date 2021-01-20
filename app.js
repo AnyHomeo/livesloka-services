@@ -14,6 +14,7 @@ const scheduleRouter = require("./routes/schedule");
 const paymentRouter = require("./routes/payment");
 const zoomlink = require("./routes/zoomlink");
 const salaryRouter = require("./routes/salary");
+const uploadRouter = require("./routes/uploads");
 
 const app = express();
 require("dotenv").config();
@@ -36,6 +37,7 @@ app.use("/schedule", scheduleRouter);
 app.use("/payment", paymentRouter);
 app.use("/link", zoomlink);
 app.use("/salary", salaryRouter);
+app.use("/uploads", uploadRouter);
 
 const server = require("http").createServer(app);
 const PORT = process.env.PORT || 5000;
