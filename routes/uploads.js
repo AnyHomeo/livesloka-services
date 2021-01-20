@@ -5,7 +5,7 @@ const {
     GetTeacherSchedules
 } = require("../controllers/Uploads.controller");
 
-router.get("/getTeacherSchds", GetTeacherSchedules);
+router.get("/getTeacherSchds/:id", GetTeacherSchedules);
 
 
 module.exports = router;
