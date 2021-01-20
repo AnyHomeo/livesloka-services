@@ -119,7 +119,7 @@ const Customer = new mongoose.Schema(
       {
         className: { type: String },
         materialSrc: { type: String },
-        date: { type: String }
+        date: { type: Date, default: new Date() }
       }
     ]
   },

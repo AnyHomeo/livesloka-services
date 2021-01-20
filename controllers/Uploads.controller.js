@@ -30,7 +30,34 @@ exports.GetTeacherSchedules = async (req, res) => {
 
 exports.PostUpload = async (req, res) => {
     console.log(req.body);
+    let scheduleid = req.body.scheduleId;
+    req.body.scheduleId = undefined;
+    try {
+        let postdata = await Uploads.insertMany(req.body);
+        let scheduleData = await Schedule.find({ _id: scheduleid });
+        let studentsids = scheduleData[0].students;
+        CustomerModel.updateMany(
+            { _id: { $in: studentsids } },
+            {
+                $push:
+                {
+                    materials: {
+                        className: req.body.className,
+                        materialSrc: req.body.UploadLink
+                    }
+                }
+            }
+        ).then((data) => { })
+            .catch((err) => { console.log(err) })
+        let cus = await CustomerModel.find({ _id: { $in: studentsids } })
+        console.log(cus[0].materials);
+        return res.status(200).json({ message: "Material uploaded Successfully", });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error });
+    }
 }
+
 
 
 
