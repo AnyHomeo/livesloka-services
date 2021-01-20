@@ -49,9 +49,19 @@ exports.PostUpload = async (req, res) => {
             }
         ).then((data) => { })
             .catch((err) => { console.log(err) })
-        let cus = await CustomerModel.find({ _id: { $in: studentsids } })
-        console.log(cus[0].materials);
         return res.status(200).json({ message: "Material uploaded Successfully", });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error });
+    }
+}
+
+exports.GetStudentsMaterial = async (req, res) => {
+    try {
+        let stdId = req.params.id;
+        let stdmatdata = await CustomerModel.find({ _id: stdId });
+        let mat = stdmatdata[0].materials;
+        return res.status(200).json({ message: "Fetched Succesfully", mat })
     } catch (error) {
         console.log(error);
         return res.status(500).json({ error });
