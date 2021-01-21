@@ -8,9 +8,7 @@ const Uploads = require("../models/uploads.model");
 exports.GetTeacherSchedules = async (req, res) => {
     let teacherId = req.params.id;
     let allSchds = await Schedule.find({ teacher: teacherId });
-    console.log(allSchds.length);
     ActiveSchds = allSchds.filter((el) => el.isDeleted === false);
-    console.log(ActiveSchds.length);
     let obj = [];
     ActiveSchds.forEach((el) => {
         eachObj = {};
@@ -18,7 +16,6 @@ exports.GetTeacherSchedules = async (req, res) => {
         eachObj["ClassName"] = el.className;
         obj.push(eachObj);
     });
-    console.log(obj);
     try {
         return res.status(200).json({ message: "Teacher Scheduled Fetched", obj });
     } catch (error) {
@@ -40,10 +37,7 @@ exports.PostUpload = async (req, res) => {
             {
                 $push:
                 {
-                    materials: {
-                        className: req.body.className,
-                        materialSrc: req.body.UploadLink
-                    }
+                    materials: postdata[0]._id
                 }
             }
         ).then((data) => { })
@@ -58,8 +52,13 @@ exports.PostUpload = async (req, res) => {
 exports.GetStudentsMaterial = async (req, res) => {
     try {
         let stdId = req.params.id;
-        let stdmatdata = await CustomerModel.find({ _id: stdId });
-        let mat = stdmatdata[0].materials;
+        let stdmatdata = await CustomerModel.find({ email: stdId }).populate("materials")
+        console.log(stdmatdata);
+        let mat = []
+        stdmatdata.forEach(el => {
+            mat.push(...el.materials)
+        })
+        console.log(mat)
         return res.status(200).json({ message: "Fetched Succesfully", mat })
     } catch (error) {
         console.log(error);

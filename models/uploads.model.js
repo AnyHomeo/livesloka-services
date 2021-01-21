@@ -7,6 +7,7 @@ var UploadSchema = new mongoose.Schema(
         //     ref: "Schedule",
         // },
         className: { type: String },
+        materialName: { type: String },
         UploadLink: {
             trim: true,
             type: String,
@@ -17,6 +18,9 @@ var UploadSchema = new mongoose.Schema(
         typeOfmaterial: {
             type: String,
         }
+    },
+    {
+        timestamps: true,
     }
 );
 
