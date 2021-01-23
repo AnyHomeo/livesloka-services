@@ -54,11 +54,11 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
             (singleAttendance, index) => {
               return (
                 singleAttendance.scheduleId &&
-                singleAttendance.scheduleId.teacher === teacher.id
+                singleAttendance.scheduleId.teacher === teacher.id &&
+                !singleAttendance.scheduleId.demo
               );
             }
           );
-          objToPush.classes = allAttendecesTakenByThisTeacher;
           objToPush.details = {};
           allAttendecesTakenByThisTeacher.forEach((attendance) => {
             if (attendance.scheduleId) {
@@ -106,7 +106,6 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
               }
             }
           });
-          objToPush.classes = undefined;
           let totalSalary = 0;
           Object.keys(objToPush.details).forEach((className) => {
             totalSalary += objToPush.details[className].totalSalary;
