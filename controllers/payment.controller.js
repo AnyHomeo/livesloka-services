@@ -15,10 +15,10 @@ paypal.configure({
   client_secret: process.env.PAYPAL_CLIENT_SECRET,
 });
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+// const razorpay = new Razorpay({
+//   key_id: process.env.RAZORPAY_KEY_ID,
+//   key_secret: process.env.RAZORPAY_KEY_SECRET,
+// });
 
 exports.makePayment = async (req, res) => {
   try {
@@ -27,77 +27,77 @@ exports.makePayment = async (req, res) => {
       "firstName lastName className proposedAmount proposedCurrencyId"
     );
     const currency = await Currency.findOne({ id: user.proposedCurrencyId });
-    if (currency.currencyName !== "INR") {
-      if (user.proposedAmount) {
-        let price = user.proposedAmount.toString();
-        const payment_json = {
-          intent: "sale",
-          payer: {
-            payment_method: "paypal",
-          },
-          redirect_urls: {
-            return_url: `${process.env.SERVICES_URL}/payment/success/${id}`,
-            cancel_url: `${process.env.SERVICES_URL}/payment/cancel/${id}`,
-          },
-          transactions: [
-            {
-              item_list: {
-                items: [
-                  {
-                    name: user.className || "Livesloka class",
-                    price,
-                    currency: currency.currencyName || "USD",
-                    quantity: 1,
-                  },
-                ],
-              },
-              amount: {
-                currency: currency.currencyName || "USD",
-                total: price,
-              },
-              description:
-                "Payment for Class: " + user.className || "Livesloka class",
+    // if (currency.currencyName !== "INR") {
+    if (user.proposedAmount) {
+      let price = user.proposedAmount.toString();
+      const payment_json = {
+        intent: "sale",
+        payer: {
+          payment_method: "paypal",
+        },
+        redirect_urls: {
+          return_url: `${process.env.SERVICES_URL}/payment/success/${id}`,
+          cancel_url: `${process.env.SERVICES_URL}/payment/cancel/${id}`,
+        },
+        transactions: [
+          {
+            item_list: {
+              items: [
+                {
+                  name: user.className || "Livesloka class",
+                  price,
+                  currency: currency.currencyName || "USD",
+                  quantity: 1,
+                },
+              ],
             },
-          ],
-        };
-        paypal.payment.create(payment_json, function (error, payment) {
-          if (error) {
-            console.log(error);
-            res.status(500).json({
-              error:
-                "error in creating payment, Try again after Sometime or Contact Admin",
-            });
-          } else {
-            for (let i = 0; i < payment.links.length; i++) {
-              if (payment.links[i].rel === "approval_url") {
-                return res.json({
-                  link: payment.links[i].href,
-                  type: "PAYPAL",
-                });
-              }
+            amount: {
+              currency: currency.currencyName || "USD",
+              total: price,
+            },
+            description:
+              "Payment for Class: " + user.className || "Livesloka class",
+          },
+        ],
+      };
+      paypal.payment.create(payment_json, function (error, payment) {
+        if (error) {
+          console.log(error);
+          res.status(500).json({
+            error:
+              "error in creating payment, Try again after Sometime or Contact Admin",
+          });
+        } else {
+          for (let i = 0; i < payment.links.length; i++) {
+            if (payment.links[i].rel === "approval_url") {
+              return res.json({
+                link: payment.links[i].href,
+                type: "PAYPAL",
+              });
             }
           }
-        });
-      } else {
-        return res.status(500).json({
-          error: "Please Contact Admin! to add Amount or Currency type",
-        });
-      }
+        }
+      });
     } else {
-      const options = {
-        amount: user.proposedAmount * 100,
-        currency: "INR",
-        receipt: shortid.generate(),
-        payment_capture: 1,
-      };
-      let response = await razorpay.orders.create(options);
-      return res.json({
-        amount: response.amount,
-        currency: response.currency,
-        id: response.id,
-        type: "RAZORPAY",
+      return res.status(500).json({
+        error: "Please Contact Admin! to add Amount or Currency type",
       });
     }
+    // } else {
+    //   const options = {
+    //     amount: user.proposedAmount * 100,
+    //     currency: "INR",
+    //     receipt: shortid.generate(),
+    //     payment_capture: 1,
+    //   };
+    //   let response = await razorpay.orders.create(options);
+    //   return res.json({
+    //     amount: response.amount,
+    //     currency: response.currency,
+    //     id: response.id,
+    //     type: "RAZORPAY",
+    //   });
+    // }
   } catch (error) {
     console.log(error);
     return res.status(500).json({

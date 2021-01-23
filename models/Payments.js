@@ -10,6 +10,14 @@ var PaymentSchema = new mongoose.Schema(
       type: String,
       enum: ["SUCCESS", "CANCELLED"],
     },
+    type: {
+      type: String,
+      enum: ["PAYPAL", "RAZORPAY"],
+      default: "PAYPAL",
+    },
+    amount: {
+      type: Number,
+    },
     paymentData: mongoose.Schema.Types.Mixed,
   },
   { timestamps: true }
