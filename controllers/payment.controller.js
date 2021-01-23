@@ -5,11 +5,19 @@ const Payment = require("../models/Payments");
 const Currency = require("../models/Currency.model");
 const { addMonths } = require("../scripts");
 const moment = require("moment");
+const shortid = require("shortid");
+const Razorpay = require("razorpay");
+const { v4: uuidv4 } = require("uuid");
 
 paypal.configure({
-  mode: process.env.PAYPAL_MODE, //sandbox or live
+  mode: process.env.PAYPAL_MODE,
   client_id: process.env.PAYPAL_CLIENT_ID,
   client_secret: process.env.PAYPAL_CLIENT_SECRET,
+});
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
 exports.makePayment = async (req, res) => {
@@ -19,58 +27,75 @@ exports.makePayment = async (req, res) => {
       "firstName lastName className proposedAmount proposedCurrencyId"
     );
     const currency = await Currency.findOne({ id: user.proposedCurrencyId });
-    if (user.proposedAmount) {
-      let price = user.proposedAmount.toString();
-      const payment_json = {
-        intent: "sale",
-        payer: {
-          payment_method: "paypal",
-        },
-        redirect_urls: {
-          return_url: `${process.env.SERVICES_URL}/payment/success/${id}`,
-          cancel_url: `${process.env.SERVICES_URL}/payment/cancel/${id}`,
-        },
-        transactions: [
-          {
-            item_list: {
-              items: [
-                {
-                  name: user.className || "Livesloka class",
-                  price,
-                  currency: currency.currencyName || "USD",
-                  quantity: 1,
-                },
-              ],
-            },
-            amount: {
-              currency: currency.currencyName || "USD",
-              total: price,
-            },
-            description:
-              "Payment for Class: " + user.className || "Livesloka class",
+    if (currency.currencyName !== "INR") {
+      if (user.proposedAmount) {
+        let price = user.proposedAmount.toString();
+        const payment_json = {
+          intent: "sale",
+          payer: {
+            payment_method: "paypal",
           },
-        ],
-      };
-      paypal.payment.create(payment_json, function (error, payment) {
-        if (error) {
-          console.log(error);
-          res.status(500).json({
-            error:
-              "error in creating payment, Try again after Sometime or Contact Admin",
-          });
-        } else {
-          for (let i = 0; i < payment.links.length; i++) {
-            if (payment.links[i].rel === "approval_url") {
-              return res.json({
-                link: payment.links[i].href,
-              });
+          redirect_urls: {
+            return_url: `${process.env.SERVICES_URL}/payment/success/${id}`,
+            cancel_url: `${process.env.SERVICES_URL}/payment/cancel/${id}`,
+          },
+          transactions: [
+            {
+              item_list: {
+                items: [
+                  {
+                    name: user.className || "Livesloka class",
+                    price,
+                    currency: currency.currencyName || "USD",
+                    quantity: 1,
+                  },
+                ],
+              },
+              amount: {
+                currency: currency.currencyName || "USD",
+                total: price,
+              },
+              description:
+                "Payment for Class: " + user.className || "Livesloka class",
+            },
+          ],
+        };
+        paypal.payment.create(payment_json, function (error, payment) {
+          if (error) {
+            console.log(error);
+            res.status(500).json({
+              error:
+                "error in creating payment, Try again after Sometime or Contact Admin",
+            });
+          } else {
+            for (let i = 0; i < payment.links.length; i++) {
+              if (payment.links[i].rel === "approval_url") {
+                return res.json({
+                  link: payment.links[i].href,
+                  type: "PAYPAL",
+                });
+              }
             }
           }
-        }
-      });
+        });
+      } else {
+        return res.status(500).json({
+          error: "Please Contact Admin! to add Amount or Currency type",
+        });
+      }
     } else {
-      return res.status(500).json({
-        error: "Please Contact Admin! to add Amount or Currency type",
+      const options = {
+        amount: user.proposedAmount * 100,
+        currency: "INR",
+        receipt: shortid.generate(),
+        payment_capture: 1,
+      };
+      let response = await razorpay.orders.create(options);
+      return res.json({
+        amount: response.amount,
+        currency: response.currency,
+        id: response.id,
+        type: "RAZORPAY",
       });
     }
   } catch (error) {
@@ -103,52 +128,85 @@ exports.onSuccess = async (req, res) => {
       ],
     };
 
-    paypal.payment.execute(
-      paymentId,
-      execute_payment_json,
-      async function (error, payment) {
-        if (error) {
-          console.log(error);
-          return res.status(400).json({
-            error: "Something went wrong!",
-          });
-        } else {
-          if (customer.noOfClasses != 0 && !!customer.noOfClasses) {
-            customer.numberOfClassesBought =
-              customer.numberOfClassesBought + customer.noOfClasses;
-          } else if (customer.paymentDate) {
-            if (customer.paidTill) {
-              customer.paidTill = addMonths(customer.paidTill, 1);
-            } else {
-              const year = new Date().getFullYear();
-              const month = new Date().getMonth() + 1;
-              customer.paidTill = addMonths(
-                `${customer.paymentDate}-${month}-${year}`,
-                1
-              );
-            }
+    paypal.payment.execute(paymentId, execute_payment_json, async function (
+      error,
+      payment
+    ) {
+      if (error) {
+        console.log(error);
+        return res.status(400).json({
+          error: "Something went wrong!",
+        });
+      } else {
+        if (customer.noOfClasses != 0 && !!customer.noOfClasses) {
+          customer.numberOfClassesBought =
+            customer.numberOfClassesBought + customer.noOfClasses;
+        } else if (customer.paymentDate) {
+          if (customer.paidTill) {
+            customer.paidTill = addMonths(customer.paidTill, 1);
+          } else {
+            const year = new Date().getFullYear();
+            const month = new Date().getMonth() + 1;
+            customer.paidTill = addMonths(
+              `${customer.paymentDate}-${month}-${year}`,
+              1
+            );
           }
-          await customer.save();
-          const newPayment = new Payment({
-            customerId: id,
-            status: "SUCCESS",
-            paymentData: payment,
-          });
-          newPayment
-            .save()
-            .then(async (data) => {
-              return res.redirect(
-                `${process.env.USER_CLIENT_URL}/payment-success`
-              );
-            })
-            .catch((err) => {
-              return res.json({
-                error: "Internal Server Error",
-              });
-            });
         }
+        await customer.save();
+        const newPayment = new Payment({
+          customerId: id,
+          status: "SUCCESS",
+          paymentData: payment,
+        });
+        newPayment
+          .save()
+          .then(async (data) => {
+            return res.redirect(
+              `${process.env.USER_CLIENT_URL}/payment-success`
+            );
+          })
+          .catch((err) => {
+            return res.json({
+              error: "Internal Server Error",
+            });
+          });
       }
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
+};
+
+exports.onRazorpaySuccess = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const customer = await Customer.findById(id).select(
+      "firstName lastName className proposedAmount proposedCurrencyId noOfClasses paymentDate numberOfClassesBought paidTill"
     );
+    console.log(customer);
+    if (customer.noOfClasses != 0 && !!customer.noOfClasses) {
+      customer.numberOfClassesBought =
+        customer.numberOfClassesBought + customer.noOfClasses;
+    } else if (customer.paymentDate) {
+      if (customer.paidTill) {
+        customer.paidTill = addMonths(customer.paidTill, 1);
+      } else {
+        const year = new Date().getFullYear();
+        const month = new Date().getMonth() + 1;
+        customer.paidTill = addMonths(
+          `${customer.paymentDate}-${month}-${year}`,
+          1
+        );
+      }
+    }
+    await customer.save();
+    return res.json({
+      message: "Added classses Successfully",
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
