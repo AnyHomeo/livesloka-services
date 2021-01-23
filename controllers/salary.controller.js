@@ -34,7 +34,10 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
     const allTeachers = await TeacherModel.find({}).lean();
     const allTeacherAttendances = await Attendance.find({
       date: { $regex: month },
-    }).populate("scheduleId", "OneToOne oneToMany className students teacher");
+    }).populate(
+      "scheduleId",
+      "OneToOne oneToMany className students teacher demo"
+    );
     Attendance.populate(
       allTeacherAttendances,
       {
