@@ -45,10 +45,26 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
         model: CustomerModel,
         select: "numberOfStudents",
       },
-      (err, allTeacherAttendances) => {
+      async (err, allTeacherAttendances) => {
         if (err) {
           console.log(err);
         }
+        allTeacherAttendances = await Attendance.populate(
+          allTeacherAttendances,
+          {
+            path: "customers",
+            model: CustomerModel,
+            select: "numberOfStudents",
+          }
+        );
+        allTeacherAttendances = await Attendance.populate(
+          allTeacherAttendances,
+          {
+            path: "absentees",
+            model: CustomerModel,
+            select: "numberOfStudents",
+          }
+        );
         allTeachers.forEach((teacher) => {
           let objToPush = {};
           objToPush.id = teacher.id;
@@ -77,18 +93,26 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
           allAttendecesTakenByThisTeacher.forEach((attendance) => {
             if (attendance.scheduleId) {
               let className = attendance.scheduleId.className;
-              let totalStudents = 0;
-              attendance.scheduleId.students.forEach((student) => {
-                totalStudents += student.numberOfStudents
-                  ? parseInt(student.numberOfStudents)
-                  : 1;
-              });
               if (className) {
                 if (!objToPush.details[className]) {
                   objToPush.details[className] = {
                     scheduleId: attendance.scheduleId._id,
                     noOfDays: 1,
                   };
+                  objToPush.details[className].numberOfStudents = 0;
+                  let totalStudents = 0;
+                  attendance.customers.forEach((student) => {
+                    console.log(student.numberOfStudents);
+                    totalStudents += student.numberOfStudents
+                      ? parseInt(student.numberOfStudents)
+                      : 1;
+                  });
+                  attendance.absentees.forEach((student) => {
+                    console.log(student.numberOfStudents);
+                    totalStudents += student.numberOfStudents
+                      ? parseInt(student.numberOfStudents)
+                      : 1;
+                  });
                   if (attendance.scheduleId.OneToOne) {
                     objToPush.details[className].commission =
                       typeof teacher.Commission_Amount_One === "string"
@@ -108,13 +132,31 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
                         ? parseInt(teacher.Commission_Amount_Many)
                         : 0;
                   }
-                  objToPush.details[className].numberOfStudents = totalStudents;
+                  objToPush.details[
+                    className
+                  ].numberOfStudents += totalStudents;
                   objToPush.details[className].totalSalary =
                     objToPush.details[className].totalSalary * totalStudents;
                 } else {
+                  let totalStudents = 0;
+                  attendance.customers.forEach((student) => {
+                    console.log("from presentees", student.numberOfStudents);
+                    totalStudents += student.numberOfStudents
+                      ? parseInt(student.numberOfStudents)
+                      : 1;
+                  });
+                  attendance.absentees.forEach((student) => {
+                    console.log("from absentees", student.numberOfStudents);
+                    totalStudents += student.numberOfStudents
+                      ? parseInt(student.numberOfStudents)
+                      : 1;
+                  });
+                  objToPush.details[
+                    className
+                  ].numberOfStudents += totalStudents;
+                  console.log(objToPush.details[className].numberOfStudents);
                   objToPush.details[className].noOfDays += 1;
                   objToPush.details[className].totalSalary =
-                    objToPush.details[className].noOfDays *
                     objToPush.details[className].numberOfStudents *
                     objToPush.details[className].commission;
                 }
