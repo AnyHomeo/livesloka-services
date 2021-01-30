@@ -55,11 +55,22 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
           objToPush.name = teacher.TeacherName;
           let allAttendecesTakenByThisTeacher = allTeacherAttendances.filter(
             (singleAttendance, index) => {
-              return (
+              if (
                 singleAttendance.scheduleId &&
                 singleAttendance.scheduleId.teacher === teacher.id &&
                 !singleAttendance.scheduleId.demo
-              );
+              ) {
+                return true;
+              } else if (
+                singleAttendance.scheduleId &&
+                singleAttendance.scheduleId.teacher === teacher.id &&
+                singleAttendance.scheduleId.demo &&
+                teacher.isDemoIncludedInSalaries
+              ) {
+                return true;
+              } else {
+                return false;
+              }
             }
           );
           objToPush.details = {};
@@ -75,6 +86,7 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
               if (className) {
                 if (!objToPush.details[className]) {
                   objToPush.details[className] = {
+                    scheduleId: attendance.scheduleId._id,
                     noOfDays: 1,
                   };
                   if (attendance.scheduleId.OneToOne) {

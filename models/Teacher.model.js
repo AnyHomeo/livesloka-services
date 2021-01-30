@@ -39,15 +39,15 @@ var TeacherSchema = new mongoose.Schema(
     },
     Commission_Amount_One: {
       type: String,
-      default: "0"
+      default: "0",
     },
     Commission_Amount_Many: {
       type: String,
-      default: "0"
+      default: "0",
     },
     Salary_tillNow: {
       type: String,
-      default: "0"
+      default: "0",
     },
     Bank_account: {
       type: String,
@@ -57,7 +57,11 @@ var TeacherSchema = new mongoose.Schema(
     },
     Bank_full_name: {
       type: String,
-    }
+    },
+    isDemoIncludedInSalaries: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
