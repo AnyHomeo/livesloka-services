@@ -25,7 +25,6 @@ exports.GetTeacherSchedules = async (req, res) => {
 };
 
 exports.PostUpload = async (req, res) => {
-  console.log(req.body);
   let scheduleid = req.body.scheduleId;
   req.body.scheduleId = undefined;
   try {
@@ -58,12 +57,10 @@ exports.GetStudentsMaterial = async (req, res) => {
       email: stdId,
     }).populate("materials");
 
-    console.log(stdmatdata);
     let mat = [];
     stdmatdata.forEach((el) => {
       mat.push(...el.materials);
     });
-    console.log(mat);
     return res.status(200).json({ message: "Fetched Succesfully", mat });
   } catch (error) {
     console.log(error);

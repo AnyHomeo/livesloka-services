@@ -8,6 +8,8 @@ const allZones = require("../models/timeZone.json");
 const ZoomAccountModel = require("../models/ZoomAccount.model");
 const fetch = require("node-fetch");
 const SchedulerModel = require("../models/Scheduler.model");
+const TeacherModel = require("../models/Teacher.model");
+var equal = require("fast-deep-equal");
 
 function convertTZ(date, tzString) {
   return new Date(
@@ -84,8 +86,9 @@ const slotPreproccesor = (sluts) => {
       let mintime = arrayMin(evalstamps);
       let maxtime = arrayMax(evalstamps);
       let convertedStamps = covertIntToTimes([mintime, maxtime]);
-      let finalStr = `${slot.toUpperCase()}-${convertedStamps[0]}-${convertedStamps[1]
-        }`;
+      let finalStr = `${slot.toUpperCase()}-${convertedStamps[0]}-${
+        convertedStamps[1]
+      }`;
       sluts[slot] = [finalStr];
     }
   });
@@ -306,7 +309,7 @@ const SlotConverter = (data, timezon) => {
 const postProcess = (data, cn) => {
   let schdarr = [];
   let schd = "";
-  for (q = 0; q < data.length;) {
+  for (q = 0; q < data.length; ) {
     schd = data[q] + "to " + data[q + 1].slice(-9);
     q = q + 2;
     schdarr.push(schd);
@@ -374,8 +377,9 @@ exports.addSchedule = async (req, res) => {
     if (classname) {
       className = classname;
     } else {
-      className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
-        } ${startDate} ${demo ? "Demo" : ""}`;
+      className = `${selectedSubject.subjectName} ${
+        selectedTeacher.TeacherName
+      } ${startDate} ${demo ? "Demo" : ""}`;
     }
   } catch (error) {
     console.log(error);
@@ -532,28 +536,16 @@ exports.editSchedule = async (req, res) => {
     subject,
     className,
     meetingAccount,
-    OneToOne,
-    oneToMany,
   } = req.body;
 
-  let {
-    monday,
-    tuesday,
-    wednesday,
-    thursday,
-    friday,
-    saturday,
-    sunday,
-  } = req.body.slots;
-
   let slotschange = {
-    monday,
-    tuesday,
-    wednesday,
-    thursday,
-    friday,
-    saturday,
-    sunday,
+    monday: req.body.slots.monday,
+    tuesday: req.body.slots.tuesday,
+    wednesday: req.body.slots.wednesday,
+    thursday: req.body.slots.thursday,
+    friday: req.body.slots.friday,
+    saturday: req.body.slots.saturday,
+    sunday: req.body.slots.sunday,
   };
 
   try {
@@ -562,8 +554,9 @@ exports.editSchedule = async (req, res) => {
     if (className) {
       req.body.className = className;
     } else {
-      req.body.className = `${selectedSubject.subjectName} ${selectedTeacher.TeacherName
-        } ${startDate} ${demo ? "Demo" : ""}`;
+      req.body.className = `${selectedSubject.subjectName} ${
+        selectedTeacher.TeacherName
+      } ${startDate} ${demo ? "Demo" : ""}`;
     }
   } catch (error) {
     console.log(error);
@@ -571,40 +564,45 @@ exports.editSchedule = async (req, res) => {
       error: "Can't Add className",
     });
   }
+
   let scheduleDescription = scheduleDescriptionGenerator(slotschange);
+  const oldSchedule = await Schedule.findOne({ _id: id });
+  let oldTeacher = await TeacherModel.findOne({ id: oldSchedule.teacher });
+  let {
+    monday,
+    tuesday,
+    wednesday,
+    thursday,
+    friday,
+    saturday,
+    sunday,
+  } = oldSchedule.slots;
+  let allSlots = [
+    ...monday,
+    ...tuesday,
+    ...wednesday,
+    ...thursday,
+    ...friday,
+    ...saturday,
+    ...sunday,
+  ];
+
+  oldTeacher.availableSlots = oldTeacher.availableSlots.concat(allSlots);
+  oldTeacher.availableSlots = [...new Set(oldTeacher.availableSlots)];
+  let allScheduledSlotsOfTeacher = [...oldTeacher.scheduledSlots];
+  allScheduledSlotsOfTeacher.forEach((slot) => {
+    if (allSlots.includes(slot)) {
+      let index = oldTeacher.scheduledSlots.indexOf(slot);
+      oldTeacher.scheduledSlots.splice(index, 1);
+    }
+  });
+
+  await oldTeacher.save();
 
   ZoomAccountModel.findById(meetingAccount, async (err, data) => {
     if (err) {
       console.log(err);
     }
-    const oldSchedule = await Schedule.findOne({ _id: id });
-
-    // let slotsToCheckfromOldSchedule = oldSchedule.slots.map((slotDay) =>
-    //   slotDay.sort()
-    // );
-    // let slotsToCheckFromNewSchedule = slotschange.map((slotDay) =>
-    //   slotDay.sort()
-    // );
-    // if (!equal(slotsToCheckfromOldSchedule, slotsToCheckFromNewSchedule)) {
-    let {
-      monday,
-      tuesday,
-      wednesday,
-      thursday,
-      friday,
-      saturday,
-      sunday,
-    } = oldSchedule.slots;
-    let allSlots = [
-      ...monday,
-      ...tuesday,
-      ...wednesday,
-      ...thursday,
-      ...friday,
-      ...saturday,
-      ...sunday,
-    ];
-
     allSlots.forEach((slot) => {
       let slotIndex = data.timeSlots.indexOf(slot);
       if (slotIndex != -1) {
@@ -641,23 +639,26 @@ exports.editSchedule = async (req, res) => {
       }
       const { _id, zoomEmail, zoomJwt, zoomPassword } = availableZoomAccount;
       const { meetingLink } = oldSchedule;
-      fetch(
-        `https://api.zoom.us/v2/meetings/${meetingLink.split("/")[4].split("?")[0]
-        }`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${zoomJwt}`,
-          },
-        }
-      )
-        .then((res) => {
-          console.log(res);
-        })
-        .catch((Err) => {
-          console.log(Err);
-        });
+      if (meetingLink) {
+        fetch(
+          `https://api.zoom.us/v2/meetings/${
+            meetingLink.split("/")[4].split("?")[0]
+          }`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${zoomJwt}`,
+            },
+          }
+        )
+          .then((res) => {
+            console.log(res);
+          })
+          .catch((Err) => {
+            console.log(Err);
+          });
+      }
       const formData = {
         topic: "Livesloka Online Class",
         type: 3,
@@ -692,117 +693,120 @@ exports.editSchedule = async (req, res) => {
               message: "Error while creating meeting link",
             });
           }
+          console.log(json);
           console.log(json.join_url);
           req.body.meetingLink = json.join_url;
           req.body.meetingAccount = _id;
-          // }
-          Schedule.updateOne(
-            { _id: id },
-            { ...req.body, scheduleDescription },
-            (err, response) => {
-              if (err) {
-                return res.status(500).json({
-                  error: "Error in updating schedule",
-                });
-              }
-              ZoomAccountModel.findById(_id)
-                .then(async (data) => {
-                  data.timeSlots = [
-                    ...data.timeSlots,
-                    ...monday,
-                    ...tuesday,
-                    ...wednesday,
-                    ...thursday,
-                    ...friday,
-                    ...saturday,
-                    ...sunday,
-                  ];
-                  await data.save();
-                })
-                .catch((err) => {
-                  console.log(err);
-                });
-              let Subjectname = "";
-              Subject.findOne({ _id: subject })
-                .then((subject) => {
-                  Subjectname = Subjectname + subject.subjectName;
-                })
-                .catch((error) => {
-                  console.log(error);
-                });
-              for (x = 0; x < students.length; x++) {
-                Customer.findOne({ _id: students[x] })
-                  .then((data) => {
-                    let stud_id = data._id;
-                    let { timeZoneId } = data;
-
-                    timzone
-                      .findOne({ id: timeZoneId })
-                      .then(async (dat) => {
-                        let rec = SlotConverter(slots, dat.timeZoneName);
-                        let schdDescription = postProcess(rec, Subjectname);
-                        await Customer.updateOne(
-                          { _id: stud_id },
-                          {
-                            $set: {
-                              scheduleDescription: schdDescription,
-                              meetingLink: json.join_url,
-                            },
-                          }
-                        );
-                      })
-                      .catch((err) => {
-                        console.log(err);
-                      }); // error in fetching the timezones from database
-                  })
-                  .catch((error) => {
-                    console.log(error);
-                    //return res.status(400).json({ msg: "error in updating students Links and Description", err });
-                  }); // error in fetching the students from DB
-              }
-              Teacher.findOne({ id: teacher })
-                .then((data) => {
-                  if (data) {
-                    let { availableSlots } = data;
-                    if (availableSlots) {
-                      Object.keys(slots).forEach((day) => {
-                        let arr = slots[day];
-                        arr.forEach((slot) => {
-                          let index = availableSlots.indexOf(slot);
-                          if (index != -1) {
-                            data.availableSlots.splice(index, 1);
-                          }
-                          data.scheduledSlots.push(slot);
-                        });
-                      });
-                    }
-                    data.availableSlots = [...new Set(data.availableSlots)];
-                    data.scheduledSlots = [...new Set(data.scheduledSlots)];
-                    data.save((err, docs) => {
-                      if (err) {
-                        console.log(err);
-                        return res.status(500).json({
-                          error: "error in updating teacher slots",
-                        });
-                      } else {
-                        return res.json({
-                          message: "schedule updated successfully",
-                        });
-                      }
-                    });
-                  }
-                })
-                .catch((err) => {
-                  console.log(err);
-                  return res.status(400).json({
-                    error: "error in updating students Links and Description",
-                  });
-                });
-            }
-          );
         });
     });
   });
+  Schedule.updateOne(
+    { _id: id },
+    { ...req.body, scheduleDescription },
+    (err, response) => {
+      if (err) {
+        return res.status(500).json({
+          error: "Error in updating schedule",
+        });
+      }
+      ZoomAccountModel.findById(req.body.meetingAccount)
+        .then(async (data) => {
+          data.timeSlots = [
+            ...data.timeSlots,
+            ...monday,
+            ...tuesday,
+            ...wednesday,
+            ...thursday,
+            ...friday,
+            ...saturday,
+            ...sunday,
+          ];
+
+          await ZoomAccountModel.updateOne(
+            { _id: req.body.meetingAccount },
+            { timeSlots: data.timeSlots }
+          );
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      let Subjectname = "";
+      Subject.findOne({ _id: subject })
+        .then((subject) => {
+          Subjectname = Subjectname + subject.subjectName;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+      for (x = 0; x < students.length; x++) {
+        Customer.findOne({ _id: students[x] })
+          .then((data) => {
+            let stud_id = data._id;
+            let { timeZoneId } = data;
+
+            timzone
+              .findOne({ id: timeZoneId })
+              .then(async (dat) => {
+                let rec = SlotConverter(slots, dat.timeZoneName);
+                let schdDescription = postProcess(rec, Subjectname);
+                await Customer.updateOne(
+                  { _id: stud_id },
+                  {
+                    $set: {
+                      scheduleDescription: schdDescription,
+                      meetingLink: req.body.meetingLink,
+                    },
+                  }
+                );
+              })
+              .catch((err) => {
+                console.log(err);
+              });
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+      }
+      Teacher.findOne({ id: teacher })
+        .then((data) => {
+          if (data) {
+            let { availableSlots } = data;
+            if (availableSlots) {
+              Object.keys(slots).forEach((day) => {
+                let arr = slots[day];
+                arr.forEach((slot) => {
+                  let index = availableSlots.indexOf(slot);
+                  if (index != -1) {
+                    data.availableSlots.splice(index, 1);
+                  }
+                  data.scheduledSlots.push(slot);
+                });
+              });
+            }
+            data.availableSlots = [...new Set(data.availableSlots)];
+            data.scheduledSlots = [...new Set(data.scheduledSlots)];
+            data.save((err, docs) => {
+              if (err) {
+                console.log(err);
+                return res.status(500).json({
+                  error: "error in updating teacher slots",
+                });
+              } else {
+                return res.json({
+                  message: "schedule updated successfully",
+                });
+              }
+            });
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+          return res.status(400).json({
+            error: "error in updating students Links and Description",
+          });
+        });
+    }
+  );
 };
 exports.deleteScheduleById = async (req, res) => {
   const { id } = req.params;
@@ -838,7 +842,8 @@ exports.deleteScheduleById = async (req, res) => {
     const meetingAccountData = await ZoomAccountModel.findById(meetingAccount);
 
     fetch(
-      `https://api.zoom.us/v2/meetings/${meetingLink.split("/")[4].split("?")[0]
+      `https://api.zoom.us/v2/meetings/${
+        meetingLink.split("/")[4].split("?")[0]
       }`,
       {
         method: "DELETE",

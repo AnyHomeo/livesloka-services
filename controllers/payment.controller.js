@@ -187,7 +187,6 @@ exports.onRazorpaySuccess = async (req, res) => {
     const customer = await Customer.findById(id).select(
       "firstName lastName className proposedAmount proposedCurrencyId noOfClasses paymentDate numberOfClassesBought paidTill"
     );
-    console.log(customer);
     if (customer.noOfClasses != 0 && !!customer.noOfClasses) {
       customer.numberOfClassesBought =
         customer.numberOfClassesBought + customer.noOfClasses;
@@ -334,7 +333,6 @@ exports.getDailyDataGraph = async (req, res) => {
         monthlyData[month].count++;
         monthlyData[month].responses.push(item);
       });
-    console.log(dailyData);
     return res.status(200).json({
       result: dailyData,
     });

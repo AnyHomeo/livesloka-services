@@ -416,7 +416,6 @@ exports.GetSalaries = async (req, res) => {
         { date: { $regex: dat, $options: "m" } },
       ],
     }).populate("scheduleId");
-    console.log(teacherAttends);
     let finalObj = [];
     allTeachers.forEach((teacher) => {
       let objj = {
