@@ -1,6 +1,7 @@
 const Attendance = require("../models/Attendance");
 const CustomerModel = require("../models/Customer.model");
 const TeacherModel = require("../models/Teacher.model");
+const SchedulerModel = require("../models/Scheduler.model");
 
 exports.getAllDatesOfSalaries = async (req, res) => {
   try {
@@ -29,9 +30,13 @@ exports.getAllDatesOfSalaries = async (req, res) => {
 
 exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
   try {
-    const { month } = req.query;
+    const { month, teacher } = req.query;
     var finalDataObjectArr = [];
-    const allTeachers = await TeacherModel.find({}).lean();
+    let query = {};
+    if (teacher) {
+      query["id"] = teacher;
+    }
+    const allTeachers = await TeacherModel.find(query).lean();
     const allTeacherAttendances = await Attendance.find({
       date: { $regex: month },
     }).populate(
@@ -102,13 +107,11 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
                   objToPush.details[className].numberOfStudents = 0;
                   let totalStudents = 0;
                   attendance.customers.forEach((student) => {
-                    console.log(student.numberOfStudents);
                     totalStudents += student.numberOfStudents
                       ? parseInt(student.numberOfStudents)
                       : 1;
                   });
                   attendance.absentees.forEach((student) => {
-                    console.log(student.numberOfStudents);
                     totalStudents += student.numberOfStudents
                       ? parseInt(student.numberOfStudents)
                       : 1;
@@ -140,13 +143,11 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
                 } else {
                   let totalStudents = 0;
                   attendance.customers.forEach((student) => {
-                    console.log("from presentees", student.numberOfStudents);
                     totalStudents += student.numberOfStudents
                       ? parseInt(student.numberOfStudents)
                       : 1;
                   });
                   attendance.absentees.forEach((student) => {
-                    console.log("from absentees", student.numberOfStudents);
                     totalStudents += student.numberOfStudents
                       ? parseInt(student.numberOfStudents)
                       : 1;
@@ -154,7 +155,6 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
                   objToPush.details[
                     className
                   ].numberOfStudents += totalStudents;
-                  console.log(objToPush.details[className].numberOfStudents);
                   objToPush.details[className].noOfDays += 1;
                   objToPush.details[className].totalSalary =
                     objToPush.details[className].numberOfStudents *
@@ -181,4 +181,79 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
       error: "Error in retrieving Salaries",
     });
   }
+};
+
+exports.getSalariesOfTeacherByMonthAndId = async (req, res) => {
+  const { month } = req.query;
+  const { id } = req.params;
+  let allScheduleIdsOfThisTeacher = await SchedulerModel.find({
+    teacher: id,
+  }).select("_id");
+  allScheduleIdsOfThisTeacher = allScheduleIdsOfThisTeacher.map(
+    (obj) => obj._id
+  );
+  let teacherData = await TeacherModel.findOne({ id }).select(
+    "Commission_Amount_One Commission_Amount_Many isDemoIncludedInSalaries"
+  );
+  const AttendanceByThisTeacher = await Attendance.find({
+    date: { $regex: month },
+    scheduleId: { $in: allScheduleIdsOfThisTeacher },
+  })
+    .populate("customers", "numberOfStudents firstName")
+    .populate("absentees", "numberOfStudents firstName")
+    .populate("scheduleId", "OneToOne demo className startDate");
+
+  let finalObject = {};
+  AttendanceByThisTeacher.forEach((attendance) => {
+    if (attendance.scheduleId && attendance.scheduleId._id) {
+      if (!attendance.scheduleId.demo || teacherData.isDemoIncludedInSalaries) {
+        if (!finalObject[attendance.scheduleId._id]) {
+          let id = attendance.scheduleId._id;
+          finalObject[id] = {};
+          finalObject[id]["className"] = attendance.scheduleId.className;
+          finalObject[id]["startDate"] = attendance.scheduleId.startDate;
+          finalObject[id]["isDemo"] = attendance.scheduleId.demo;
+          finalObject[id]["isOneToOneClass"] = attendance.scheduleId.OneToOne;
+          finalObject[id]["commission"] = attendance.scheduleId.OneToOne
+            ? typeof teacherData.Commission_Amount_One === "string"
+              ? parseInt(teacherData.Commission_Amount_One)
+              : 0
+            : typeof teacherData.Commission_Amount_Many === "string"
+            ? parseInt(teacherData.Commission_Amount_Many)
+            : 0;
+          finalObject[id]["_id"] = id;
+          finalObject[id].dates = [];
+          finalObject[id]["totalStudents"] = 0;
+        }
+        let objectToPush = {};
+        let id = attendance.scheduleId._id;
+        objectToPush.date = attendance.date;
+        let totalStudents = 0;
+        objectToPush.presentees = attendance.customers.map((customerObj) => {
+          totalStudents += customerObj.numberOfStudents;
+          return customerObj.firstName;
+        });
+        objectToPush.absentees = attendance.absentees.map((customerObj) => {
+          totalStudents += customerObj.numberOfStudents;
+          return customerObj.firstName;
+        });
+        finalObject[id]["totalStudents"] += totalStudents;
+        finalObject[id]["totalSalary"] =
+          finalObject[id]["totalStudents"] * finalObject[id]["commission"];
+        finalObject[id].dates.push(objectToPush);
+      }
+    }
+  });
+  let result = Object.values(finalObject);
+  let totalSalary = result.reduce((prev, current, i) => {
+    if (i === 1) {
+      return prev.totalSalary + current.totalSalary;
+    } else {
+      return prev + current.totalSalary;
+    }
+  });
+  return res.json({
+    totalSalary,
+    result,
+  });
 };
