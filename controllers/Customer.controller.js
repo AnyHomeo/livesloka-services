@@ -315,6 +315,7 @@ module.exports = {
   insertDataFromWix: async (req, res) => {
     try {
       const { data } = req.body;
+      console.log(data);
       data["field:comp-kh8kc6mf"] =
         typeof data["field:comp-kh8kc6mf"] === "string"
           ? data["field:comp-kh8kc6mf"].toUpperCase()
