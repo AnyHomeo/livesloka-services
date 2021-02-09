@@ -248,6 +248,7 @@ exports.getSalariesOfTeacherByMonthAndId = async (req, res) => {
   let totalSalary = result.length
     ? result.reduce((prev, current, i) => {
         if (i === 1) {
+          console.log(prev, current);
           return prev.totalSalary + current.totalSalary;
         } else {
           return prev + current.totalSalary;
