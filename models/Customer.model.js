@@ -89,10 +89,14 @@ const Customer = new mongoose.Schema(
       type: String,
       default: "108731321313146850",
     },
-    proposedAmount: Number,
+    proposedAmount: {
+      type: Number,
+      default: 50,
+    },
     proposedCurrencyId: {
       trim: true,
       type: String,
+      default: "150762951045490",
     },
     welcomeCall: Boolean,
     welcomeChat: Boolean,
@@ -115,9 +119,7 @@ const Customer = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    materials: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Upload", }
-    ]
+    materials: [{ type: mongoose.Schema.Types.ObjectId, ref: "Upload" }],
   },
 
   {

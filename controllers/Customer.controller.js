@@ -315,31 +315,30 @@ module.exports = {
   insertDataFromWix: async (req, res) => {
     try {
       const { data } = req.body;
-      console.log(data);
-      data["field:comp-kh8kc6mf"] =
-        typeof data["field:comp-kh8kc6mf"] === "string"
-          ? data["field:comp-kh8kc6mf"].toUpperCase()
-          : ".";
+      data["field:comp-kk7je66v"] =
+        typeof data["field:comp-kk7je66v"] === "string"
+          ? data["field:comp-kk7je66v"].toUpperCase()
+          : "IST";
       let timeZoneSelected = await TimeZoneModel.findOne({
-        timeZoneName: data["field:comp-kh8kc6mf"],
+        timeZoneName: data["field:comp-kk7je66v"],
       }).lean();
-      let selectedSubjectNames = data["field:comp-kh8nvj7n"]
+      let selectedSubjectNames = data["field:comp-kk7je66r1"]
         .split(",")
         .map((name) => name.trim());
       let selectedSubjects = await SubjectModel.find({
         subjectName: { $in: selectedSubjectNames },
       }).lean();
       let user = {
-        lastName: data["field:comp-k8h6ltbn"],
-        firstName: data["field:comp-kbj52w90"],
+        lastName: data["field:comp-kk7je65y"],
+        firstName: data["field:comp-kk7je6651"],
         timeZoneId: timeZoneSelected ? timeZoneSelected.id : "",
-        whatsAppnumber: data["field:comp-kbfpi4zl"],
-        email: data["field:comp-kcdgzuaj"],
+        whatsAppnumber: data["field:comp-kk7je66p"],
+        email: data["field:comp-kk7je66n"],
         gender:
-          typeof data["field:comp-kig8mhkn"] === "string"
-            ? data["field:comp-kig8mhkn"].toLowerCase()
+          typeof data["field:comp-kk926n0p"] === "string"
+            ? data["field:comp-kk926n0p"].toLowerCase()
             : "",
-        age: data["field:comp-kh8nsqzv"],
+        age: data["field:comp-kk7je668"],
       };
       let finalUserInsertableData = selectedSubjects.map((subject) => {
         return {
@@ -353,15 +352,15 @@ module.exports = {
           console.log(err);
         } else {
           const userIfExists = await AdminModel.findOne({
-            userId: data["field:comp-kcdgzuaj"],
+            userId: data["field:comp-kk7je66n"],
           });
           if (!userIfExists) {
             const newUser = new AdminModel({
-              userId: data["field:comp-kcdgzuaj"],
+              userId: data["field:comp-kk7je66n"],
               password: "livesloka",
               roleId: 1,
               customerId: docs[0]._id,
-              username: data["field:comp-kbj52w90"],
+              username: data["field:comp-kk7je6651"],
             });
             newUser.save().then((savedDoc) => {
               return res.json({
@@ -378,27 +377,27 @@ module.exports = {
       console.log(error);
       const { data } = req.body;
       let user = {
-        lastName: data["field:comp-k8h6ltbn"],
-        firstName: data["field:comp-kbj52w90"],
-        whatsAppnumber: data["field:comp-kbfpi4zl"],
-        email: data["field:comp-kcdgzuaj"],
-        gender: data["field:comp-kig8mhkn"],
-        age: data["field:comp-kh8nsqzv"],
+        lastName: data["field:comp-kk7je65y"],
+        firstName: data["field:comp-kk7je6651"],
+        whatsAppnumber: data["field:comp-kk7je66p"],
+        email: data["field:comp-kk7je66n"],
+        gender: data["field:comp-kk926n0p"],
+        age: data["field:comp-kk7je668"],
       };
       const newCustomer = new CustomerModel(user);
       newCustomer
         .save()
         .then(async (data) => {
           const userIfExists = await AdminModel.findOne({
-            userId: data["field:comp-kcdgzuaj"],
+            userId: data["field:comp-kk7je66n"],
           });
           if (!userIfExists) {
             const newUser = new AdminModel({
-              userId: data["field:comp-kcdgzuaj"],
+              userId: data["field:comp-kk7je66n"],
               password: "livesloka",
               roleId: 1,
               customerId: docs[0]._id,
-              username: data["field:comp-kbj52w90"],
+              username: data["field:comp-kk7je6651"],
             });
             newUser.save().then((savedDoc) => {
               return res.json({
