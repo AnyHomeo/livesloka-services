@@ -5,6 +5,7 @@ const Schedule = require("../models/Scheduler.model");
 const Attendence = require("../models/Attendance");
 const Uploads = require("../models/uploads.model");
 const uploadsModel = require("../models/uploads.model");
+const SchedulerModel = require("../models/Scheduler.model");
 
 exports.GetTeacherSchedules = async (req, res) => {
   let teacherId = req.params.id;
@@ -57,24 +58,27 @@ exports.PostUpload = async (req, res) => {
   }
 };
 
-exports.GetStudentsMaterial = async (req, res) => {
+exports.GetStudentMaterials = async (req, res) => {
   try {
-    let stdId = req.params.id;
-    let stdmatdata = await CustomerModel.find({
-      email: stdId,
-    }).populate("materials");
-    let mat = [];
-    stdmatdata.forEach((el) => {
-      mat.push(...el.materials);
+    const { id } = req.params;
+    const allSchedules = await SchedulerModel.find({
+      students: {
+        $in: [id],
+      },
+    })
+      .select("materials -_id")
+      .populate("materials");
+    let allMaterials = [];
+    allSchedules.forEach((schedule) => {
+      allMaterials = [...allMaterials, ...schedule.materials];
     });
-    return res.status(200).json({
-      message: "Fetched Succesfully",
-      mat,
+    return res.json({
+      result: allMaterials,
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error,
+      error: "Error in retrieving material!",
     });
   }
 };
@@ -103,36 +107,39 @@ exports.assignMaterial = async (req, res) => {
 exports.getMaterialsByTeacherId = async (req, res) => {
   try {
     const { teacherId } = req.params;
-    let uploadsByTeacher = await Uploads.find({
+    let materialsByTeacher = await Uploads.find({
       teacherId,
-    });
-    let uploadIds = uploadsByTeacher.map((upload) => upload._id);
-    let customersWithThisTeacherMaterials = await CustomerModel.find({
+    }).lean();
+    let materialIds = materialsByTeacher.map((material) => material._id);
+    let schedulesWithTheseMaterials = await SchedulerModel.find({
       materials: {
-        $in: uploadIds,
+        $in: materialIds,
       },
-    }).select("materials firstName");
+    })
+      .select("students materials className")
+      .populate("students", "firstName")
+      .lean();
     let finalMaterials = [];
-    uploadsByTeacher.forEach((upload) => {
-      let uploadWithUsers = {
-        ...upload,
-        students: [],
-      };
-      customersWithThisTeacherMaterials.forEach((customer) => {
-        if (customer.materials.includes(upload._id)) {
-          uploadWithUsers.students.push(customer);
+    materialsByTeacher.forEach((material) => {
+      let materialData = { ...material, classes: [] };
+      schedulesWithTheseMaterials.forEach((schedule) => {
+        schedule.materials = schedule.materials.map((material) =>
+          material.toString()
+        );
+        if (schedule.materials.includes(material._id.toString())) {
+          materialData.classes.push(schedule);
         }
       });
-      finalMaterials.push(uploadWithUsers);
+      finalMaterials.push(materialData);
     });
     return res.json({
       result: finalMaterials,
-      message: "All Materials fetched successfully !",
+      message: "Materials Retrieved Successfully!",
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Error in retrieving data!",
+      error: "error in retrieving materials",
     });
   }
 };

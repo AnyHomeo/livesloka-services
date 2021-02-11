@@ -4,7 +4,7 @@ const router = express.Router();
 const {
   GetTeacherSchedules,
   PostUpload,
-  GetStudentsMaterial,
+  GetStudentMaterials,
   assignMaterial,
   getMaterialsByTeacherId,
   deleteMaterial,
@@ -12,7 +12,7 @@ const {
 
 router.get("/schedules/:id", GetTeacherSchedules);
 router.post("/material", PostUpload);
-router.get("/student/:id", GetStudentsMaterial);
+router.get("/student/:id", GetStudentMaterials);
 router.post("/assign", assignMaterial);
 router.get("/teacher/:teacherId", getMaterialsByTeacherId);
 router.delete("/delete/:materialId", deleteMaterial);
