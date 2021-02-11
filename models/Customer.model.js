@@ -119,7 +119,6 @@ const Customer = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    materials: [{ type: mongoose.Schema.Types.ObjectId, ref: "Upload" }],
   },
 
   {

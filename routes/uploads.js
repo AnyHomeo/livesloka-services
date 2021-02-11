@@ -10,9 +10,9 @@ const {
   deleteMaterial,
 } = require("../controllers/Uploads.controller");
 
-router.get("/getTeacherSchds/:id", GetTeacherSchedules);
-router.post("/uploadMaterial", PostUpload);
-router.get("/getStudentmaterial/:id", GetStudentsMaterial);
+router.get("/schedules/:id", GetTeacherSchedules);
+router.post("/material", PostUpload);
+router.get("/student/:id", GetStudentsMaterial);
 router.post("/assign", assignMaterial);
 router.get("/teacher/:teacherId", getMaterialsByTeacherId);
 router.delete("/delete/:materialId", deleteMaterial);

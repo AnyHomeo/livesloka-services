@@ -34,10 +34,21 @@ exports.GetTeacherSchedules = async (req, res) => {
 
 exports.PostUpload = async (req, res) => {
   try {
-    await Uploads.insertMany(req.body);
-    return res.json({
-      message: "Material Uploaded Successfully !",
-    });
+    const upload = new Uploads(req.body);
+    upload
+      .save()
+      .then((data) => {
+        console.log(upload);
+        return res.json({
+          message: "Material Uploaded Successfully !",
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+        return res.status(500).json({
+          error: "error in saving!!",
+        });
+      });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -69,34 +80,24 @@ exports.GetStudentsMaterial = async (req, res) => {
 };
 
 exports.assignMaterial = async (req, res) => {
-  let { scheduleId, materialId } = req.body;
-  let scheduleData = await Schedule.find({
-    _id: scheduleId,
-  });
-  let studentsIds = scheduleData[0].students;
-  CustomerModel.updateMany(
-    {
-      _id: {
-        $in: studentsIds,
-      },
-    },
-    {
-      $push: {
-        materials: materialId,
-      },
-    }
-  )
-    .then((data) => {
-      return res.json({
-        message: "Material Assigned Successfully !",
-      });
-    })
-    .catch((err) => {
-      console.log(err);
-      return res.status(500).json({
-        error: "problem in assigning the material",
-      });
+  try {
+    let { scheduleId, materialId } = req.body;
+    let scheduleData = await Schedule.findOne({
+      _id: scheduleId,
     });
+    if (!scheduleData.materials.includes(materialId)) {
+      scheduleData.materials.push(materialId);
+    }
+    await scheduleData.save();
+    return res.json({
+      message: "Material Assigned Successfully!!",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Error in assigning Materials",
+    });
+  }
 };
 
 exports.getMaterialsByTeacherId = async (req, res) => {

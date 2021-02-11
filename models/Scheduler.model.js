@@ -67,6 +67,7 @@ const SchedulerSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    materials: [{ type: mongoose.Schema.Types.ObjectId, ref: "Upload" }],
   },
   { timestamps: true }
 );

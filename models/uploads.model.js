@@ -6,14 +6,14 @@ var UploadSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    UploadLink: {
+    uploadLink: {
       trim: true,
       type: String,
     },
     teacherId: {
       type: String,
     },
-    typeOfmaterial: {
+    typeOfMaterial: {
       type: String,
     },
   },
