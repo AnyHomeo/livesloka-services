@@ -61,11 +61,11 @@ exports.PostUpload = async (req, res) => {
 exports.GetStudentMaterials = async (req, res) => {
   try {
     const { id } = req.params;
-    let schedule = await (await SchedulerModel.findById(id))
+    let schedule = await SchedulerModel.findById(id)
       .populate("materials")
       .select("materials");
     return res.json({
-      result: schedule.materials,
+      result: schedule ? schedule.materials : [],
     });
   } catch (error) {
     console.log(error);
