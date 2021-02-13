@@ -78,7 +78,7 @@ exports.GetStudentMaterials = async (req, res) => {
 exports.assignMaterial = async (req, res) => {
   try {
     let { scheduleId, materialId } = req.body;
-    let scheduleData = await Schedule.findOne({
+    let scheduleData = await SchedulerModel.findOne({
       _id: scheduleId,
     });
     if (!scheduleData.materials.includes(materialId)) {
@@ -101,6 +101,9 @@ exports.getMaterialsByTeacherId = async (req, res) => {
     const { teacherId } = req.params;
     let materialsByTeacher = await Uploads.find({
       teacherId,
+      isDeleted: {
+        $ne: true,
+      },
     }).lean();
     let materialIds = materialsByTeacher.map((material) => material._id);
     let schedulesWithTheseMaterials = await SchedulerModel.find({
@@ -137,23 +140,52 @@ exports.getMaterialsByTeacherId = async (req, res) => {
 };
 
 exports.deleteMaterial = async (req, res) => {
-  const materialId = req.params;
-  await uploadsModel.deleteOne({
-    _id: materialId,
-  });
-  let customersWithThisMaterial = await CustomerModel.find({
-    materials: materialId,
-  }).select("materials");
-  customersWithThisMaterial.forEach(async (customer) => {
-    if (
-      Array.isArray(customer.materials) &&
-      customer.materials.includes(materialId)
-    ) {
-      let index = customer.materials.indexOf(materialId);
-      if (index !== -1) {
-        customer.materials.splice(index, 1);
+  try {
+    const { materialId } = req.params;
+    let material = await Uploads.findById(materialId);
+    material.isDeleted = true;
+    await material.save();
+    let schedulesWithThisMaterial = await SchedulerModel.find({
+      materials: {
+        $in: [material._id],
+      },
+    });
+    schedulesWithThisMaterial.forEach(async (schedule) => {
+      if (schedule.materials.includes(materialId)) {
+        let index = schedule.materials.indexOf(materialId);
+        schedule.materials.splice(index, 1);
+      }
+      await schedule.save();
+    });
+    return res.json({
+      message: "Material Deleted Successfully !",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Something wrong in deleting Material",
+    });
+  }
+};
+
+exports.removeClassFromMaterialAccess = async (req, res) => {
+  try {
+    const { materialId, scheduleId } = req.params;
+    const schedule = await SchedulerModel.findById(scheduleId);
+    if (schedule) {
+      let materialIndex = schedule.materials.indexOf(materialId);
+      if (materialIndex !== -1) {
+        schedule.materials.splice(materialIndex, 1);
+        await schedule.save();
       }
     }
-    await customer.save();
-  });
+    return res.json({
+      message: "Removed class Successfully !",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Something went Wrong",
+    });
+  }
 };

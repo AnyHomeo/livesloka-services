@@ -423,6 +423,7 @@ module.exports.getAllAdmins = (req, res) => {
     .select("customerId")
     .populate("customerId", "firstName email")
     .then((data) => {
+      console.log(data);
       return res.json({
         message: "data retrieved successfully",
         result: data,

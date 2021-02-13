@@ -16,6 +16,10 @@ var UploadSchema = new mongoose.Schema(
     typeOfMaterial: {
       type: String,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
