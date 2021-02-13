@@ -61,23 +61,9 @@ exports.PostUpload = async (req, res) => {
 exports.GetStudentMaterials = async (req, res) => {
   try {
     const { id } = req.params;
-    let customers = await CustomerModel.find({
-      email: id,
-    });
-    customers = customers.map((customer) => customer._id);
-    const allSchedules = await SchedulerModel.find({
-      students: {
-        $in: customers,
-      },
-    })
-      .select("materials -_id")
-      .populate("materials");
-    let allMaterials = [];
-    allSchedules.forEach((schedule) => {
-      allMaterials = [...allMaterials, ...schedule.materials];
-    });
+    let schedule = await SchedulerModel.findById(id).select("materials");
     return res.json({
-      result: allMaterials,
+      result: schedule.materials,
     });
   } catch (error) {
     console.log(error);
