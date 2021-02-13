@@ -61,7 +61,9 @@ exports.PostUpload = async (req, res) => {
 exports.GetStudentMaterials = async (req, res) => {
   try {
     const { id } = req.params;
-    let schedule = await SchedulerModel.findById(id).select("materials");
+    let schedule = await (await SchedulerModel.findById(id))
+      .populate("materials")
+      .select("materials");
     return res.json({
       result: schedule.materials,
     });
