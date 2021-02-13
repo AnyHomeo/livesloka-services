@@ -61,9 +61,13 @@ exports.PostUpload = async (req, res) => {
 exports.GetStudentMaterials = async (req, res) => {
   try {
     const { id } = req.params;
+    let customers = await CustomerModel.find({
+      email: id,
+    });
+    customers = customers.map((customer) => customer._id);
     const allSchedules = await SchedulerModel.find({
       students: {
-        $in: [id],
+        $in: customers,
       },
     })
       .select("materials -_id")
