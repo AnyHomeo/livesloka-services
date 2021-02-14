@@ -416,4 +416,45 @@ module.exports = {
         });
     }
   },
+
+  getClassDashBoardData: async (req, res) => {
+    try {
+      let customersLessThanMinus2 = await CustomerModel.count({
+        numberOfClassesBought: {
+          $lte: -2,
+        },
+        classStatusId: "113975223750050",
+      });
+      let customersEqualToMinus1 = await CustomerModel.count({
+        numberOfClassesBought: -1,
+        classStatusId: "113975223750050",
+      });
+      let customersEqualTo0 = await CustomerModel.count({
+        numberOfClassesBought: 0,
+        classStatusId: "113975223750050",
+      });
+      let demoCustomers = await CustomerModel.count({
+        classStatusId: "38493085684944",
+      });
+      let newCustomers = await CustomerModel.count({
+        classStatusId: "108731321313146850",
+      });
+      let customersInClass = await CustomerModel.count({
+        classStatusId: "113975223750050",
+      });
+      return res.json({
+        customersEqualToMinus1,
+        customersEqualTo0,
+        customersLessThanMinus2,
+        newCustomers,
+        demoCustomers,
+        customersInClass,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        error: "Something went wrong !",
+      });
+    }
+  },
 };
