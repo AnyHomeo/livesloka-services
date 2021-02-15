@@ -10,6 +10,7 @@ const fetch = require("node-fetch");
 const SchedulerModel = require("../models/Scheduler.model");
 const TeacherModel = require("../models/Teacher.model");
 var equal = require("fast-deep-equal");
+const moment = require("moment");
 
 function convertTZ(date, tzString) {
   return new Date(
@@ -167,7 +168,7 @@ const SlotConverter = (data, timezon) => {
                 `Jan 11 2021 ${temp[k]} GMT+0530 (India Standard Time)`,
                 trgtName
               );
-              let d = date.format(tim, "dddd-hh:mm A ");
+              let d = moment(tim).format("dddd-hh:mm A ");
               slotie.push(d);
             } else {
               let ti = convertTime12to24(temp[k]);
@@ -175,8 +176,7 @@ const SlotConverter = (data, timezon) => {
                 `Jan 11 2021 ${ti} GMT+0530 (India Standard Time)`,
                 trgtName
               );
-              let d = date.format(tim, "dddd-hh:mm A ");
-
+              let d = moment(tim).format("dddd-hh:mm A ");
               slotie.push(d);
             }
           }
@@ -187,7 +187,7 @@ const SlotConverter = (data, timezon) => {
                 `Jan 12 2021 ${temp[k]} GMT+0530 (India Standard Time)`,
                 trgtName
               );
-              let d = date.format(tim, "dddd-hh:mm A ");
+              let d = moment(tim).format("dddd-hh:mm A ");
               slotie.push(d);
             } else {
               let ti = convertTime12to24(temp[k]);
@@ -195,7 +195,7 @@ const SlotConverter = (data, timezon) => {
                 `Jan 12 2021 ${ti} GMT+0530 (India Standard Time)`,
                 trgtName
               );
-              let d = date.format(tim, "dddd-hh:mm A ");
+              let d = moment(tim).format("dddd-hh:mm A ");
 
               slotie.push(d);
             }
@@ -207,7 +207,7 @@ const SlotConverter = (data, timezon) => {
                 `Jan 13 2021 ${temp[k]} GMT+0530 (India Standard Time)`,
                 trgtName
               );
-              let d = date.format(tim, "dddd-hh:mm A ");
+              let d = moment(tim).format("dddd-hh:mm A ");
               slotie.push(d);
             } else {
               let ti = convertTime12to24(temp[k]);
@@ -215,7 +215,7 @@ const SlotConverter = (data, timezon) => {
                 `Jan 13 2021 ${ti} GMT+0530 (India Standard Time)`,
                 trgtName
               );
-              let d = date.format(tim, "dddd-hh:mm A ");
+              let d = moment(tim).format("dddd-hh:mm A ");
 
               slotie.push(d);
             }
@@ -227,7 +227,7 @@ const SlotConverter = (data, timezon) => {
                 `Jan 14 2021 ${temp[k]} GMT+0530 (India Standard Time)`,
                 trgtName
               );
-              let d = date.format(tim, "dddd-hh:mm A ");
+              let d = moment(tim).format("dddd-hh:mm A ");
               slotie.push(d);
             } else {
               let ti = convertTime12to24(temp[k]);
@@ -235,7 +235,7 @@ const SlotConverter = (data, timezon) => {
                 `Jan 14 2021 ${ti} GMT+0530 (India Standard Time)`,
                 trgtName
               );
-              let d = date.format(tim, "dddd-hh:mm A ");
+              let d = moment(tim).format("dddd-hh:mm A ");
               slotie.push(d);
             }
           }
@@ -246,7 +246,7 @@ const SlotConverter = (data, timezon) => {
                 `Jan 15 2021 ${temp[k]} GMT+0530 (India Standard Time)`,
                 trgtName
               );
-              let d = date.format(tim, "dddd-hh:mm A ");
+              let d = moment(tim).format("dddd-hh:mm A ");
               slotie.push(d);
             } else {
               let ti = convertTime12to24(temp[k]);
@@ -254,7 +254,7 @@ const SlotConverter = (data, timezon) => {
                 `Jan 15 2021 ${ti} GMT+0530 (India Standard Time)`,
                 trgtName
               );
-              let d = date.format(tim, "dddd-hh:mm A ");
+              let d = moment(tim).format("dddd-hh:mm A ");
 
               slotie.push(d);
             }
@@ -266,7 +266,7 @@ const SlotConverter = (data, timezon) => {
                 `Jan 16 2021 ${temp[k]} GMT+0530 (India Standard Time)`,
                 trgtName
               );
-              let d = date.format(tim, "dddd-hh:mm A ");
+              let d = moment(tim).format("dddd-hh:mm A ");
               slotie.push(d);
             } else {
               let ti = convertTime12to24(temp[k]);
@@ -274,7 +274,7 @@ const SlotConverter = (data, timezon) => {
                 `Jan 16 2021 ${ti} GMT+0530 (India Standard Time)`,
                 trgtName
               );
-              let d = date.format(tim, "dddd-hh:mm A ");
+              let d = moment(tim).format("dddd-hh:mm A ");
 
               slotie.push(d);
             }
@@ -286,7 +286,7 @@ const SlotConverter = (data, timezon) => {
                 `Jan 17 2021 ${temp[k]} GMT+0530 (India Standard Time)`,
                 trgtName
               );
-              let d = date.format(tim, "dddd-hh:mm A ");
+              let d = moment(tim).format("dddd-hh:mm A ");
               slotie.push(d);
             } else {
               let ti = convertTime12to24(temp[k]);
@@ -294,7 +294,7 @@ const SlotConverter = (data, timezon) => {
                 `Jan 17 2021 ${ti} GMT+0530 (India Standard Time)`,
                 trgtName
               );
-              let d = date.format(tim, "dddd-hh:mm A ");
+              let d = moment(tim).format("dddd-hh:mm A ");
 
               slotie.push(d);
             }

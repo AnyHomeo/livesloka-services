@@ -62,7 +62,7 @@
     },
     {
       "value": "Pacific Daylight Time",
-      "abbr": "PST",
+      "abbr": "PDT",
       "offset": -7,
       "isdst": true,
       "text": "(UTC-07:00) Pacific Time (US & Canada)",
