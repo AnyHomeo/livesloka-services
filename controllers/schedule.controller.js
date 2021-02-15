@@ -327,6 +327,7 @@ const scheduleDescriptionGenerator = (dataSlots) => {
       scheduleDes = scheduleDes + " " + "(" + dataSlots[ds] + ")";
     }
   });
+  console.log(scheduleDes);
   return scheduleDes;
 };
 
