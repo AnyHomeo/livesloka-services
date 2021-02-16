@@ -12,9 +12,11 @@ const {
   getAllDaysSlots,
   GetTeacherMeetings,
   GetTeacherAttendance,
+  joinClass,
   GetSalaries,
 } = require("../controllers/teacher.controller");
 
+router.get("/join/:scheduleId/:teacherId", joinClass);
 router.post("/add/available/:id", validateSlot, addSlot);
 router.get("/available/:id", getAvailableSlots);
 router.get("/", getTeachers);

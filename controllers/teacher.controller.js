@@ -4,8 +4,7 @@ const Category = require("../models/Category.model");
 const Schedule = require("../models/Scheduler.model");
 const Attendence = require("../models/Attendance");
 const { param } = require("../routes/teacher");
-
-// const { parse } = require("date-fns");
+const SchedulerModel = require("../models/Scheduler.model");
 
 const days = [
   "MONDAY",
@@ -466,4 +465,30 @@ exports.GetSalaries = async (req, res) => {
   }
 };
 
-const viewDet = (data) => {};
+exports.joinClass = async (req, res) => {
+  try {
+    const { teacherId, scheduleId } = req.params;
+    const { date } = req.query;
+    let teacher = await TeacherModel.findOne({ id: teacherId });
+    if (teacher) {
+      teacher.lastTimeJoinedClass = date;
+      await teacher.save();
+      let schedule = await SchedulerModel.findById(scheduleId).select(
+        "meetingLink"
+      );
+      return res.json({
+        message: "Last time joined updated Successfully!",
+        link: schedule.meetingLink,
+      });
+    } else {
+      return res.status(400).json({
+        error: "invalid TeacherId or Teacher Deleted!",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Something went wrong !",
+    });
+  }
+};
