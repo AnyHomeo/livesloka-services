@@ -7,6 +7,7 @@ const PaymentModel = require("../models/Payments");
 const TimeZoneModel = require("../models/timeZone.model");
 const moment = require("moment");
 const SubjectModel = require("../models/Subject.model");
+const SchedulerModel = require("../models/Scheduler.model");
 
 module.exports = {
   async registerCustomer(req, res) {
@@ -419,6 +420,7 @@ module.exports = {
 
   getClassDashBoardData: async (req, res) => {
     try {
+      const { slot, date } = req.query;
       let customersLessThanMinus2 = await CustomerModel.count({
         numberOfClassesBought: {
           $lte: -2,
@@ -442,6 +444,23 @@ module.exports = {
       let customersInClass = await CustomerModel.count({
         classStatusId: "113975223750050",
       });
+      let day = slot.split("-")[0].toLowerCase();
+      console.log(day);
+      let query = {
+        ["slots." + day]: {
+          $in: [slot],
+        },
+      };
+      let schedulesRightNow = await SchedulerModel.find(query)
+        .select("meetingLink className scheduleDescription lastTimeJoinedClass")
+        .lean();
+      schedulesRightNow = schedulesRightNow.map((schedule) => {
+        console.log(date, schedule.lastTimeJoinedClass);
+        return {
+          ...schedule,
+          isTeacherJoined: schedule.lastTimeJoinedClass === date,
+        };
+      });
       return res.json({
         customersEqualToMinus1,
         customersEqualTo0,
@@ -449,6 +468,7 @@ module.exports = {
         newCustomers,
         demoCustomers,
         customersInClass,
+        schedulesRightNow,
       });
     } catch (error) {
       console.log(error);

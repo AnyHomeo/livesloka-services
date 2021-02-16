@@ -68,6 +68,9 @@ const SchedulerSchema = new mongoose.Schema(
       default: false,
     },
     materials: [{ type: mongoose.Schema.Types.ObjectId, ref: "Upload" }],
+    lastTimeJoinedClass: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

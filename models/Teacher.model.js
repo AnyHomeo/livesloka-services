@@ -62,9 +62,6 @@ var TeacherSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    lastTimeJoinedClass: {
-      type: String,
-    },
   },
   { timestamps: true }
 );
