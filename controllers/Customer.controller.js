@@ -8,6 +8,7 @@ const TimeZoneModel = require("../models/timeZone.model");
 const moment = require("moment");
 const SubjectModel = require("../models/Subject.model");
 const SchedulerModel = require("../models/Scheduler.model");
+const { nextSlotFinder } = require("../scripts/nextSlotFinder");
 
 module.exports = {
   async registerCustomer(req, res) {
@@ -421,46 +422,52 @@ module.exports = {
   getClassDashBoardData: async (req, res) => {
     try {
       const { slot, date } = req.query;
-      let customersLessThanMinus2 = await CustomerModel.count({
+      let nextSlot = nextSlotFinder(slot);
+      let customersLessThanMinus2 = await CustomerModel.countDocuments({
         numberOfClassesBought: {
           $lte: -2,
         },
         classStatusId: "113975223750050",
       });
-      let customersEqualToMinus1 = await CustomerModel.count({
+      let customersEqualToMinus1 = await CustomerModel.countDocuments({
         numberOfClassesBought: -1,
         classStatusId: "113975223750050",
       });
-      let customersEqualTo0 = await CustomerModel.count({
+      let customersEqualTo0 = await CustomerModel.countDocuments({
         numberOfClassesBought: 0,
         classStatusId: "113975223750050",
       });
-      let demoCustomers = await CustomerModel.count({
+      let demoCustomers = await CustomerModel.countDocuments({
         classStatusId: "38493085684944",
       });
-      let newCustomers = await CustomerModel.count({
+      let newCustomers = await CustomerModel.countDocuments({
         classStatusId: "108731321313146850",
       });
-      let customersInClass = await CustomerModel.count({
+      let customersInClass = await CustomerModel.countDocuments({
         classStatusId: "113975223750050",
       });
       let day = slot.split("-")[0].toLowerCase();
-      console.log(day);
-      let query = {
+      let schedulesRightNow = await SchedulerModel.find({
         ["slots." + day]: {
           $in: [slot],
         },
-      };
-      let schedulesRightNow = await SchedulerModel.find(query)
+      })
         .select("meetingLink className scheduleDescription lastTimeJoinedClass")
         .lean();
       schedulesRightNow = schedulesRightNow.map((schedule) => {
-        console.log(date, schedule.lastTimeJoinedClass);
         return {
           ...schedule,
           isTeacherJoined: schedule.lastTimeJoinedClass === date,
         };
       });
+      let nextSchedules = await SchedulerModel.find({
+        ["slots." + day]: {
+          $nin: [slot],
+          $in: [nextSlot],
+        },
+      })
+        .select("meetingLink className scheduleDescription")
+        .lean();
       return res.json({
         customersEqualToMinus1,
         customersEqualTo0,
@@ -469,6 +476,7 @@ module.exports = {
         demoCustomers,
         customersInClass,
         schedulesRightNow,
+        nextSchedules,
       });
     } catch (error) {
       console.log(error);
