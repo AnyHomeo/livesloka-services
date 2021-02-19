@@ -17,6 +17,13 @@ const salaryRouter = require("./routes/salary");
 const uploadRouter = require("./routes/uploads");
 
 const app = express();
+const http = require("http").createServer(app);
+const io = require("socket.io")(http, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
 require("dotenv").config();
 require("./models/db");
 
@@ -39,8 +46,16 @@ app.use("/link", zoomlink);
 app.use("/salary", salaryRouter);
 app.use("/uploads", uploadRouter);
 
-const server = require("http").createServer(app);
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server started at port : ${PORT}`));
+
+io.on("connection", (socket) => {
+  socket.on("teacher-joined-class", (msg) => {
+    io.emit("teacher-joined", msg);
+  });
+});
+
+http.listen(PORT, () => {
+  console.log(`Server started at port : ${PORT}`);
+});
 
 module.exports = app;
