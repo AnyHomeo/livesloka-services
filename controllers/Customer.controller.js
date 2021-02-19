@@ -451,6 +451,9 @@ module.exports = {
         ["slots." + day]: {
           $in: [slot],
         },
+        isDeleted: {
+          $ne: true,
+        },
       })
         .select("meetingLink className scheduleDescription lastTimeJoinedClass")
         .lean();
@@ -464,6 +467,9 @@ module.exports = {
         ["slots." + day]: {
           $nin: [slot],
           $in: [nextSlot],
+        },
+        isDeleted: {
+          $ne: true,
         },
       })
         .select("meetingLink className scheduleDescription")

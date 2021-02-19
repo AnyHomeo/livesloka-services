@@ -33,7 +33,6 @@ function nextSlotFinder(slot) {
     let newEndTimeHours = parseInt(endTimeWithoutAM.split(":")[0]);
     newEndTime = `0${newEndTimeHours}`.slice(-2) + ":30";
   }
-  console.log(`${day}-${endTime}`, newEndTime, meredian);
   return `${day}-${endTime}-${newEndTime} ${meredian}`;
 }
 
