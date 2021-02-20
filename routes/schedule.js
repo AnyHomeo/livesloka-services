@@ -8,9 +8,11 @@ const {
   getAllSchedules,
   getAllSchedulesByZoomAccountId,
   getAllScheduleswithZoomAccountSorted,
+  dangerousScheduleUpdate,
 } = require("../controllers/schedule.controller");
 
 router.post("/", addSchedule);
+router.post("/dangerous/edit/:scheduleId", dangerousScheduleUpdate);
 router.post("/edit/:id", editSchedule);
 router.get("/delete/:id", deleteScheduleById);
 router.get("/data/all", getAllSchedules);

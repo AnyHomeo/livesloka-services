@@ -1101,3 +1101,22 @@ exports.getAllScheduleswithZoomAccountSorted = async (req, res) => {
     });
   }
 };
+
+exports.dangerousScheduleUpdate = async (req, res) => {
+  const { message } = req.query;
+  try {
+    const { scheduleId } = req.params;
+    let updatedSchedule = await SchedulerModel.updateOne(
+      { _id: scheduleId },
+      { ...req.body }
+    );
+    return res.json({
+      message: message ? message + " successful" : "Updated Successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: message ? message + " failed" : "Internal Server Error",
+    });
+  }
+};
