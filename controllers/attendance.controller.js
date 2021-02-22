@@ -39,13 +39,12 @@ const getAttendance = (req, res) => {
 };
 
 const postAttendance = (req, res) => {
-  const {
-    scheduleId,
-    date,
-    customers,
-    requestedStudents,
-    absentees,
-  } = req.body;
+  let { scheduleId, date, customers, requestedStudents, absentees } = req.body;
+
+  requestedStudents = Array.isArray(requestedStudents) ? requestedStudents : [];
+  absentees = Array.isArray(absentees) ? absentees : [];
+  customers = Array.isArray(customers) ? customers : [];
+
   Attendance.findOne({ scheduleId, date })
     .then((alreadyGivenAttendance) => {
       if (alreadyGivenAttendance) {

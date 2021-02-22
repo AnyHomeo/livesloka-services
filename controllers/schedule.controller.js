@@ -1025,7 +1025,9 @@ exports.getAllSchedules = (req, res) => {
   let { params } = req.query;
   params = params ? params.split(",").join(" ") : "";
   Schedule.find({
-    isDeleted: false,
+    isDeleted: {
+      $ne: true,
+    },
   })
     .select(params)
     .then((allSchedules) => {
