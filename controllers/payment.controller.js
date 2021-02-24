@@ -245,11 +245,20 @@ exports.getTransactions = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const allTransactions = await Payment.find({ customerId: id });
+    const userEmail = await Customer.findOne({ _id: id }).select("email");
+    const allUsers = await Customer.find({
+      email: userEmail.email,
+    });
+    let allUserIds = allUsers.map((user) => user._id);
+    const allTransactions = await Payment.find({
+      customerId: {
+        $in: allUserIds,
+      },
+    });
 
     if (allTransactions === null) {
       return res.status(400).json({
-        message: "Not found",
+        error: "Not found",
       });
     } else
       return res.status(200).json({
@@ -258,6 +267,9 @@ exports.getTransactions = async (req, res) => {
       });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({
+      error: "Something went wrong",
+    });
   }
 };
 
