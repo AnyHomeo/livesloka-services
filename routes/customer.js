@@ -7,11 +7,13 @@ const {
   getRequestedData,
   insertDataFromWix,
   getClassDashBoardData,
+  getCustomersAllDataByUserIdSettings,
 } = require("../controllers/Customer.controller");
 const router = express.Router();
 
 router.get("/customer/data/:customerId", getCustomerData);
 router.get("/customers/all", getCustomersAllData);
+router.get("/customers/all/:userId", getCustomersAllDataByUserIdSettings);
 router.post("/customer/schedules", getAllSchedulesByMail);
 router.get("/customer/email", getRequestedData);
 router.post("/customer/wixs", insertDataFromWix);

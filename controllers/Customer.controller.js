@@ -18,7 +18,9 @@ module.exports = {
       .then(async (val) => {
         let user = {};
         try {
-          const data = await AdminModel.findOne({ userId: val.email });
+          const data = await AdminModel.findOne({
+            userId: val.email,
+          });
           if (data) {
             return res.json({
               status: "OK",
@@ -85,7 +87,9 @@ module.exports = {
   async details(req, res) {
     CustomerModel.find({})
       .select("-customerId")
-      .sort({ createdAt: -1 })
+      .sort({
+        createdAt: -1,
+      })
       .then((result) => {
         res.status(200).json({
           message: "Customer data retrieved",
@@ -95,17 +99,29 @@ module.exports = {
       })
       .catch((err) => {
         console.log(err);
-        res.status(400).json({ message: "something went Wrong", err });
+        res.status(400).json({
+          message: "something went Wrong",
+          err,
+        });
       });
   },
 
   async updateCustomer(req, res) {
-    CustomerModel.updateOne({ _id: req.body._id }, req.body)
+    CustomerModel.updateOne(
+      {
+        _id: req.body._id,
+      },
+      req.body
+    )
       .then((result) => {
         if (req.body.email) {
           AdminModel.updateOne(
-            { customerId: req.body._id },
-            { userId: req.body.email }
+            {
+              customerId: req.body._id,
+            },
+            {
+              userId: req.body.email,
+            }
           )
             .then((updatedUser) => {
               return res.status(200).send({
@@ -116,9 +132,9 @@ module.exports = {
             })
             .catch((err) => {
               console.log(err);
-              return res
-                .status(500)
-                .json({ error: "error in updating userid" });
+              return res.status(500).json({
+                error: "error in updating userid",
+              });
             });
         } else {
           res.status(200).send({
@@ -142,14 +158,16 @@ module.exports = {
     AdminModel.find({})
       .select(params)
       .then((users) => {
-        return res
-          .status(200)
-          .json({ message: "retrieved all users", result: users });
+        return res.status(200).json({
+          message: "retrieved all users",
+          result: users,
+        });
       })
       .catch((err) => {
-        return res
-          .status(500)
-          .json({ error: "unable to retrieve users", result: null });
+        return res.status(500).json({
+          error: "unable to retrieve users",
+          result: null,
+        });
       });
   },
 
@@ -157,20 +175,27 @@ module.exports = {
     const { customerId } = req.params;
     CustomerModel.findByIdAndDelete(customerId, (err, data) => {
       if (err) {
-        return res
-          .status(500)
-          .json({ error: "error in Deleting customer", result: null });
+        return res.status(500).json({
+          error: "error in Deleting customer",
+          result: null,
+        });
       }
-      AdminModel.findOneAndDelete({ customerId }, (err, docs) => {
-        if (err) {
-          return res
-            .status(500)
-            .json({ error: "error in Deleting customer", result: null });
+      AdminModel.findOneAndDelete(
+        {
+          customerId,
+        },
+        (err, docs) => {
+          if (err) {
+            return res.status(500).json({
+              error: "error in Deleting customer",
+              result: null,
+            });
+          }
+          return res.status(200).json({
+            message: "Customer Deleted Successfully",
+          });
         }
-        return res
-          .status(200)
-          .json({ message: "Customer Deleted Successfully" });
-      });
+      );
     });
   },
 
@@ -194,9 +219,10 @@ module.exports = {
           })
         );
     } else {
-      return res
-        .status(400)
-        .json({ error: "Please provide Params", result: null });
+      return res.status(400).json({
+        error: "Please provide Params",
+        result: null,
+      });
     }
   },
 
@@ -238,7 +264,9 @@ module.exports = {
   getAllSchedulesByMail: async (req, res) => {
     try {
       const { email } = req.body;
-      let customers = await CustomerModel.find({ email })
+      let customers = await CustomerModel.find({
+        email,
+      })
         .select(
           "_id scheduleDescription noOfClasses paymentDate paidTill numberOfClassesBought isJoinButtonEnabledByAdmin"
         )
@@ -264,8 +292,12 @@ module.exports = {
             isJoinButtonDisabled = false;
           }
           let actualSchedule = await ScheduleModel.findOne({
-            students: { $in: [customer._id] },
-            isDeleted: { $ne: true },
+            students: {
+              $in: [customer._id],
+            },
+            isDeleted: {
+              $ne: true,
+            },
           }).lean();
           if (actualSchedule) {
             let subject = await SubjectModel.findOne({
@@ -301,7 +333,9 @@ module.exports = {
     try {
       let { email, q } = req.query;
       q = q.split(",").join(" ");
-      const customers = await CustomerModel.find({ email }).select(q);
+      const customers = await CustomerModel.find({
+        email,
+      }).select(q);
       return res.json({
         message: "Data retrieved sucessfully",
         result: customers,
@@ -328,7 +362,9 @@ module.exports = {
         .split(",")
         .map((name) => name.trim());
       let selectedSubjects = await SubjectModel.find({
-        subjectName: { $in: selectedSubjectNames },
+        subjectName: {
+          $in: selectedSubjectNames,
+        },
       }).lean();
       let user = {
         lastName: data["field:comp-kk7je65y"],
@@ -371,7 +407,9 @@ module.exports = {
               });
             });
           } else {
-            return res.json({ Success: true });
+            return res.json({
+              Success: true,
+            });
           }
         }
       });
@@ -408,7 +446,9 @@ module.exports = {
               });
             });
           } else {
-            return res.json({ Success: true });
+            return res.json({
+              Success: true,
+            });
           }
         })
         .catch((err) => {
@@ -488,6 +528,96 @@ module.exports = {
       console.log(error);
       return res.status(500).json({
         error: "Something went wrong !",
+      });
+    }
+  },
+
+  getCustomersAllDataByUserIdSettings: async (req, res) => {
+    const isValidSettings = (filters) =>
+      Object.keys(filters).some((filterKey) => filters[filterKey].length);
+
+    try {
+      const { userId } = req.params;
+      const user = await AdminModel.findById(userId).select("settings");
+      console.log(user.settings.filters);
+      let query = {};
+      if (
+        user &&
+        user.settings &&
+        user.settings.filters &&
+        Object.keys(user.settings.filters).length &&
+        isValidSettings(user.settings.filters)
+      ) {
+        const { filters } = user.settings;
+        if (filters.classStatuses && filters.classStatuses.length) {
+          query.classStatusId = {
+            $in: filters.classStatuses.map((item) => item.id),
+          };
+        }
+        if (filters.timeZones && filters.timeZones.length) {
+          query.timeZoneId = {
+            $in: filters.timeZones.map((item) => item.id),
+          };
+        }
+        if (filters.classes && filters.classes.length) {
+          query.classId = {
+            $in: filters.classes.map((item) => item.id),
+          };
+        }
+        if (filters.teachers && filters.teachers.length) {
+          query.teacherId = {
+            $in: filters.teachers.map((item) => item.id),
+          };
+        }
+        if (filters.countries && filters.countries.length) {
+          query.countryId = {
+            $in: filters.countries.map((item) => item.id),
+          };
+        }
+        CustomerModel.find(query)
+          .select("-customerId")
+          .sort({
+            createdAt: -1,
+          })
+          .then((result) => {
+            res.status(200).json({
+              message: "Customer data retrieved",
+              status: "OK",
+              result,
+            });
+          })
+          .catch((err) => {
+            console.log(err);
+            res.status(400).json({
+              message: "something went Wrong",
+              err,
+            });
+          });
+      } else {
+        CustomerModel.find({})
+          .select("-customerId")
+          .sort({
+            createdAt: -1,
+          })
+          .then((result) => {
+            res.status(200).json({
+              message: "Customer data retrieved",
+              status: "OK",
+              result,
+            });
+          })
+          .catch((err) => {
+            console.log(err);
+            res.status(400).json({
+              message: "something went Wrong",
+              err,
+            });
+          });
+      }
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        error: "Something went wrong",
       });
     }
   },
