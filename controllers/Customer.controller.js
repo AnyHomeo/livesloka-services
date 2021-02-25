@@ -574,6 +574,21 @@ module.exports = {
             $in: filters.countries.map((item) => item.id),
           };
         }
+        if (filters.subjects && filters.subjects.length) {
+          query.subjectId = {
+            $in: filters.subjects.map((item) => item.id),
+          };
+        }
+        if (filters.agents && filters.agents.length) {
+          query.agentId = {
+            $in: filters.agents.map((item) => item.id),
+          };
+        }
+        if (filters.paidClasses && filters.paidClasses.length) {
+          query.numberOfClassesBought = {
+            $in: filters.paidClasses.map((item) => parseInt(item)),
+          };
+        }
         CustomerModel.find(query)
           .select("-customerId")
           .sort({
