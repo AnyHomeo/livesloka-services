@@ -9,7 +9,8 @@ const moment = require("moment");
 const SubjectModel = require("../models/Subject.model");
 const SchedulerModel = require("../models/Scheduler.model");
 const { nextSlotFinder } = require("../scripts/nextSlotFinder");
-
+const allZones = require("../models/timeZone.json");
+const momentTZ = require("moment-timezone");
 module.exports = {
   async registerCustomer(req, res) {
     let customerRegData = new CustomerModel(req.body);
@@ -628,6 +629,45 @@ module.exports = {
               err,
             });
           });
+      }
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        error: "Something went wrong",
+      });
+    }
+  },
+
+  getUserTimeZone: async (req, res) => {
+    try {
+      const { customerId } = req.params;
+
+      const customerTZId = await CustomerModel.findById(customerId).select(
+        "timeZoneId"
+      );
+      console.log(customerTZId);
+      if (customerTZId) {
+        const timeZone = await TimeZoneModel.findOne({
+          id: customerTZId.timeZoneId,
+        }).lean();
+
+        let selectedZoneUTCArray = allZones.filter(
+          (zone) => zone.abbr === timeZone.timeZoneName
+        )[0].utc;
+
+        let allTimeZones = momentTZ.tz.names();
+        let selectedZones = allTimeZones.filter((name) =>
+          selectedZoneUTCArray.includes(name)
+        );
+
+        return res.json({
+          result: selectedZones[0],
+          message: "Timezone retrieved successfully!",
+        });
+      } else {
+        return res.status(400).json({
+          error: "Timezone need to be added",
+        });
       }
     } catch (error) {
       console.log(error);

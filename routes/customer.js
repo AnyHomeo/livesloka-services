@@ -8,10 +8,12 @@ const {
   insertDataFromWix,
   getClassDashBoardData,
   getCustomersAllDataByUserIdSettings,
+  getUserTimeZone,
 } = require("../controllers/Customer.controller");
 const router = express.Router();
 
 router.get("/customer/data/:customerId", getCustomerData);
+router.get("/customer/timezone/:customerId", getUserTimeZone);
 router.get("/customers/all", getCustomersAllData);
 router.get("/customers/all/:userId", getCustomersAllDataByUserIdSettings);
 router.post("/customer/schedules", getAllSchedulesByMail);
