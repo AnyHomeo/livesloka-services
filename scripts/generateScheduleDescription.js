@@ -73,12 +73,18 @@ function getScheduleDescription(schedule, zone) {
         .split("T")[0]
         .split('"')[1];
       scheduleDescription.push(
-        `${momentTZ(moment(dateToday).add(minStartTime, "hours").format())
-          .tz(zone)
-          .format("dddd - hh:mm A")} to ${momentTZ(
-          moment(dateToday).add(maxEndTime, "hours").format()
+        `${moment(
+          momentTZ(moment(dateToday).add(minStartTime, "hours").format()).tz(
+            zone
+          )
         )
-          .tz(zone)
+          .subtract(5.5)
+          .add(1, "minutes")
+          .format("dddd - hh:mm A")} to ${moment(
+          momentTZ(moment(dateToday).add(maxEndTime, "hours").format()).tz(zone)
+        )
+          .subtract(5.5)
+          .add(1, "minutes")
           .format("hh:mm A")}`
       );
     }
