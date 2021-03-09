@@ -11,6 +11,8 @@ const SchedulerModel = require("../models/Scheduler.model");
 const { nextSlotFinder } = require("../scripts/nextSlotFinder");
 const allZones = require("../models/timeZone.json");
 const momentTZ = require("moment-timezone");
+const generateScheduleDescription = require("../scripts/generateScheduleDescription");
+const timeZoneModel = require("../models/timeZone.model");
 module.exports = {
   async registerCustomer(req, res) {
     let customerRegData = new CustomerModel(req.body);
@@ -269,7 +271,7 @@ module.exports = {
         email,
       })
         .select(
-          "_id scheduleDescription noOfClasses paymentDate paidTill numberOfClassesBought isJoinButtonEnabledByAdmin"
+          "_id scheduleDescription noOfClasses paymentDate paidTill numberOfClassesBought isJoinButtonEnabledByAdmin timeZoneId"
         )
         .lean();
       let mainSchedules = await Promise.all(
@@ -304,6 +306,18 @@ module.exports = {
             let subject = await SubjectModel.findOne({
               _id: actualSchedule.subject,
             });
+            let timeZone = await timeZoneModel.findOne({
+              id: customer.timeZoneId,
+            });
+            console.log(timeZone);
+            let selectedZoneUTCArray = allZones.filter(
+              (zone) => zone.abbr === timeZone.timeZoneName
+            )[0].utc;
+
+            let allTimeZones = momentTZ.tz.names();
+            let selectedZones = allTimeZones.filter((name) =>
+              selectedZoneUTCArray.includes(name)
+            );
             return {
               ...actualSchedule,
               isJoinButtonDisabled,
@@ -311,6 +325,10 @@ module.exports = {
               numberOfClassesBought: customer.numberOfClassesBought,
               paidTill: customer.paidTill,
               scheduleDescription: customer.scheduleDescription,
+              scheduleDescription2: generateScheduleDescription(
+                actualSchedule.slots,
+                selectedZones[0]
+              ),
               subject,
             };
           } else {
