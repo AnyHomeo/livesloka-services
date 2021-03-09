@@ -58,7 +58,7 @@ function getScheduleDescription(schedule, zone) {
       let maxEndTime = Math.max(...endTimes) - 5.5;
       let dateToday = JSON.stringify(
         nextWeekdayDate(
-          new Date(),
+          moment(new Date()).subtract(1, "day"),
           [
             "monday",
             "tuesday",
