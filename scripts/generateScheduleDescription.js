@@ -54,8 +54,8 @@ function getScheduleDescription(schedule, zone) {
       endTimes.push(bothNumbers[1]);
     });
     if (startTimes.length && endTimes.length) {
-      let minStartTime = Math.min(...startTimes);
-      let maxEndTime = Math.max(...endTimes);
+      let minStartTime = Math.min(...startTimes) - 5.5;
+      let maxEndTime = Math.max(...endTimes) - 5.5;
       let dateToday = JSON.stringify(
         nextWeekdayDate(
           new Date(),
