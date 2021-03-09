@@ -4,8 +4,6 @@ const momentTZ = require("moment-timezone");
 function nextWeekdayDate(date, day_in_week) {
   var ret = new Date(date || new Date());
   ret.setDate(ret.getDate() + ((day_in_week - ret.getDay() + 7) % 7) + 1);
-  ret.setHours(0);
-  ret.setMinutes(0);
   return ret;
 }
 
@@ -58,18 +56,22 @@ function getScheduleDescription(schedule, zone) {
     if (startTimes.length && endTimes.length) {
       let minStartTime = Math.min(...startTimes);
       let maxEndTime = Math.max(...endTimes);
-      let dateToday = nextWeekdayDate(
-        new Date(),
-        [
-          "monday",
-          "tuesday",
-          "wednesday",
-          "thursday",
-          "friday",
-          "saturday",
-          "sunday",
-        ].indexOf(day)
-      );
+      let dateToday = JSON.stringify(
+        nextWeekdayDate(
+          new Date(),
+          [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+          ].indexOf(day)
+        )
+      )
+        .split("T")[0]
+        .split('"')[1];
       scheduleDescription.push(
         `${momentTZ(moment(dateToday).add(minStartTime, "hours").format())
           .tz(zone)
