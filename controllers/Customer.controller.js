@@ -310,10 +310,12 @@ module.exports = {
               id: customer.timeZoneId,
             });
             console.log(timeZone);
+            console.log(allZones.filter(
+              (zone) => zone.abbr === timeZone.timeZoneName
+            ))
             let selectedZoneUTCArray = allZones.filter(
               (zone) => zone.abbr === timeZone.timeZoneName
             )[0].utc;
-
             let allTimeZones = momentTZ.tz.names();
             let selectedZones = allTimeZones.filter((name) =>
               selectedZoneUTCArray.includes(name)
