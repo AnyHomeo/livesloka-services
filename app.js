@@ -15,6 +15,7 @@ const paymentRouter = require("./routes/payment");
 const zoomlink = require("./routes/zoomlink");
 const salaryRouter = require("./routes/salary");
 const uploadRouter = require("./routes/uploads");
+const cancelClassRouter = require("./routes/cancelledClasses");
 
 const app = express();
 const http = require("http").createServer(app);
@@ -38,6 +39,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/", customerRouter);
 app.use("/", attendanceRouter);
+app.use("/cancelclass", cancelClassRouter);
 app.use("/settings", settingsRouter);
 app.use("/teacher", teacherRouter);
 app.use("/schedule", scheduleRouter);

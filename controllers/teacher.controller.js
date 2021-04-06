@@ -5,6 +5,7 @@ const Schedule = require("../models/Scheduler.model");
 const Attendence = require("../models/Attendance");
 const { param } = require("../routes/teacher");
 const SchedulerModel = require("../models/Scheduler.model");
+const CancelledClassesModel = require("../models/CancelledClasses.model");
 
 const days = [
   "MONDAY",
@@ -380,7 +381,14 @@ exports.GetTeacherMeetings = async (req, res) => {
   Schedule.find({ teacher: req.params.id, isDeleted: { $ne: true } })
     .populate("subject")
     .populate("students")
-    .then((result) => {
+    .lean()
+    .then(async (result) => {
+      result = await Promise.all(result.map(async (eachSchedule) => {
+        let cancelledClasses = await CancelledClassesModel.find({scheduleId:eachSchedule._id}).populate("studentId","firstName")
+        console.log(cancelledClasses,eachSchedule.className)
+        return {...eachSchedule,cancelledClasses}
+      }))
+      console.log(result)
       return res
         .status(200)
         .json({ message: "Fetched  meetings successfully", result });

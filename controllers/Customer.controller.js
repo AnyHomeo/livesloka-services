@@ -13,6 +13,8 @@ const allZones = require("../models/timeZone.json");
 const momentTZ = require("moment-timezone");
 const generateScheduleDescription = require("../scripts/generateScheduleDescription");
 const timeZoneModel = require("../models/timeZone.model");
+const CancelledClassesModel = require("../models/CancelledClasses.model");
+const generateScheduleDays = require("../scripts/generateScheduleDays");
 module.exports = {
   async registerCustomer(req, res) {
     let customerRegData = new CustomerModel(req.body);
@@ -303,6 +305,8 @@ module.exports = {
             },
           }).lean();
           if (actualSchedule) {
+            let allCancelledClasses = await CancelledClassesModel.find({scheduleId:actualSchedule._id,studentId:customer._id})
+            console.log(allCancelledClasses)
             let subject = await SubjectModel.findOne({
               _id: actualSchedule.subject,
             });
@@ -331,7 +335,12 @@ module.exports = {
                 actualSchedule.slots,
                 selectedZones[0]
               ),
+              scheduleDays:generateScheduleDays(
+                actualSchedule.slots,
+                selectedZones[0]
+              ),
               subject,
+              cancelledClasses:allCancelledClasses
             };
           } else {
             return null;
