@@ -2,6 +2,20 @@ const CancelledClassesModel = require("../models/CancelledClasses.model");
 const CustomerModel = require("../models/Customer.model");
 const SchedulerModel = require("../models/Scheduler.model");
 
+exports.getAllAppliedLeaves = async (req,res) => {
+  try {
+    const data = await CancelledClassesModel.find().populate("studentId","firstName lastName").populate("scheduleId","className").sort("createdAt")
+    return res.json({
+      message:"Retrieved successfully!!",
+      result:data
+    })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      error:"Something went wrong!!"
+    })
+  }
+}
 
 exports.CancelAClass = async (req, res) => {
   try {
@@ -58,6 +72,7 @@ exports.updateCancelledClass = async (req, res) => {
       { _id: req.body._id },
       { ...req.body }
     );
+    console.log(updatedData)
     return res.json({
       message: "Updated Successfully!",
     });
