@@ -22,10 +22,11 @@ exports.getAllAppliedLeaves = async (req,res) => {
 exports.getAllAppliedLeavesByScheduleId = async (req,res) => {
   try {
     const { scheduleId } = req.params
-    let data = await CancelledClassesModel.find({cancelledDate:{
-      $gte:new Date(req.body.date),
-    },
-    scheduleId
+    let data = await CancelledClassesModel.find({
+      cancelledDate:{
+        $gte: moment(new Date(req.body.date)).format("DD-MM-YYYY"),
+      },
+      scheduleId
   })
   console.log(data)
   return res.json({ 
