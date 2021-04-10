@@ -6,7 +6,12 @@ const SchedulerModel = require("../models/Scheduler.model");
 
 exports.getAllAppliedLeaves = async (req,res) => {
   try {
-    const data = await CancelledClassesModel.find().populate("studentId","firstName lastName").populate("scheduleId","className").sort("createdAt")
+    const today = moment().startOf('day')
+    const data = await CancelledClassesModel.find({
+      cancelledDate :{
+        $gte: today.toDate(),
+       },
+    }).populate("studentId","firstName lastName").populate("scheduleId","className").sort("createdAt")
     return res.json({
       message:"Retrieved successfully!!",
       result:data
@@ -31,7 +36,6 @@ exports.getAllAppliedLeavesByScheduleId = async (req,res) => {
      
       scheduleId
   })
-  console.log(data)
   return res.json({ 
       message:"Retrieved Successfully",
       result:data
@@ -47,44 +51,52 @@ exports.getAllAppliedLeavesByScheduleId = async (req,res) => {
 exports.CancelAClass = async (req, res) => {
   try {
     req.body.cancelledDate = new Date(req.body.cancelledDate);
-    let { studentId,scheduleId } = req.body
-    let studentIds = await CustomerModel.find({email:studentId}).select("_id").lean()
-    studentIds = studentIds.map(id => id._id)
-    let scheduleUsers = await SchedulerModel.findById(scheduleId).select("students").lean()
-    scheduleUsers = scheduleUsers.students
-    let selectedUser = ""
-    for (let i = 0; i < studentIds.length; i++) {
-      const student = studentIds[i];
-      for (let j = 0; j < scheduleUsers.length; j++) {
-        const schedule = scheduleUsers[j];
-        if(schedule.equals(student)){
-          selectedUser = student
-          break
+    var diff = Math.abs(req.body.cancelledDate.getTime() - new Date().getTime()) / 3600000;
+    if(diff >= 9){
+      let { studentId,scheduleId } = req.body
+      let studentIds = await CustomerModel.find({email:studentId}).select("_id").lean()
+      studentIds = studentIds.map(id => id._id)
+      let scheduleUsers = await SchedulerModel.findById(scheduleId).select("students").lean()
+      scheduleUsers = scheduleUsers.students
+      let selectedUser = ""
+      for (let i = 0; i < studentIds.length; i++) {
+        const student = studentIds[i];
+        for (let j = 0; j < scheduleUsers.length; j++) {
+          const schedule = scheduleUsers[j];
+          if(schedule.equals(student)){
+            selectedUser = student
+            break
+          }
         }
+        if(selectedUser) break;
       }
-      if(selectedUser) break;
-    }
-    if(!selectedUser){
-      return res.status(500).json({
-        error:"Invalid User"
+      if(!selectedUser){
+        return res.status(500).json({
+          error:"Invalid User"
+        })
+      }
+      req.body.studentId = selectedUser
+      let alreadyExists = await CancelledClassesModel.findOne({studentId:req.body.studentId,scheduleId:req.body.scheduleId})
+      
+      let oldDate =  alreadyExists ? alreadyExists.cancelledDate : ""
+      let newDate = req.body.cancelledDate
+      alreadyExists = JSON.stringify(oldDate).split("T")[0] === JSON.stringify(newDate).split("T")[0]
+      if(!alreadyExists){
+        const cancelledClass = new CancelledClassesModel(req.body);
+        await cancelledClass.save();
+        return res.status(200).json({
+          message: "applied for Leave successfully!",
+        });
+      }
+      return res.status(400).json({
+        error:"Already Applied on same day!"
+      })
+    }else {
+      return res.status(400).json({
+        error:"Please Contact admin,Cancelling date is less than 9 Hours"
       })
     }
-    req.body.studentId = selectedUser
-    let alreadyExists = await CancelledClassesModel.findOne({studentId:req.body.studentId,scheduleId:req.body.scheduleId})
     
-    let oldDate =  alreadyExists ? alreadyExists.cancelledDate : ""
-    let newDate = req.body.cancelledDate
-    alreadyExists = JSON.stringify(oldDate).split("T")[0] === JSON.stringify(newDate).split("T")[0]
-    if(!alreadyExists){
-      const cancelledClass = new CancelledClassesModel(req.body);
-      await cancelledClass.save();
-      return res.status(200).json({
-        message: "applied for Leave successfully!",
-      });
-    }
-    return res.status(400).json({
-      error:"Already Applied on same day!"
-    })
   } catch (error) {
     console.log(error);
     return res.status(500).json({
