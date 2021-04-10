@@ -1,4 +1,6 @@
 const CancelledClassesModel = require("../models/CancelledClasses.model");
+const  moment = require('moment');
+const  momentTZ = require('moment-timezone');
 const CustomerModel = require("../models/Customer.model");
 const SchedulerModel = require("../models/Scheduler.model");
 
@@ -7,6 +9,27 @@ exports.getAllAppliedLeaves = async (req,res) => {
     const data = await CancelledClassesModel.find().populate("studentId","firstName lastName").populate("scheduleId","className").sort("createdAt")
     return res.json({
       message:"Retrieved successfully!!",
+      result:data
+    })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      error:"Something went wrong!!"
+    })
+  }
+}
+
+exports.getAllAppliedLeavesByScheduleId = async (req,res) => {
+  try {
+    const { scheduleId } = req.params
+    let data = await CancelledClassesModel.find({cancelledDate:{
+      $gte:new Date(req.body.date),
+    },
+    scheduleId
+  })
+  console.log(data)
+  return res.json({ 
+      message:"Retrieved Successfully",
       result:data
     })
   } catch (error) {
