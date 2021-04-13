@@ -5,10 +5,12 @@ const admin = require("../models/Admin.model");
 const Comment = require("../models/comments.model");
 const CustomerModel = require("../models/Customer.model");
 const InvoiceModel = require("../models/Invoice.model");
+const TimeZoneModel = require("../models/timeZone.model");
+
 
 module.exports = {
   authentication(req, res, next) {
-    admin.findOne({ userId: req.body.userId.toLowerCase() }, (err, user) => {
+    admin.findOne({ userId: req.body.userId.toLowerCase() }, async (err, user) => {
       console.log(err);
       if (!user) {
         return res.status(400).json({ error: "Invalid userId or Password" });
@@ -26,9 +28,11 @@ module.exports = {
             }
           );
           user.password = undefined;
+          let customer = await CustomerModel.findById(user.customerId).select("timeZoneId firstName lastName phone whatsAppnumber -_id").lean()
+          let timeZone = await TimeZoneModel.findOne({id:customer.timeZoneId}).select("timeZoneName -_id").lean()
           return res.status(200).json({
             message: "LoggedIn successfully",
-            result: { ...user._doc, token: newToken },
+            result: { ...user._doc,...customer,timeZone:timeZone.timeZoneName, token: newToken },
           });
         }
         return res.status(400).json({ error: "Wrong Password !!" });
