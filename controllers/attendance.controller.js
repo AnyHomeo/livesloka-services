@@ -2,6 +2,7 @@ const Attendance = require("../models/Attendance");
 const CustomerModel = require("../models/Customer.model");
 const SchedulerModel = require("../models/Scheduler.model");
 const Payments = require("../models/Payments");
+const ClassHistoryModel = require("../models/ClassHistory.model");
 
 const getAttendance = (req, res) => {
   const { id } = req.params;
@@ -48,63 +49,78 @@ const postAttendance = (req, res) => {
   customers = Array.isArray(customers) ? customers : [];
 
   Attendance.findOne({ scheduleId, date })
-    .then((alreadyGivenAttendance) => {
-      if (alreadyGivenAttendance) {
-        let newlyRequestedStudents = [];
-        requestedStudents.forEach((student) => {
-          if (!alreadyGivenAttendance.requestedStudents.includes(student)) {
-            newlyRequestedStudents.push(student);
-          }
-        });
-        CustomerModel.updateMany(
-          { _id: { $in: newlyRequestedStudents } },
-          { $inc: { numberOfClassesBought: 1 } }
-        )
-          .then((data) => {
-            console.log(data);
-          })
-          .catch((err) => {
-            console.log(err);
+    .then(async (alreadyGivenAttendance) => {
+      try {
+        if (alreadyGivenAttendance) {
+          let newlyRequestedStudents = [];
+           requestedStudents.forEach((student) => {
+            if (!alreadyGivenAttendance.requestedStudents.includes(student)) {
+              newlyRequestedStudents.push(student);
+            }
           });
-        alreadyGivenAttendance.customers = customers;
-        alreadyGivenAttendance.absentees = absentees;
-        alreadyGivenAttendance.requestedStudents = requestedStudents;
-        alreadyGivenAttendance.save((err, savedAttendance) => {
-          if (err) {
-            console.log(err);
-            return res.status(500).json({
-              error: "Error in updating Attendance",
-            });
-          } else {
-            return res.json({
-              message: "Attendance updated successfully",
-            });
-          }
-        });
-      } else {
-        CustomerModel.updateMany(
-          { _id: { $in: [...customers, ...absentees] } },
-          { $inc: { numberOfClassesBought: -1 } }
-        )
-          .then((data) => {
-            console.log(data);
-          })
-          .catch((err) => {
-            console.log(err);
+          let allCustomers = await CustomerModel.find({_id:{
+            $in:newlyRequestedStudents
+          }}).select("numberOfClassesBought")
+          allCustomersHistory = allCustomers.map( customer => ({
+            customerId:customer._id,
+            previousValue:customer.numberOfClassesBought,
+            nextValue:customer.numberOfClassesBought + 1,
+            comment:"Requested for a class!"
+          }))
+          await ClassHistoryModel.insertMany(allCustomersHistory)
+          await CustomerModel.updateMany(
+            { _id: { $in: newlyRequestedStudents } },
+            { $inc: { numberOfClassesBought: 1 } }
+          )
+          alreadyGivenAttendance.customers = customers;
+          alreadyGivenAttendance.absentees = absentees;
+          alreadyGivenAttendance.requestedStudents = requestedStudents;
+          alreadyGivenAttendance.save((err, savedAttendance) => {
+            if (err) {
+              console.log(err);
+              return res.status(500).json({
+                error: "Error in updating Attendance",
+              });
+            } else {
+              return res.json({
+                message: "Attendance updated successfully",
+              });
+            }
           });
-        const attendance = new Attendance(req.body);
-        attendance.save((err, doc) => {
-          if (err) {
-            console.log(err);
-            return res.status(500).json({
-              error: "Error in Taking Attendance",
-            });
-          } else {
-            return res.json({
-              message: "Attendance Added successfully",
-            });
-          }
-        });
+        } else {
+          let allCustomers = await CustomerModel.find({_id:{
+            $in:[...customers, ...absentees]
+          }}).select("numberOfClassesBought")
+          allCustomersHistory = allCustomers.map( customer => ({
+            customerId:customer._id,
+            previousValue:customer.numberOfClassesBought,
+            nextValue:customer.numberOfClassesBought - 1,
+            comment:"Attendance Taken!"
+          }))
+          await ClassHistoryModel.insertMany(allCustomersHistory)
+          await CustomerModel.updateMany(
+            { _id: { $in: [...customers, ...absentees] } },
+            { $inc: { numberOfClassesBought: -1 } }
+          )
+          const attendance = new Attendance(req.body);
+          attendance.save((err, doc) => {
+            if (err) {
+              console.log(err);
+              return res.status(500).json({
+                error: "Error in Taking Attendance",
+              });
+            } else {
+              return res.json({
+                message: "Attendance Added successfully",
+              });
+            }
+          });
+        } 
+      } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+          error:"something went wrong!!"
+        })
       }
     })
     .catch((err) => {
