@@ -30,3 +30,19 @@ exports.updateClassesPaid = async (req, res) => {
     });
   }
 };
+
+exports.getHistoryById = async (req,res) => {
+  try {
+    const { customerId } = req.params;
+    let history = await ClassHistoryModel.find({customerId})
+    return res.json({
+      message:"Retrieved history successfully!",
+      result:history
+    })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      error:"Error in retrieving the History"
+    })
+  }
+}
