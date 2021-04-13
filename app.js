@@ -16,6 +16,7 @@ const zoomlink = require("./routes/zoomlink");
 const salaryRouter = require("./routes/salary");
 const uploadRouter = require("./routes/uploads");
 const cancelClassRouter = require("./routes/cancelledClasses");
+const classHistoryRouter = require("./routes/classHistory");
 
 const app = express();
 const http = require("http").createServer(app);
@@ -39,6 +40,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/", customerRouter);
 app.use("/", attendanceRouter);
+app.use("/class-history", classHistoryRouter);
 app.use("/cancelclass", cancelClassRouter);
 app.use("/settings", settingsRouter);
 app.use("/teacher", teacherRouter);

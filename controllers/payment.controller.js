@@ -3,6 +3,7 @@ const paypal = require("paypal-rest-sdk");
 const Customer = require("../models/Customer.model");
 const Payment = require("../models/Payments");
 const Currency = require("../models/Currency.model");
+const ClassHistoryModel = require("../models/ClassHistory.model");
 const { addMonths } = require("../scripts");
 const moment = require("moment");
 const shortid = require("shortid");
@@ -110,6 +111,8 @@ exports.onSuccess = async (req, res) => {
   try {
     const { id } = req.params;
     const { PayerID, paymentId } = req.query;
+    let previousValue = 0;
+    let nextValue = 0;
     const customer = await Customer.findById(id).select(
       "firstName lastName className proposedAmount proposedCurrencyId noOfClasses paymentDate numberOfClassesBought paidTill"
     );
@@ -139,9 +142,18 @@ exports.onSuccess = async (req, res) => {
         });
       } else {
         if (customer.noOfClasses != 0 && !!customer.noOfClasses) {
+          previousValue = customer.numberOfClassesBought
           customer.numberOfClassesBought =
             customer.numberOfClassesBought + customer.noOfClasses;
-        } else if (customer.paymentDate) {
+            nextValue = customer.numberOfClassesBought
+            let newUpdate = new ClassHistoryModel({
+              previousValue,
+              nextValue,
+              comment:"Successful Payment!",
+              customerId:id
+            })
+            await newUpdate.save()
+          } else if (customer.paymentDate) {
           if (customer.paidTill) {
             customer.paidTill = addMonths(customer.paidTill, 1);
           } else {

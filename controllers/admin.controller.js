@@ -29,10 +29,16 @@ module.exports = {
           );
           user.password = undefined;
           let customer = await CustomerModel.findById(user.customerId).select("timeZoneId firstName lastName phone whatsAppnumber -_id").lean()
-          let timeZone = await TimeZoneModel.findOne({id:customer.timeZoneId}).select("timeZoneName -_id").lean()
+          if(customer){
+            let timeZone = await TimeZoneModel.findOne({id:customer.timeZoneId}).select("timeZoneName -_id").lean()
+            return res.status(200).json({
+              message: "LoggedIn successfully",
+              result: { ...user._doc,...customer,timeZone:timeZone.timeZoneName, token: newToken },
+            });
+          }
           return res.status(200).json({
             message: "LoggedIn successfully",
-            result: { ...user._doc,...customer,timeZone:timeZone.timeZoneName, token: newToken },
+            result: { ...user._doc, token: newToken },
           });
         }
         return res.status(400).json({ error: "Wrong Password !!" });
@@ -138,9 +144,13 @@ module.exports.deletecomment = (req, res) => {
 
 module.exports.getCorrespondingData = (req, res) => {
   try {
+    let { select } = req.query
+    if(typeof select === "string"){
+      select = select.split(",").join(" ");
+    }
     const Model = require(`../models/${req.params.name}.model`);
     Model.find({})
-      .select("-__v -createdAt -updatedAt ")
+      .select(select ? select : "-__v -createdAt -updatedAt ")
       .then((result) => {
         res.status("200").send({
           message: req.params.name + " retrieved successfully",
