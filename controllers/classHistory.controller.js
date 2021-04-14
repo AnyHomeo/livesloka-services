@@ -34,33 +34,12 @@ exports.updateClassesPaid = async (req, res) => {
 
 exports.getHistoryById = async (req,res) => {
   try {
-    const { email } = req.params;
-    let allCustomers = await CustomerModel.find({email}).select("_id").lean()
-    allCustomers = allCustomers.map(customer => customer._id)
-      let schedulesOfCustomers = await SchedulerModel.find({
-        students:{
-          $in: allCustomers
-        },
-        isDeleted:{
-          $ne:true
-        }
-      }).populate("subject","subjectName").select("subject students");
-      let allHistory = await ClassHistoryModel.find({
-        customerId:{
-          $in:allCustomers
-        }
-      })
-      let result = schedulesOfCustomers.map(schedule => {
-        let customerId = allCustomers.filter(customer => schedule.students.some(student => student.equals(customer)))[0]
-        console.log(customerId)
-        return {
-          history:allHistory.filter(history => history.customerId.equals(customerId)),
-          subject:schedule.subject.subjectName
-        }
-      })
-      return res.json({
-        result
-      })
+    const { customerId } = req.params;
+    let history = await ClassHistoryModel.find({customerId}).sort("createdAt");
+    return res.json({
+      message:"Retrieved successfully!",
+      result:history
+    })
   } catch (error) {
     console.log(error)
     return res.status(500).json({

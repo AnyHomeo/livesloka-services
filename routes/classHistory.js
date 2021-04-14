@@ -3,6 +3,6 @@ const { updateClassesPaid, getHistoryById } = require("../controllers/classHisto
 const router = express.Router();
 
 router.put("/",updateClassesPaid);
-router.get("/:email",getHistoryById);
+router.get("/:customerId",getHistoryById);
 
 module.exports = router;
