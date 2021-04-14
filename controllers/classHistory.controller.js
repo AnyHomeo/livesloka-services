@@ -1,5 +1,6 @@
 const CustomerModel = require("../models/Customer.model");
 const ClassHistoryModel = require("../models/ClassHistory.model");
+const SchedulerModel = require("../models/Scheduler.model");
 
 exports.updateClassesPaid = async (req, res) => {
   try {
@@ -33,12 +34,33 @@ exports.updateClassesPaid = async (req, res) => {
 
 exports.getHistoryById = async (req,res) => {
   try {
-    const { customerId } = req.params;
-    let history = await ClassHistoryModel.find({customerId})
-    return res.json({
-      message:"Retrieved history successfully!",
-      result:history
-    })
+    const { email } = req.params;
+    let allCustomers = await CustomerModel.find({email}).select("_id").lean()
+    allCustomers = allCustomers.map(customer => customer._id)
+      let schedulesOfCustomers = await SchedulerModel.find({
+        students:{
+          $in: allCustomers
+        },
+        isDeleted:{
+          $ne:true
+        }
+      }).populate("subject","subjectName").select("subject students");
+      let allHistory = await ClassHistoryModel.find({
+        customerId:{
+          $in:allCustomers
+        }
+      })
+      let result = schedulesOfCustomers.map(schedule => {
+        let customerId = allCustomers.filter(customer => schedule.students.some(student => student.equals(customer)))[0]
+        console.log(customerId)
+        return {
+          history:allHistory.filter(history => history.customerId.equals(customerId)),
+          subject:schedule.subject.subjectName
+        }
+      })
+      return res.json({
+        result
+      })
   } catch (error) {
     console.log(error)
     return res.status(500).json({

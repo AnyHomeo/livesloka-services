@@ -705,4 +705,29 @@ module.exports = {
       });
     }
   },
+
+  getSingleUser: async (req,res) => {
+    try {
+      const { id } = req.params
+      let customer = await CustomerModel.findById(id).select("timeZoneId firstName lastName phone whatsAppnumber -_id").lean()
+      console.log(customer)
+      if(customer){
+        let timeZone = await TimeZoneModel.findOne({id:customer.timeZoneId}).select("timeZoneName -_id").lean()
+        return res.status(200).json({
+          message: "Retrieved Data successfully",
+          result: { ...customer,timeZone:timeZone.timeZoneName },
+        });
+      }
+      return res.status(400).json({
+        error:"No user with that Id"
+      })
+    } catch (error) {
+      console.log(error)
+      return res.status(500).json({
+        error:"Something went wrong!"
+      })
+    }
+    const { email } = req.params
+      
+  }
 };

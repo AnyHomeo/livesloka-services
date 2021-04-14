@@ -9,9 +9,11 @@ const {
   getClassDashBoardData,
   getCustomersAllDataByUserIdSettings,
   getUserTimeZone,
+  getSingleUser,
 } = require("../controllers/Customer.controller");
 const router = express.Router();
 
+router.get("/user/info/:id", getSingleUser);
 router.get("/customer/data/:customerId", getCustomerData);
 router.get("/customer/timezone/:customerId", getUserTimeZone);
 router.get("/customers/all", getCustomersAllData);
