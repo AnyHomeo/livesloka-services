@@ -49,6 +49,10 @@ var TeacherSchema = new mongoose.Schema(
       type: String,
       default: "0",
     },
+    leaveDifferenceHours:{
+      type:Number,
+      default:0
+    },
     Bank_account: {
       type: String,
     },

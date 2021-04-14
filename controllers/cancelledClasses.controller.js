@@ -107,14 +107,21 @@ exports.CancelAClass = async (req, res) => {
 
 exports.updateCancelledClass = async (req, res) => {
   try {
-    let updatedData = await CancelledClassesModel.updateOne(
-      { _id: req.body._id },
-      { ...req.body }
-    );
-    console.log(updatedData)
-    return res.json({
-      message: "Updated Successfully!",
-    });
+    req.body.cancelledDate = new Date(req.body.cancelledDate);
+    var diff = Math.abs(req.body.cancelledDate.getTime() - new Date().getTime()) / 3600000;
+    if(diff >= 9){
+      let updatedData = await CancelledClassesModel.updateOne(
+        { _id: req.body._id },
+        { ...req.body }
+      );
+      return res.json({
+        message: "Updated Successfully!",
+      });
+    } else {
+      return res.status(500).json({
+        error:"Please Contact admin,Cancelling date is less than 9 Hours"
+      })
+    }
   } catch (error) {
     console.log(error);
     return res.status(500).json({
