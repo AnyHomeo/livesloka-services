@@ -42,9 +42,10 @@ const getAttendance = (req, res) => {
 };
 
 const postAttendance = (req, res) => {
-  let { scheduleId, date, customers, requestedStudents, absentees } = req.body;
+  let { scheduleId, date, customers, requestedStudents,requestedPaidStudents, absentees } = req.body;
 
   requestedStudents = Array.isArray(requestedStudents) ? requestedStudents : [];
+  requestedPaidStudents = Array.isArray(requestedPaidStudents) ? requestedPaidStudents : [];
   absentees = Array.isArray(absentees) ? absentees : [];
   customers = Array.isArray(customers) ? customers : [];
 
@@ -54,7 +55,12 @@ const postAttendance = (req, res) => {
         if (alreadyGivenAttendance) {
           let newlyRequestedStudents = [];
            requestedStudents.forEach((student) => {
-            if (!alreadyGivenAttendance.requestedStudents.includes(student)) {
+            if (!alreadyGivenAttendance.requestedStudents.includes(student) && !alreadyGivenAttendance.requestedPaidStudents.includes(student)) {
+              newlyRequestedStudents.push(student);
+            }
+          });
+          requestedPaidStudents.forEach((student) => {
+            if (!alreadyGivenAttendance.requestedPaidStudents.includes(student) && !alreadyGivenAttendance.requestedPaidStudents.includes(student)) {
               newlyRequestedStudents.push(student);
             }
           });
@@ -75,6 +81,7 @@ const postAttendance = (req, res) => {
           alreadyGivenAttendance.customers = customers;
           alreadyGivenAttendance.absentees = absentees;
           alreadyGivenAttendance.requestedStudents = requestedStudents;
+          alreadyGivenAttendance.requestedPaidStudents = requestedPaidStudents;
           alreadyGivenAttendance.save((err, savedAttendance) => {
             if (err) {
               console.log(err);
@@ -151,6 +158,7 @@ const getAttendanceByScheduleId = (req, res) => {
   Attendance.find({ scheduleId })
     .populate("customers", "firstName email")
     .populate("requestedStudents", "firstName email")
+    .populate("requestedPaidStudents", "firstName email")
     .populate("absentees", "firstName email")
     .then((data) => {
       return res.json({

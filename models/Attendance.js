@@ -23,6 +23,12 @@ var AttendanceSchema = new mongoose.Schema(
         ref: "Customer",
       },
     ],
+    requestedPaidStudents:[
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Customer",
+      },
+    ],
     date: {
       trim: true,
       type: String,
