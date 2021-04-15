@@ -70,6 +70,14 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
             select: "numberOfStudents",
           }
         );
+        allTeacherAttendances = await Attendance.populate(
+          allTeacherAttendances,
+          {
+            path: "requestedPaidStudents",
+            model: CustomerModel,
+            select: "numberOfStudents",
+          }
+        );
         allTeachers.forEach((teacher) => {
           let objToPush = {};
           objToPush.id = teacher.id;
@@ -111,6 +119,11 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
                       ? parseInt(student.numberOfStudents)
                       : 1;
                   });
+                  attendance.requestedPaidStudents.forEach((student) => {
+                    totalStudents += student.numberOfStudents
+                      ? parseInt(student.numberOfStudents)
+                      : 1;
+                  });
                   attendance.absentees.forEach((student) => {
                     totalStudents += student.numberOfStudents
                       ? parseInt(student.numberOfStudents)
@@ -148,6 +161,11 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
                       : 1;
                   });
                   attendance.absentees.forEach((student) => {
+                    totalStudents += student.numberOfStudents
+                      ? parseInt(student.numberOfStudents)
+                      : 1;
+                  });
+                  attendance.requestedPaidStudents.forEach((student) => {
                     totalStudents += student.numberOfStudents
                       ? parseInt(student.numberOfStudents)
                       : 1;
@@ -201,6 +219,7 @@ exports.getSalariesOfTeacherByMonthAndId = async (req, res) => {
   })
     .populate("customers", "numberOfStudents firstName")
     .populate("absentees", "numberOfStudents firstName")
+    .populate("requestedPaidStudents", "numberOfStudents firstName")
     .populate("scheduleId", "OneToOne demo className startDate");
 
   let finalObject = {};
