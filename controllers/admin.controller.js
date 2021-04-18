@@ -7,48 +7,81 @@ const CustomerModel = require("../models/Customer.model");
 const InvoiceModel = require("../models/Invoice.model");
 const TimeZoneModel = require("../models/timeZone.model");
 
-
 module.exports = {
   authentication(req, res, next) {
-    admin.findOne({ userId: req.body.userId.toLowerCase() }, async (err, user) => {
-      console.log(err);
-      if (!user) {
-        return res.status(400).json({ error: "Invalid userId or Password" });
-      } else {
-        if (user.password === req.body.password) {
-          var payload = {
-            _id: user._id,
-            userId: user.userId,
-          };
-          var newToken = jwt.sign(
-            payload,
-            "mckdsmlckmweifjmc;mapofkmdskmvidonvcodkscklsdmcksdoisdsdmcks",
-            {
-              expiresIn: process.env.JWT_EXP,
+    try {
+      admin.findOne(
+        { userId: req.body.userId.toLowerCase() },
+        async (err, user) => {
+          console.log(err);
+          if (!user) {
+            return res
+              .status(400)
+              .json({ error: "Invalid userId or Password" });
+          } else {
+            if (user.password === req.body.password) {
+              var payload = {
+                _id: user._id,
+                userId: user.userId,
+              };
+              var newToken = jwt.sign(
+                payload,
+                "mckdsmlckmweifjmc;mapofkmdskmvidonvcodkscklsdmcksdoisdsdmcks",
+                {
+                  expiresIn: process.env.JWT_EXP,
+                }
+              );
+              user.password = undefined;
+              let customer = await CustomerModel.findById(user.customerId)
+                .select("timeZoneId firstName lastName phone whatsAppnumber -_id")
+                .lean();
+              if (customer) {
+                let timeZone = await TimeZoneModel.findOne({
+                  id: customer.timeZoneId,
+                })
+                  .select("timeZoneName -_id")
+                  .lean();
+                  if(timeZone){
+                    return res.status(200).json({
+                      message: "LoggedIn successfully",
+                      result: {
+                        ...user._doc,
+                        ...customer,
+                        timeZone: timeZone.timeZoneName,
+                        token: newToken,
+                      },
+                    });
+                  } else {
+                    return res.status(200).json({
+                      message: "LoggedIn successfully",
+                      result: {
+                        ...user._doc,
+                        ...customer,
+                        token: newToken,
+                      },
+                    });
+                  }
+              }
+              return res.status(200).json({
+                message: "LoggedIn successfully",
+                result: { ...user._doc, token: newToken },
+              });
             }
-          );
-          user.password = undefined;
-          let customer = await CustomerModel.findById(user.customerId).select("timeZoneId firstName lastName phone whatsAppnumber -_id").lean()
-          if(customer){
-            let timeZone = await TimeZoneModel.findOne({id:customer.timeZoneId}).select("timeZoneName -_id").lean()
-            return res.status(200).json({
-              message: "LoggedIn successfully",
-              result: { ...user._doc,...customer,timeZone:timeZone.timeZoneName, token: newToken },
-            });
+            return res.status(400).json({ error: "Wrong Password !!" });
           }
-          return res.status(200).json({
-            message: "LoggedIn successfully",
-            result: { ...user._doc, token: newToken },
-          });
         }
-        return res.status(400).json({ error: "Wrong Password !!" });
-      }
-    });
+      );
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        error: "Error In login!",
+      });
+    }
   },
 };
 
 module.exports.ChangePassword = (req, res) => {
-  // call for passport aut hentication
+  // call for passport authentication
   if (req.body.newPassword === req.body.confirmPassword) {
     admin
       .updateOne(
@@ -144,8 +177,8 @@ module.exports.deletecomment = (req, res) => {
 
 module.exports.getCorrespondingData = (req, res) => {
   try {
-    let { select } = req.query
-    if(typeof select === "string"){
+    let { select } = req.query;
+    if (typeof select === "string") {
       select = select.split(",").join(" ");
     }
     const Model = require(`../models/${req.params.name}.model`);
