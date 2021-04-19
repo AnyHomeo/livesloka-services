@@ -1006,7 +1006,7 @@ exports.deleteScheduleById = async (req, res) => {
 exports.getScheduleById = (req, res) => {
   const { id } = req.params;
   Schedule.findById(id)
-    .populate("students", "firstName lastName")
+    .populate("students", "firstName lastName phone whatsAppnumber")
     .then((data) => {
       return res.status(200).json({
         message: "Schedule Retrieved Successfully",
