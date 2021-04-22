@@ -412,6 +412,7 @@ module.exports = {
         return {
           ...user,
           subjectId: subject.id,
+          proposedAmount:subject.amount,
           firstName: `${user.firstName} ${subject.subjectName}`,
         };
       });

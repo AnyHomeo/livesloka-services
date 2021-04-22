@@ -51,8 +51,9 @@ exports.getAllAppliedLeavesByScheduleId = async (req,res) => {
 exports.CancelAClass = async (req, res) => {
   try {
     req.body.cancelledDate = new Date(req.body.cancelledDate);
+    const { isAdmin } = req.query
     var diff = Math.abs(req.body.cancelledDate.getTime() - new Date().getTime()) / 3600000;
-    if(diff >= 9){
+    if(diff >= 9 && !isAdmin){
       let { studentId,scheduleId } = req.body
       let studentIds = await CustomerModel.find({email:studentId}).select("_id").lean()
       studentIds = studentIds.map(id => id._id)
@@ -91,7 +92,34 @@ exports.CancelAClass = async (req, res) => {
       return res.status(400).json({
         error:"Already Applied on same day!"
       })
-    }else {
+    }
+    else if(isAdmin){
+      let scheduleId = await SchedulerModel.findOne({students: req.body.studentId,isDeleted:{
+        $ne: true
+      }})
+      if(scheduleId){
+        req.body.scheduleId = scheduleId._id
+        let alreadyExists = await CancelledClassesModel.findOne({studentId:req.body.studentId,scheduleId:req.body.scheduleId})
+      let oldDate =  alreadyExists ? alreadyExists.cancelledDate : ""
+      let newDate = req.body.cancelledDate
+      alreadyExists = JSON.stringify(oldDate).split("T")[0] === JSON.stringify(newDate).split("T")[0]
+      if(!alreadyExists){
+        const cancelledClass = new CancelledClassesModel(req.body);
+        await cancelledClass.save();
+        return res.status(200).json({
+          message: "applied for Leave successfully!",
+        });
+      }
+      return res.status(400).json({
+        error:"Already Applied on same day!"
+      })
+      } else {
+        return res.status(400).json({
+          error:"No Schedule to user!"
+        })
+      }
+
+    }else{
       return res.status(400).json({
         error:"Please Contact admin,Cancelling date is less than 9 Hours"
       })
