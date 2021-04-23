@@ -165,6 +165,7 @@ exports.onSuccess = async (req, res) => {
             );
           }
         }
+        customer.classStatusId = "113975223750050"
         await customer.save();
         const newPayment = new Payment({
           customerId: id,

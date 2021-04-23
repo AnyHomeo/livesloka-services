@@ -31,6 +31,10 @@ var adminSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    agentId: {
+      type: String,
+      trim: true,
+    },
     password: {
       type: String,
       required: "Password can't be empty",

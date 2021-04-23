@@ -11,6 +11,7 @@ const SchedulerModel = require("../models/Scheduler.model");
 const TeacherModel = require("../models/Teacher.model");
 var equal = require("fast-deep-equal");
 const moment = require("moment");
+const Payments = require("../models/Payments");
 
 function convertTZ(date, tzString) {
   return new Date(
@@ -374,7 +375,7 @@ exports.addSchedule = async (req, res) => {
     : "https://" + meetingLink;
   try {
     let selectedSubject = await Subject.findOne({ _id: subject }).lean();
-    let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
+    var selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
     if (classname) {
       className = classname;
     } else {
@@ -461,11 +462,18 @@ exports.addSchedule = async (req, res) => {
               .then(async (dat) => {
                 let rec = SlotConverter(scheduledData.slots, dat.timeZoneName);
                 let schdDescription = postProcess(rec, Subjectname);
-
+                console.log(selectedTeacher.id)
                 await Customer.updateOne(
                   { _id: stud_id },
                   {
-                    $set: { scheduleDescription: schdDescription, meetingLink },
+                    $set: {
+                      scheduleDescription: schdDescription,
+                      meetingLink,
+                      teacherId:selectedTeacher.id,
+                      classStatusId: demo
+                        ? "38493085684944"
+                        :  "121975682530440",
+                    },
                     $inc: { numberOfClassesBought: demo ? 1 : 0 },
                   }
                 );
@@ -553,7 +561,7 @@ exports.editSchedule = async (req, res) => {
 
     try {
       let selectedSubject = await Subject.findOne({ _id: subject }).lean();
-      let selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
+      var selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
       if (className) {
         req.body.className = className;
       } else {
@@ -759,12 +767,18 @@ exports.editSchedule = async (req, res) => {
                           .then(async (dat) => {
                             let rec = SlotConverter(slots, dat.timeZoneName);
                             let schdDescription = postProcess(rec, Subjectname);
+                            let anyPayments = await Payments.countDocuments({customerId:data._id})
+                console.log(anyPayments,selectedTeacher.id)
                             await Customer.updateOne(
                               { _id: stud_id },
                               {
                                 $set: {
                                   scheduleDescription: schdDescription,
                                   meetingLink: req.body.meetingLink,
+                                  teacherId:selectedTeacher.id,
+                                  classStatusId: demo
+                                  ? "38493085684944"
+                                  : anyPayments ? "113975223750050" : "121975682530440",
                                 },
                               }
                             );
@@ -850,12 +864,18 @@ exports.editSchedule = async (req, res) => {
                   .then(async (dat) => {
                     let rec = SlotConverter(slots, dat.timeZoneName);
                     let schdDescription = postProcess(rec, Subjectname);
+                    let anyPayments = await Payments.countDocuments({customerId:data._id})
+                console.log(anyPayments,selectedTeacher.id)
                     await Customer.updateOne(
                       { _id: stud_id },
                       {
                         $set: {
                           scheduleDescription: schdDescription,
                           meetingLink: req.body.meetingLink,
+                          teacherId:selectedTeacher.id,
+                          classStatusId: demo
+                          ? "38493085684944"
+                          : anyPayments ? "113975223750050" : "121975682530440",
                         },
                       }
                     );
@@ -1006,7 +1026,10 @@ exports.deleteScheduleById = async (req, res) => {
 exports.getScheduleById = (req, res) => {
   const { id } = req.params;
   Schedule.findById(id)
-    .populate("students", "firstName lastName phone whatsAppnumber meetingLink email numberOfClassesBought")
+    .populate(
+      "students",
+      "firstName lastName phone whatsAppnumber meetingLink email numberOfClassesBought"
+    )
     .then((data) => {
       return res.status(200).json({
         message: "Schedule Retrieved Successfully",

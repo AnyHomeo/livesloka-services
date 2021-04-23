@@ -18,6 +18,16 @@ var AgentSchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
+    AgentLoginId:{
+      trim:true,
+      lowercase:true,
+      type:String,
+      default:""
+    },
+    AgentRole:{
+      type:Number,
+      default:3
+    }
   },
   { timestamps: true }
 );

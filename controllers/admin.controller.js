@@ -225,8 +225,8 @@ module.exports.updateCorrespondingData = (req, res) => {
     const vell = require(`../models/${req.params.name}.model`);
     vell
       .updateOne({ id: req.body.id }, req.body)
-      .then((result) => {
-        if (req.params.name == "Teacher") {
+      .then(async (result) => {
+        if (req.params.name === "Teacher") {
           AdminModel.findOne({ teacherId: req.body.id })
             .then((data) => {
               if (data) {
@@ -275,7 +275,31 @@ module.exports.updateCorrespondingData = (req, res) => {
                 error: "Something went wrong",
               });
             });
-        } else {
+        }
+        else if(req.params.name === "Agent" && req.body.AgentLoginId){
+          let loginData = await AdminModel.findOne({userId:req.body.AgentLoginId})
+          if(loginData){
+            loginData.roleId = req.body.AgentRole
+            loginData.agentId = req.body.id
+            loginData.username = req.body.AgentName
+            await loginData.save()
+          } else {
+            let body = {
+              username: req.body.AgentName,
+              userId: req.body.agentLoginId,
+              roleId:req.body.AgentRole,
+              agentId:req.body.id
+            }
+            const newAgent = new admin(body);
+            await newAgent.save()
+          }
+          return res.status(200).json({
+            status: "OK",
+            message: `${req.params.name} updated successfully`,
+            result,
+          });
+        }
+        else {
           return res.status(200).json({
             status: "OK",
             message: `${req.params.name} updated successfully`,
@@ -315,7 +339,7 @@ module.exports.addField = (req, res) => {
     const model = new Model(req.body);
     model
       .save()
-      .then((result) => {
+      .then(async (result) => {
         if (name == "Teacher") {
           let body = {
             username: result.TeacherName,
@@ -324,14 +348,18 @@ module.exports.addField = (req, res) => {
             teacherId: result.id,
           };
           const newTeacher = new admin(body);
-          newTeacher
+          await newTeacher
             .save()
-            .then((result) => {
-              console.log(result);
-            })
-            .catch((err) => {
-              console.log(err);
-            });
+        }
+        if(name === "Agent"){
+          let body = {
+            username: result.AgentName,
+            userId: result.agentLoginId,
+            roleId:result.AgentRole,
+            agentId:result.id
+          }
+          const newAgent = new admin(body);
+          await newAgent.save()
         }
         return res.status("200").send({
           message: name + " added successfully",
