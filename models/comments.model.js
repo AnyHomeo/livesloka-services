@@ -18,7 +18,7 @@ const Comments = new mongoose.Schema({
     trim: true,
   },
   timeStamp: {
-    type: String,
+    type: Date,
     trim: true,
   },
 });

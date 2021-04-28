@@ -20,7 +20,7 @@ var CommentSchema = new mongoose.Schema(
     },
     timeStamp: {
       trim: true,
-      type: String,
+      type: Date,
     },
   },
   { timestamps: true }

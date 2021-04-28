@@ -15,6 +15,8 @@ const generateScheduleDescription = require("../scripts/generateScheduleDescript
 const timeZoneModel = require("../models/timeZone.model");
 const CancelledClassesModel = require("../models/CancelledClasses.model");
 const generateScheduleDays = require("../scripts/generateScheduleDays");
+const TeacherModel = require("../models/Teacher.model");
+
 module.exports = {
   async registerCustomer(req, res) {
     let customerRegData = new CustomerModel(req.body);
@@ -305,8 +307,11 @@ module.exports = {
             },
           }).lean();
           if (actualSchedule) {
-            let allCancelledClasses = await CancelledClassesModel.find({scheduleId:actualSchedule._id,studentId:customer._id})
-            console.log(allCancelledClasses)
+            let allCancelledClasses = await CancelledClassesModel.find({
+              scheduleId: actualSchedule._id,
+              studentId: customer._id,
+            });
+            console.log(allCancelledClasses);
             let subject = await SubjectModel.findOne({
               _id: actualSchedule.subject,
             });
@@ -314,9 +319,9 @@ module.exports = {
               id: customer.timeZoneId,
             });
             console.log(timeZone);
-            console.log(allZones.filter(
-              (zone) => zone.abbr === timeZone.timeZoneName
-            ))
+            console.log(
+              allZones.filter((zone) => zone.abbr === timeZone.timeZoneName)
+            );
             let selectedZoneUTCArray = allZones.filter(
               (zone) => zone.abbr === timeZone.timeZoneName
             )[0].utc;
@@ -335,12 +340,12 @@ module.exports = {
                 actualSchedule.slots,
                 selectedZones[0]
               ),
-              scheduleDays:generateScheduleDays(
+              scheduleDays: generateScheduleDays(
                 actualSchedule.slots,
                 selectedZones[0]
               ),
               subject,
-              cancelledClasses:allCancelledClasses
+              cancelledClasses: allCancelledClasses,
             };
           } else {
             return null;
@@ -412,7 +417,7 @@ module.exports = {
         return {
           ...user,
           subjectId: subject.id,
-          proposedAmount:subject.amount,
+          proposedAmount: subject.amount,
           firstName: `${user.firstName} ${subject.subjectName}`,
         };
       });
@@ -707,28 +712,125 @@ module.exports = {
     }
   },
 
-  getSingleUser: async (req,res) => {
+  getSingleUser: async (req, res) => {
     try {
-      const { id } = req.params
-      let customer = await CustomerModel.findById(id).select("timeZoneId firstName lastName phone whatsAppnumber -_id").lean()
-      console.log(customer)
-      if(customer){
-        let timeZone = await TimeZoneModel.findOne({id:customer.timeZoneId}).select("timeZoneName -_id").lean()
+      const { id } = req.params;
+      let customer = await CustomerModel.findById(id)
+        .select("timeZoneId firstName lastName phone whatsAppnumber -_id")
+        .lean();
+      console.log(customer);
+      if (customer) {
+        let timeZone = await TimeZoneModel.findOne({ id: customer.timeZoneId })
+          .select("timeZoneName -_id")
+          .lean();
         return res.status(200).json({
           message: "Retrieved Data successfully",
-          result: { ...customer,timeZone:timeZone.timeZoneName },
+          result: { ...customer, timeZone: timeZone.timeZoneName },
         });
       }
       return res.status(400).json({
-        error:"No user with that Id"
-      })
+        error: "No user with that Id",
+      });
     } catch (error) {
-      console.log(error)
+      console.log(error);
       return res.status(500).json({
-        error:"Something went wrong!"
-      })
+        error: "Something went wrong!",
+      });
     }
-    const { email } = req.params
-      
-  }
+    const { email } = req.params;
+  },
+
+  updateLastTimeJoined: async (req, res) => {
+    try {
+      let { email, scheduleId } = req.params;
+      let allUsersWithThatEmail = await CustomerModel.find({ email })
+        .select("_id email firstName")
+        .lean();
+      allUsersWithThatEmail = allUsersWithThatEmail.map((user) => user._id);
+      let schedule = await ScheduleModel.findById(scheduleId)
+        .select("students")
+        .lean();
+      let selectedCustomer = schedule.students.filter((student) =>
+        allUsersWithThatEmail.some((user) => user.equals(student))
+      )[0];
+      let response = await CustomerModel.updateOne(
+        { _id: selectedCustomer },
+        { lastTimeJoined: new Date() }
+      );
+      if (response.nModified === 1) {
+        return res.json({
+          message: "last time joined Updated Successfully",
+        });
+      } else {
+        return res.status(500).json({
+          error: "Error in updating last time joined!",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        error: "Error updating join class",
+      });
+    }
+  },
+
+  getStatistics: async (req, res) => {
+    try {
+      const { day } = req.params;
+      let allSchedules = await SchedulerModel.find({
+        isDeleted: {
+          $ne: true,
+        },
+        ["slots." + day + ".0"]: { $exists: true },
+      })
+        .select(
+          "slots students meetingLink teacher className subject lastTimeJoinedClass"
+        )
+        .populate("subject", "subjectName")
+        .populate(
+          "students",
+          "firstName lastTimeJoined lastName numberOfClassesBought email whatsAppnumber"
+        )
+        .lean();
+      let allTeachers = await TeacherModel.find({
+        id: {
+          $in: [...new Set(allSchedules.map((schedule) => schedule.teacher))],
+        },
+      })
+        .select("TeacherName id Phone_number")
+        .lean();
+      allSchedules = allSchedules.map((schedule) => ({
+        ...schedule,
+        teacher: allTeachers.filter(
+          (teacher) => teacher.id === schedule.teacher
+        )[0],
+      }));
+
+      return res.json({
+        result: allSchedules.map((schedule) => {
+          return {
+            ...schedule,
+            isTeacherJoined:
+              typeof schedule.lastTimeJoinedClass === "object"
+                ? moment(schedule.lastTimeJoinedClass).format("YYYY-MM-DD") ===
+                  moment().format("YYYY-MM-DD")
+                : false,
+            students: schedule.students.map((student) => ({
+              ...student,
+              isStudentJoined:
+                typeof student.lastTimeJoined === "object"
+                  ? moment(student.lastTimeJoined).format("YYYY-MM-DD") ===
+                    moment().format("YYYY-MM-DD")
+                  : false,
+            })),
+          };
+        }),
+      });
+    } catch (err) {
+      console.log(err);
+      return res.json({
+        error: "Something went wrong!!",
+      });
+    }
+  },
 };

@@ -111,6 +111,9 @@ const Customer = new mongoose.Schema(
       trim: true,
       type: String,
     },
+    lastTimeJoined:{
+      type:Date,
+    },
     numberOfClassesBought: {
       type: Number,
       default: 0,

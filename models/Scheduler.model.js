@@ -69,7 +69,7 @@ const SchedulerSchema = new mongoose.Schema(
     },
     materials: [{ type: mongoose.Schema.Types.ObjectId, ref: "Upload" }],
     lastTimeJoinedClass: {
-      type: String,
+      type: Date,
     },
     isClassTemperarilyCancelled: {
       type: Boolean,

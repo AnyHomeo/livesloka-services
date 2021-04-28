@@ -474,7 +474,7 @@ exports.addSchedule = async (req, res) => {
                         ? "38493085684944"
                         :  "121975682530440",
                     },
-                    $inc: { numberOfClassesBought: demo ? 1 : 0 },
+                    numberOfClassesBought: demo ? 1 : undefined
                   }
                 );
               })

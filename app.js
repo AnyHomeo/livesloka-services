@@ -56,6 +56,9 @@ io.on("connection", (socket) => {
   socket.on("teacher-joined-class", (msg) => {
     io.emit("teacher-joined", msg);
   });
+  socket.on("student-joined-class", (msg) => {
+    io.emit("student-joined", msg);
+  });
 });
 
 http.listen(PORT, () => {

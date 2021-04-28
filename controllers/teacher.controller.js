@@ -385,7 +385,6 @@ exports.GetTeacherMeetings = async (req, res) => {
     .then(async (result) => {
       result = await Promise.all(result.map(async (eachSchedule) => {
         let cancelledClasses = await CancelledClassesModel.find({scheduleId:eachSchedule._id}).populate("studentId","firstName")
-        console.log(cancelledClasses,eachSchedule.className)
         return {...eachSchedule,cancelledClasses}
       }))
       console.log(result)
@@ -475,12 +474,11 @@ exports.GetSalaries = async (req, res) => {
 exports.joinClass = async (req, res) => {
   try {
     const { scheduleId } = req.params;
-    const { date } = req.query;
     let schedule = await SchedulerModel.findById(scheduleId).select(
       "meetingLink"
     );
     if (schedule) {
-      schedule.lastTimeJoinedClass = date;
+      schedule.lastTimeJoinedClass = new Date();
       await schedule.save();
       return res.json({
         message: "Last time joined updated Successfully!",

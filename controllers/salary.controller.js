@@ -264,16 +264,15 @@ exports.getSalariesOfTeacherByMonthAndId = async (req, res) => {
     }
   });
   let result = Object.values(finalObject);
-  let totalSalary = result.length
+  let totalSalary = result.length > 1
     ? result.reduce((prev, current, i) => {
         if (i === 1) {
-          console.log(prev, current);
           return prev.totalSalary + current.totalSalary;
         } else {
           return prev + current.totalSalary;
         }
       })
-    : 0;
+    : result.length === 1 ? result.totalSalary : 0;
   return res.json({
     totalSalary,
     result,
