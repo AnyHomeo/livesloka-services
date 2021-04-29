@@ -1003,6 +1003,9 @@ exports.deleteScheduleById = async (req, res) => {
         });
       }
       schedule.isDeleted = true;
+      if(typeof schedule.lastTimeJoinedClass === "string"){
+        schedule.lastTimeJoinedClass = new Date()
+      }
       schedule.save((err, deletedSchedule) => {
         if (err) {
           console.log(err);
