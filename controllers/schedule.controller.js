@@ -967,34 +967,31 @@ exports.deleteScheduleById = async (req, res) => {
     );
     const { meetingAccount, meetingLink } = schedule;
     const meetingAccountData = await ZoomAccountModel.findById(meetingAccount);
-
-    fetch(
-      `https://api.zoom.us/v2/meetings/${
-        meetingLink.split("/")[4].split("?")[0]
-      }`,
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${meetingAccountData.zoomJwt}`,
-        },
+      if(meetingAccountData){
+       await fetch(
+          `https://api.zoom.us/v2/meetings/${
+            meetingLink.split("/")[4].split("?")[0]
+          }`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${meetingAccountData.zoomJwt}`,
+            },
+          }
+        )
       }
-    )
-      .then((res) => {
-        console.log(res);
-      })
-      .catch((Err) => {
-        console.log(Err);
-      });
+    
     const ZoomAccountDetails = await ZoomAccountModel.findById(meetingAccount);
-    slotsOfSchedule.forEach((slot) => {
-      let slotIndex = ZoomAccountDetails.timeSlots.indexOf(slot);
-      if (slotIndex != -1) {
-        ZoomAccountDetails.timeSlots.splice(slotIndex, 1);
-      }
-    });
-    await ZoomAccountDetails.save();
-
+    if(ZoomAccountDetails){
+      slotsOfSchedule.forEach((slot) => {
+        let slotIndex = ZoomAccountDetails.timeSlots.indexOf(slot);
+        if (slotIndex != -1) {
+          ZoomAccountDetails.timeSlots.splice(slotIndex, 1);
+        }
+      });
+      await ZoomAccountDetails.save();  
+    }
     teacherOfSchedule.save((err, docs) => {
       if (err) {
         console.log(err);
@@ -1003,9 +1000,7 @@ exports.deleteScheduleById = async (req, res) => {
         });
       }
       schedule.isDeleted = true;
-      if(typeof schedule.lastTimeJoinedClass === "string"){
-        schedule.lastTimeJoinedClass = new Date()
-      }
+      schedule.lastTimeJoinedClass = undefined
       schedule.save((err, deletedSchedule) => {
         if (err) {
           console.log(err);
