@@ -11,7 +11,6 @@ const SubjectModel = require("../models/Subject.model");
 const SchedulerModel = require("../models/Scheduler.model");
 const { nextSlotFinder } = require("../scripts/nextSlotFinder");
 const allZones = require("../models/timeZone.json");
-const momentTZ = require("moment-timezone");
 const generateScheduleDescription = require("../scripts/generateScheduleDescription");
 const timeZoneModel = require("../models/timeZone.model");
 const CancelledClassesModel = require("../models/CancelledClasses.model");
