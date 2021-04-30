@@ -6,6 +6,7 @@ const ScheduleModel = require("../models/Scheduler.model");
 const PaymentModel = require("../models/Payments");
 const TimeZoneModel = require("../models/timeZone.model");
 const moment = require("moment");
+const momentTZ = require("moment-timezone");
 const SubjectModel = require("../models/Subject.model");
 const SchedulerModel = require("../models/Scheduler.model");
 const { nextSlotFinder } = require("../scripts/nextSlotFinder");
@@ -804,15 +805,15 @@ module.exports = {
             ...schedule,
             isTeacherJoined:
               typeof schedule.lastTimeJoinedClass === "object"
-                ? moment(schedule.lastTimeJoinedClass).format("YYYY-MM-DD") ===
-                  moment().format("YYYY-MM-DD")
+                ? momentTZ(schedule.lastTimeJoinedClass).tz("Asia/Kolkata").format("YYYY-MM-DD") ===
+                  momentTZ().tz("Asia/Kolkata").format("YYYY-MM-DD")
                 : false,
             students: schedule.students.map((student) => ({
               ...student,
               isStudentJoined:
                 typeof student.lastTimeJoined === "object"
-                  ? moment(student.lastTimeJoined).format("YYYY-MM-DD") ===
-                    moment().format("YYYY-MM-DD")
+                  ? momentTZ(student.lastTimeJoined).tz("Asia/Kolkata").format("YYYY-MM-DD") ===
+                    momentTZ().tz("Asia/Kolkata").format("YYYY-MM-DD")
                   : false,
             })),
           };
