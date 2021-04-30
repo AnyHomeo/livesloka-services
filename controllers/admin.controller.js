@@ -495,7 +495,7 @@ module.exports.resetPassword = (req, res) => {
 
 module.exports.getAllAdmins = (req, res) => {
   AdminModel.find()
-    .select("customerId")
+    .select("customerId username userId")
     .populate("customerId", "firstName email")
     .then((data) => {
       return res.json({
