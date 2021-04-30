@@ -1,11 +1,7 @@
-const TeacherModel = require("../models/Teacher.model");
-const CustomerModel = require("../models/Customer.model");
-const Category = require("../models/Category.model");
 const Schedule = require("../models/Scheduler.model");
-const Attendence = require("../models/Attendance");
 const Uploads = require("../models/uploads.model");
-const uploadsModel = require("../models/uploads.model");
 const SchedulerModel = require("../models/Scheduler.model");
+const moment = require("moment");
 
 exports.GetTeacherSchedules = async (req, res) => {
   let teacherId = req.params.id;
@@ -36,20 +32,10 @@ exports.GetTeacherSchedules = async (req, res) => {
 exports.PostUpload = async (req, res) => {
   try {
     const upload = new Uploads(req.body);
-    upload
-      .save()
-      .then((data) => {
-        console.log(upload);
-        return res.json({
-          message: "Material Uploaded Successfully !",
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-        return res.status(500).json({
-          error: "error in saving!!",
-        });
-      });
+    await upload.save();
+    return res.json({
+      message: "Material Uploaded Successfully !",
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -83,6 +69,20 @@ exports.assignMaterial = async (req, res) => {
     });
     if (!scheduleData.materials.includes(materialId)) {
       scheduleData.materials.push(materialId);
+    }
+    if (typeof scheduleData.lastTimeJoinedClass !== "object") {
+      if (typeof scheduleData.lastTimeJoinedClass === "string") {
+        let strings = scheduleData.lastTimeJoinedClass.split("-");
+        scheduleData.lastTimeJoinedClass = new Date(
+          strings[2],
+          strings[1],
+          strings[0]
+        );
+      } else {
+        scheduleData.lastTimeJoinedClass = new Date(
+          moment().subtract(1, "days").format()
+        );
+      }
     }
     await scheduleData.save();
     return res.json({
@@ -155,6 +155,20 @@ exports.deleteMaterial = async (req, res) => {
         let index = schedule.materials.indexOf(materialId);
         schedule.materials.splice(index, 1);
       }
+      if (typeof schedule.lastTimeJoinedClass !== "object") {
+        if (typeof schedule.lastTimeJoinedClass === "string") {
+          let strings = schedule.lastTimeJoinedClass.split("-");
+          schedule.lastTimeJoinedClass = new Date(
+            strings[2],
+            strings[1],
+            strings[0]
+          );
+        } else {
+          schedule.lastTimeJoinedClass = new Date(
+            moment().subtract(1, "days").format()
+          );
+        }
+      }
       await schedule.save();
     });
     return res.json({
@@ -176,6 +190,7 @@ exports.removeClassFromMaterialAccess = async (req, res) => {
       let materialIndex = schedule.materials.indexOf(materialId);
       if (materialIndex !== -1) {
         schedule.materials.splice(materialIndex, 1);
+        schedule.lastTimeJoinedClass = undefined;
         await schedule.save();
       }
     }

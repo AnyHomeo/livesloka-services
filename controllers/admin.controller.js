@@ -13,7 +13,6 @@ module.exports = {
       admin.findOne(
         { userId: req.body.userId.toLowerCase()},
         async (err, user) => {
-          console.log(user)
           console.log(err);
           if (!user) {
             return res

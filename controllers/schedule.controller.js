@@ -328,7 +328,6 @@ const scheduleDescriptionGenerator = (dataSlots) => {
       scheduleDes = scheduleDes + " " + "(" + dataSlots[ds] + ")";
     }
   });
-  console.log(scheduleDes);
   return scheduleDes;
 };
 
@@ -462,7 +461,6 @@ exports.addSchedule = async (req, res) => {
               .then(async (dat) => {
                 let rec = SlotConverter(scheduledData.slots, dat.timeZoneName);
                 let schdDescription = postProcess(rec, Subjectname);
-                console.log(selectedTeacher.id)
                 await Customer.updateOne(
                   { _id: stud_id },
                   {
@@ -616,7 +614,6 @@ exports.editSchedule = async (req, res) => {
     });
 
     await oldTeacher.save();
-    console.log(isNewMeetingLinkNeeded);
     if (isNewMeetingLinkNeeded) {
       ZoomAccountModel.findById(meetingAccount, async (err, data) => {
         if (err) {
@@ -662,7 +659,7 @@ exports.editSchedule = async (req, res) => {
           } = availableZoomAccount;
           const { meetingLink } = oldSchedule;
           if (meetingLink) {
-            fetch(
+           await fetch(
               `https://api.zoom.us/v2/meetings/${
                 meetingLink.split("/")[4].split("?")[0]
               }`,
@@ -674,12 +671,6 @@ exports.editSchedule = async (req, res) => {
                 },
               }
             )
-              .then((res) => {
-                console.log(res);
-              })
-              .catch((Err) => {
-                console.log(Err);
-              });
           }
           const formData = {
             topic: "Livesloka Online Class",
@@ -715,7 +706,6 @@ exports.editSchedule = async (req, res) => {
                   message: "Error while creating meeting link",
                 });
               }
-              console.log(json.join_url);
               req.body.meetingLink = json.join_url;
               req.body.meetingAccount = _id;
               Schedule.updateOne(
@@ -768,7 +758,6 @@ exports.editSchedule = async (req, res) => {
                             let rec = SlotConverter(slots, dat.timeZoneName);
                             let schdDescription = postProcess(rec, Subjectname);
                             let anyPayments = await Payments.countDocuments({customerId:data._id})
-                console.log(anyPayments,selectedTeacher.id)
                             await Customer.updateOne(
                               { _id: stud_id },
                               {
@@ -865,7 +854,6 @@ exports.editSchedule = async (req, res) => {
                     let rec = SlotConverter(slots, dat.timeZoneName);
                     let schdDescription = postProcess(rec, Subjectname);
                     let anyPayments = await Payments.countDocuments({customerId:data._id})
-                console.log(anyPayments,selectedTeacher.id)
                     await Customer.updateOne(
                       { _id: stud_id },
                       {

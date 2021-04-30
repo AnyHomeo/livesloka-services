@@ -311,17 +311,12 @@ module.exports = {
               scheduleId: actualSchedule._id,
               studentId: customer._id,
             });
-            console.log(allCancelledClasses);
             let subject = await SubjectModel.findOne({
               _id: actualSchedule.subject,
             });
             let timeZone = await timeZoneModel.findOne({
               id: customer.timeZoneId,
             });
-            console.log(timeZone);
-            console.log(
-              allZones.filter((zone) => zone.abbr === timeZone.timeZoneName)
-            );
             let selectedZoneUTCArray = allZones.filter(
               (zone) => zone.abbr === timeZone.timeZoneName
             )[0].utc;
@@ -575,7 +570,6 @@ module.exports = {
     try {
       const { userId } = req.params;
       const user = await AdminModel.findById(userId).select("settings");
-      console.log(user.settings.filters);
       let query = {};
       if (
         user &&
@@ -680,7 +674,6 @@ module.exports = {
       const customerTZId = await CustomerModel.findById(customerId).select(
         "timeZoneId"
       );
-      console.log(customerTZId);
       if (customerTZId) {
         const timeZone = await TimeZoneModel.findOne({
           id: customerTZId.timeZoneId,
@@ -718,7 +711,6 @@ module.exports = {
       let customer = await CustomerModel.findById(id)
         .select("timeZoneId firstName lastName phone whatsAppnumber -_id")
         .lean();
-      console.log(customer);
       if (customer) {
         let timeZone = await TimeZoneModel.findOne({ id: customer.timeZoneId })
           .select("timeZoneName -_id")

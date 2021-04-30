@@ -387,7 +387,6 @@ exports.GetTeacherMeetings = async (req, res) => {
         let cancelledClasses = await CancelledClassesModel.find({scheduleId:eachSchedule._id}).populate("studentId","firstName")
         return {...eachSchedule,cancelledClasses}
       }))
-      console.log(result)
       return res
         .status(200)
         .json({ message: "Fetched  meetings successfully", result });
@@ -462,7 +461,6 @@ exports.GetSalaries = async (req, res) => {
       // })
       // finalObj[teacher.TeacherName].allAttendece = undefined;
     });
-    // console.log(finalObj);
 
     return res.status(200).json({ message: "ok", finalObj });
   } catch (error) {
