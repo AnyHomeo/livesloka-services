@@ -353,7 +353,7 @@ module.exports.addField = (req, res) => {
         if(name === "Agent"){
           let body = {
             username: result.AgentName,
-            userId: result.agentLoginId,
+            userId: result.AgentLoginId,
             roleId:result.AgentRole,
             agentId:result.id
           }
