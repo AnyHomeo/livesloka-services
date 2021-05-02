@@ -277,18 +277,21 @@ module.exports.updateCorrespondingData = (req, res) => {
         }
         else if(req.params.name === "Agent" && req.body.AgentLoginId){
           let loginData = await AdminModel.findOne({userId:req.body.AgentLoginId})
+          console.log(loginData)
           if(loginData){
             loginData.roleId = req.body.AgentRole
             loginData.agentId = req.body.id
             loginData.username = req.body.AgentName
             await loginData.save()
           } else {
+            console.log(req.body)
             let body = {
               username: req.body.AgentName,
-              userId: req.body.agentLoginId,
+              userId: req.body.AgentLoginId,
               roleId:req.body.AgentRole,
               agentId:req.body.id
             }
+            console.log(body)
             const newAgent = new admin(body);
             await newAgent.save()
           }
@@ -350,7 +353,8 @@ module.exports.addField = (req, res) => {
           await newTeacher
             .save()
         }
-        if(name === "Agent"){
+        if(name === "Agent"){ 
+          console.log(result)
           let body = {
             username: result.AgentName,
             userId: result.AgentLoginId,
