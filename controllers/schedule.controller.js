@@ -698,7 +698,7 @@ exports.editSchedule = async (req, res) => {
         const { _id, zoomEmail, zoomJwt, zoomPassword } = availableZoomAccount;
         console.log("YES");
         const { meetingLink } = oldSchedule;
-        if (meetingLink) {
+        if (meetingLink && meetingLink.includes("zoom")) {
           await fetch(
             `https://api.zoom.us/v2/meetings/${
               meetingLink.split("/")[4].split("?")[0]
@@ -1004,7 +1004,7 @@ exports.deleteScheduleById = async (req, res) => {
     );
     const { meetingAccount, meetingLink, isZoomMeeting } = schedule;
     const meetingAccountData = await ZoomAccountModel.findById(meetingAccount);
-    if (meetingAccountData && isZoomMeeting) {
+    if (meetingAccountData && isZoomMeeting && meetingLink.includes("zoom")) {
       await fetch(
         `https://api.zoom.us/v2/meetings/${
           meetingLink.split("/")[4].split("?")[0]
