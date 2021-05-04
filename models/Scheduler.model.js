@@ -31,7 +31,6 @@ const SchedulerSchema = new mongoose.Schema(
       trim: true,
       type: mongoose.Schema.Types.ObjectId,
       ref: "ZoomAccount",
-      required: "Meeting Account is Required",
     },
     startDate: {
       trim: true,
@@ -79,6 +78,18 @@ const SchedulerSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    isZoomMeeting:{
+      type:Boolean,
+      default:true
+    },
+    wherebyHostUrl:{
+      type:String,
+      trim:true
+    },
+    wherebyMeetingId:{
+      type:String,
+      trim:true
+    }
   },
   { timestamps: true }
 );
