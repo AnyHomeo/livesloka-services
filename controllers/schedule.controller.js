@@ -1275,23 +1275,23 @@ exports.editIfWhereby = async (req, res, next) => {
                   data.timeSlots.splice(slotIndex, 1);
                 }
               });
+              await fetch(
+                `https://api.zoom.us/v2/meetings/${
+                  oldSchedule.meetingLink.split("/")[4].split("?")[0]
+                }`,
+                {
+                  method: "DELETE",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${data.zoomJwt}`,
+                  },
+                }
+              );
               await data.save();
             })
             .catch((err) => {
               console.log(err);
             });
-          await fetch(
-            `https://api.zoom.us/v2/meetings/${
-              oldSchedule.meetingLink.split("/")[4].split("?")[0]
-            }`,
-            {
-              method: "DELETE",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${zoomJwt}`,
-              },
-            }
-          );
         } else {
           let deletedMeeting = await fetch(
             "https://api.whereby.dev/v1/meetings/" +
