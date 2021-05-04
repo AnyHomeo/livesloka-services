@@ -1269,24 +1269,28 @@ exports.editIfWhereby = async (req, res, next) => {
         if (oldSchedule.isZoomMeeting) {
           ZoomAccountModel.findById(oldSchedule.meetingAccount)
             .then(async (data) => {
-              allSlots.forEach((slot) => {
-                let slotIndex = data.timeSlots.indexOf(slot);
-                if (slotIndex != -1) {
-                  data.timeSlots.splice(slotIndex, 1);
+              if(data){
+                allSlots.forEach((slot) => {
+                  let slotIndex = data.timeSlots.indexOf(slot);
+                  if (slotIndex != -1) {
+                    data.timeSlots.splice(slotIndex, 1);
+                  }
+                });
+                if(data.zoomJwt){
+                  await fetch(
+                    `https://api.zoom.us/v2/meetings/${
+                      oldSchedule.meetingLink.split("/")[4].split("?")[0]
+                    }`,
+                    {
+                      method: "DELETE",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${data.zoomJwt}`,
+                      },
+                    }
+                  );
                 }
-              });
-              await fetch(
-                `https://api.zoom.us/v2/meetings/${
-                  oldSchedule.meetingLink.split("/")[4].split("?")[0]
-                }`,
-                {
-                  method: "DELETE",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${data.zoomJwt}`,
-                  },
-                }
-              );
+              }
               await data.save();
             })
             .catch((err) => {
