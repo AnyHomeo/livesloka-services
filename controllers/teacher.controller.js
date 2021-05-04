@@ -473,7 +473,7 @@ exports.joinClass = async (req, res) => {
   try {
     const { scheduleId } = req.params;
     let schedule = await SchedulerModel.findById(scheduleId).select(
-      "meetingLink"
+      "meetingLink wherebyHostUrl"
     );
     if (schedule) {
       schedule.lastTimeJoinedClass = new Date();
@@ -481,6 +481,7 @@ exports.joinClass = async (req, res) => {
       return res.json({
         message: "Last time joined updated Successfully!",
         link: schedule.meetingLink,
+        hostLink:schedule.wherebyHostUrl
       });
     }
   } catch (error) {

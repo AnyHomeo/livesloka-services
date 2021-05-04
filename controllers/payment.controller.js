@@ -268,7 +268,7 @@ exports.getTransactions = async (req, res) => {
         $in: allUserIds,
       },
     }).populate("customerId");
-    
+
     if (allTransactions === null) {
       return res.status(400).json({
         error: "Not found",
