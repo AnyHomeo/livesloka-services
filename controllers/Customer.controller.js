@@ -776,7 +776,7 @@ module.exports = {
         ["slots." + day + ".0"]: { $exists: true },
       })
         .select(
-          "slots students meetingLink teacher className subject lastTimeJoinedClass"
+          "slots students meetingLink teacher className subject lastTimeJoinedClass demo"
         )
         .populate("subject", "subjectName")
         .populate(
