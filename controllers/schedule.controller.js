@@ -352,6 +352,8 @@ exports.addSchedule = async (req, res) => {
     subject,
     classname,
     isZoomMeeting,
+    isSummerCampClass,
+    summerCampAmount
   } = req.body;
 
   let slotees = {
@@ -449,6 +451,8 @@ exports.addSchedule = async (req, res) => {
     wherebyHostUrl,
     wherebyMeetingId,
     isZoomMeeting,
+    isSummerCampClass,
+    summerCampAmount
   });
   schedule
     .save()
@@ -585,7 +589,7 @@ exports.editSchedule = async (req, res) => {
       subject,
       className,
       meetingAccount,
-      isMeetingLinkChangeNeeded,
+      isMeetingLinkChangeNeeded
     } = req.body;
 
     let slotschange = {

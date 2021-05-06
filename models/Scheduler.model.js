@@ -89,6 +89,14 @@ const SchedulerSchema = new mongoose.Schema(
     wherebyMeetingId:{
       type:String,
       trim:true
+    },
+    isSummerCampClass:{
+      type:Boolean,
+      default:false
+    },
+    summerCampAmount:{
+      type:Number,
+      default:0
     }
   },
   { timestamps: true }

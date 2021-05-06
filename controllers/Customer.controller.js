@@ -275,7 +275,7 @@ module.exports = {
         email,
       })
         .select(
-          "_id scheduleDescription noOfClasses paymentDate paidTill numberOfClassesBought isJoinButtonEnabledByAdmin timeZoneId"
+          "_id scheduleDescription firstName noOfClasses paymentDate paidTill numberOfClassesBought isJoinButtonEnabledByAdmin timeZoneId"
         )
         .lean();
       let mainSchedules = await Promise.all(
@@ -328,6 +328,7 @@ module.exports = {
               ...actualSchedule,
               isJoinButtonDisabled,
               customerId: customer._id,
+              customerName:customer.firstName,
               numberOfClassesBought: customer.numberOfClassesBought,
               paidTill: customer.paidTill,
               scheduleDescription: customer.scheduleDescription,

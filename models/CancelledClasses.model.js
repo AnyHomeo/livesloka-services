@@ -7,7 +7,7 @@ const CancelledClassesSchema = new mongoose.Schema(
       ref:"Customer"
     },
     cancelledDate:{
-        type: Date 
+        type: Date
     },
     scheduleId: {
       type: mongoose.Schema.Types.ObjectId,
