@@ -11,6 +11,11 @@ var TeacherSchema = new mongoose.Schema(
       type:String,
       default:""
     },
+    summerCampTeacherDescription:{
+        trim:true,
+        type:String,
+        default:""
+    },
     TeacherDesc: {
       trim: true,
       type: String,

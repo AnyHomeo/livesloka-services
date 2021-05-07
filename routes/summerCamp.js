@@ -1,7 +1,7 @@
 const express = require("express");
-const { getSummerCampSchedules } = require("../controllers/summerCamp.controller");
+const {  getSummerCampDataWithSchedules } = require("../controllers/summerCamp.controller");
 const router = express.Router();
 
-router.get("/schedules",getSummerCampSchedules);
+router.get("/subject/:id",getSummerCampDataWithSchedules);
 
 module.exports = router;

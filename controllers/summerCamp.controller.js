@@ -2,7 +2,7 @@ const SchedulerModel = require("../models/Scheduler.model");
 const CustomerModel = require("../models/Customer.model");
 const AdminModel = require("../models/Admin.model");
 const SubjectModel = require("../models/Subject.model")
-
+const TeacherModel = require("../models/Teacher.model")
 
 exports.submitForm = async (req, res) => {
   try {
@@ -49,17 +49,31 @@ exports.getSummerCampSchedules = async (req, res) => {
 exports.getSummerCampDataWithSchedules = async (req,res) =>{
   try {
       const { id } = req.params
-      let subject = await SubjectModel.findById(id)
+      let subject = await SubjectModel.findById(id).select("subjectName summerCampTitle summerCampDescription")
       let schedules = await SchedulerModel.find({
         isSummerCampClass:true,
         subject:id
-      })
+      }).select("teacher students slots")
       let teachers = schedules.map(schedule => schedule.teacher);
       let allTeachersData = await TeacherModel.find({
         id: {
           $in:teachers
         }
+      }).select("summerCampTeacherDescription teacherImageLink TeacherName")
+      let studentsCount = schedules.reduce((prev,current,i) => {
+        if(i === 1){
+          return prev.students.length + current.students.length
+        } else {
+          return prev + current.students.length
+        }
       })
+      return res.json({
+        subject,
+        schedules,
+        allTeachersData,
+        studentsCount
+      })
+
   } catch (error) {
     console.log(error)
     return res.status(500).json({

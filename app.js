@@ -41,7 +41,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/", customerRouter);
 app.use("/", attendanceRouter);
-app.use("/summer-camp",summerCampRouter);
+app.use("/summercamps",summerCampRouter);
 app.use("/class-history", classHistoryRouter);
 app.use("/cancelclass", cancelClassRouter);
 app.use("/settings", settingsRouter);
