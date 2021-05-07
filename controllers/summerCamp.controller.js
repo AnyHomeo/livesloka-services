@@ -1,6 +1,8 @@
 const SchedulerModel = require("../models/Scheduler.model");
 const CustomerModel = require("../models/Customer.model");
 const AdminModel = require("../models/Admin.model");
+const SubjectModel = require("../models/Subject.model")
+
 
 exports.submitForm = async (req, res) => {
   try {
@@ -43,3 +45,25 @@ exports.getSummerCampSchedules = async (req, res) => {
     });
   }
 };
+
+exports.getSummerCampDataWithSchedules = async (req,res) =>{
+  try {
+      const { id } = req.params
+      let subject = await SubjectModel.findById(id)
+      let schedules = await SchedulerModel.find({
+        isSummerCampClass:true,
+        subject:id
+      })
+      let teachers = schedules.map(schedule => schedule.teacher);
+      let allTeachersData = await TeacherModel.find({
+        id: {
+          $in:teachers
+        }
+      })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      error:"Something went wrong !!"
+    })
+  }
+}

@@ -6,6 +6,11 @@ var TeacherSchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
+    teacherImageLink:{
+      trim:true,
+      type:String,
+      default:""
+    },
     TeacherDesc: {
       trim: true,
       type: String,
