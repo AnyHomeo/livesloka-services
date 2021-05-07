@@ -122,6 +122,10 @@ const Customer = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    isSummerCampStudent:{
+      default:false,
+      type:Boolean
+    }
   },
 
   {

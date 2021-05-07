@@ -571,7 +571,9 @@ module.exports = {
     try {
       const { userId } = req.params;
       const user = await AdminModel.findById(userId).select("settings");
-      let query = {};
+      let query = {
+        isSummerCampStudent:false
+      };
       if (
         user &&
         user.settings &&

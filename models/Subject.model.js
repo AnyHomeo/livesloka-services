@@ -25,6 +25,10 @@ var SubjectSchema = new mongoose.Schema(
     summerCampDescription:{
       type:String,
       default:""
+    },
+    summerCampImageLink:{
+      type:String,
+      default:""
     }
   },
   { timestamps: true }
