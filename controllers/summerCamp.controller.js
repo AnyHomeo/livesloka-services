@@ -88,3 +88,38 @@ exports.getSummerCampDataWithSchedules = async (req, res) => {
 		});
 	}
 };
+
+exports.registerUser = async (req, res) => {
+	try {
+		const { email, firstName, scheduleId } = req.body;
+		let alreadyExists = await AdminModel.countDocuments({ userId: email });
+		let schedule = await SchedulerModel.findById(scheduleId).populate('subject').populate('teacher', 'id');
+		if (!alreadyExists) {
+			let newCustomer = new CustomerModel({
+				...req.body,
+				isSummerCampStudent: true,
+				teacherId: schedule.teacher.id,
+				subjectId:schedule.subject.id
+			});
+			newCustomer = await newCustomer.save();
+			let newAdmin = new AdminModel({
+				userId: email,
+				userName: firstName,
+				roleId: 1,
+				customerId: newCustomer._id,
+			});
+			await newAdmin.save();
+			if(!schedule.students.includes(newCustomer._id)){
+				schedule.students.push(newCustomer._id);
+				await schedule.save();
+			}
+		} else {
+
+		}
+	} catch (error) {
+		console.log(error);
+		return res.json({
+			error: 'Something went wrong!!',
+		});
+	}
+};
