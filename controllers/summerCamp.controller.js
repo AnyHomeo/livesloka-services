@@ -52,13 +52,13 @@ exports.getSummerCampDataWithSchedules = async (req, res) => {
 		let schedules = await SchedulerModel.find({
 			isSummerCampClass: true,
 			subject: id,
-		}).select('teacher students slots');
+		}).select('teacher students slots summerCampAmount');
 		let teachers = schedules.map((schedule) => schedule.teacher);
 		let allTeachersData = await TeacherModel.find({
 			id: {
 				$in: teachers,
 			},
-		}).select('summerCampTeacherDescription teacherImageLink TeacherName');
+		}).select('summerCampTeacherDescription teacherImageLink TeacherName id');
 		let studentsCount =
 			schedules.length === 0
 				? 0
