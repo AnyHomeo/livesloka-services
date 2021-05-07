@@ -18,8 +18,15 @@ var SubjectSchema = new mongoose.Schema(
       type: Number,
       default:0
     },
+    summerCampTitle:{
+      type:String,
+      default:""
+    },
+    summerCampDescription:{
+      type:String,
+      default:""
+    }
   },
   { timestamps: true }
 );
-
 module.exports = mongoose.model("Subject", SubjectSchema);
