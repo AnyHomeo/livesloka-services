@@ -97,7 +97,23 @@ const SchedulerSchema = new mongoose.Schema(
     summerCampAmount:{
       type:Number,
       default:0
-    }
+    },
+    summerCampTitle:{
+      type:String,
+      trim:true
+    },
+    summerCampDescription:{
+      type:String,
+      trim:true
+    },
+    summerCampSchedule:String,
+    summerCampImage:{
+      type:String,
+      trim:true
+    },
+    summerCampStudentsLimit:{
+      type:Number,
+    },
   },
   { timestamps: true }
 );

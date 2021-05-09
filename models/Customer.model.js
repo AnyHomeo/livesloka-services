@@ -125,6 +125,9 @@ const Customer = new mongoose.Schema(
     isSummerCampStudent:{
       default:false,
       type:Boolean
+    },
+    tempScheduleId:{
+      type:String
     }
   },
 

@@ -3,37 +3,76 @@ const CustomerModel = require('../models/Customer.model');
 const AdminModel = require('../models/Admin.model');
 const SubjectModel = require('../models/Subject.model');
 const TeacherModel = require('../models/Teacher.model');
+const PaymentModel = require('../models/Payments')
+const CurrencyModel = require('../models/Currency.model')
+require("dotenv").config();
+const paypal = require("paypal-rest-sdk");
+const shortid = require("shortid");
 
-exports.submitForm = async (req, res) => {
-	try {
-		let alreadyExists = await AdminModel.countDocuments({ userId: req.body.email });
-		let newCustomer = new CustomerModel(req.body);
-		await newCustomer.save();
-		if (alreadyExists) {
-			let newAdmin = new Admin({
-				username: req.body.firstName,
-				userId: req.body.email,
-				roleId: 1,
-				customerId: newCustomer._id,
-			});
-			await newAdmin.save();
-		}
-		let schedule = await SchedulerModel.findById(scheduleId);
-		schedule.students.push(newCustomer._id);
-		await schedule.save();
-	} catch (error) {
-		console.log(error);
-		return res.status(500).json({
-			error: 'Something went wrong!',
-		});
-	}
-};
+paypal.configure({
+	mode: process.env.PAYPAL_MODE,
+	client_id: process.env.PAYPAL_CLIENT_ID,
+	client_secret: process.env.PAYPAL_CLIENT_SECRET,
+  });
+
+const getPaymentLink = (amount,title,currency,customerId,res) => {
+	const payment_json = {
+        intent: "sale",
+        payer: {
+          payment_method: "paypal",
+        },
+        redirect_urls: {
+          return_url: `${process.env.SERVICES_URL}/summercamps/payment/success/${customerId}`,
+          cancel_url: `${process.env.SERVICES_URL}/summercamps/payment/cancel/${customerId}`,
+        },
+        transactions: [
+          {
+            item_list: {
+              items: [
+                {
+                  name: title || "Livesloka class",
+                  price:amount.toString(),
+                  currency: currency || "USD",
+                  quantity: 1,
+                },
+              ],
+            },
+            amount: {
+              currency: currency || "USD",
+              total: amount.toString(),
+            },
+            description:
+              "Payment for Summer camp " + title || "of Livesloka",
+          },
+        ],
+      }
+	  paypal.payment.create(payment_json, (error, payment) => {
+        if (error) {
+          console.log(error);
+          return res.status(500).json({
+			  error:"Error in creating Payment!"
+		  })
+        } else {
+			 let url = payment.links.filter(link => link.rel === "approval_url")[0].href
+			 return res.json({
+				 message:"Payment link generated successfullyy!!",
+				 url
+			 })
+        }
+      });
+}
 
 exports.getSummerCampSchedules = async (req, res) => {
 	try {
 		let summerCampSchedules = await SchedulerModel.find({
 			isSummerCampClass: true,
-		});
+			isDeleted: false
+		}).lean();
+		let allTeachers = await TeacherModel.find().select("id TeacherName teacherImageLink TeacherDesc").lean()
+		summerCampSchedules = summerCampSchedules.map(schedule =>({
+			...schedule,
+			teacher:allTeachers.filter(teacher => teacher.id === schedule.teacher)[0]
+		}))
 		return res.json({
 			result: summerCampSchedules,
 		});
@@ -45,81 +84,165 @@ exports.getSummerCampSchedules = async (req, res) => {
 	}
 };
 
-exports.getSummerCampDataWithSchedules = async (req, res) => {
+exports.registerCustomer = async (req,res) => {
 	try {
-		const { id } = req.params;
-		let subject = await SubjectModel.findById(id).select('subjectName summerCampTitle summerCampDescription');
-		let schedules = await SchedulerModel.find({
-			isSummerCampClass: true,
-			subject: id,
-		}).select('teacher students slots summerCampAmount');
-		let teachers = schedules.map((schedule) => schedule.teacher);
-		let allTeachersData = await TeacherModel.find({
-			id: {
-				$in: teachers,
-			},
-		}).select('summerCampTeacherDescription teacherImageLink TeacherName id');
-		let studentsCount =
-			schedules.length === 0
-				? 0
-				: schedules.length === 1
-				? schedules[0].students.length
-				: schedules.reduce((prev, current, i) => {
-						if (i === 1) {
-							return prev.students
-								? prev.students.length
-								: 0 + current.students
-								? current.students.length
-								: 0;
-						} else {
-							return prev + current.students.length;
-						}
-				  });
-		return res.json({
-			subject,
-			schedules,
-			allTeachersData,
-			studentsCount,
-		});
-	} catch (error) {
-		console.log(error);
-		return res.status(500).json({
-			error: 'Something went wrong !!',
-		});
-	}
-};
-
-exports.registerUser = async (req, res) => {
-	try {
-		const { email, firstName, scheduleId } = req.body;
-		let alreadyExists = await AdminModel.countDocuments({ userId: email });
-		let schedule = await SchedulerModel.findById(scheduleId).populate('subject').populate('teacher', 'id');
-		if (!alreadyExists) {
-			let newCustomer = new CustomerModel({
-				...req.body,
-				isSummerCampStudent: true,
-				teacherId: schedule.teacher.id,
-				subjectId:schedule.subject.id
-			});
-			newCustomer = await newCustomer.save();
-			let newAdmin = new AdminModel({
-				userId: email,
-				userName: firstName,
-				roleId: 1,
-				customerId: newCustomer._id,
-			});
-			await newAdmin.save();
-			if(!schedule.students.includes(newCustomer._id)){
-				schedule.students.push(newCustomer._id);
-				await schedule.save();
+		const { email,scheduleId } = req.body
+		let alreadyExists = await CustomerModel.findOne({email,tempScheduleId:scheduleId});
+		let schedule = await SchedulerModel.findById(scheduleId).populate("subject")
+		req.body.subjectId = schedule.subject.id
+		req.body.proposedAmount = schedule.summerCampAmount
+		if(!alreadyExists){
+			if(!req.body.firstName){
+				return res.status(500).json({
+					error:"Please complete the registration!!"
+				})
 			}
+			let newCustomer = new CustomerModel({...req.body,isSummerCampStudent:true,tempScheduleId:scheduleId});
+			await newCustomer.save();
+			let loginAlreadyExists = await AdminModel.findOne({email});
+			if(!loginAlreadyExists){
+				let newAdmin = new AdminModel({
+					username: req.body.firstName,
+					userId:email,
+					password:req.body.password,
+					roleId:1,
+					firstTimeLogin:"N",
+					customerId:newCustomer._id
+				});
+				await newAdmin.save()
+			}
+			return getPaymentLink(schedule.summerCampAmount,schedule.summerCampTitle,"USD",newCustomer._id,res)
 		} else {
-
+			let isPaymentDone = await PaymentModel.findOne({
+				status:"SUCCESS",
+				customerId:alreadyExists._id,
+			})
+			if(isPaymentDone){
+				return res.json({
+					status:"ALREADY PAID",
+					message:"Payment Already done please login to join Classes"
+				})
+			} else {
+				let currency = await CurrencyModel.findOne({id:alreadyExists.proposedCurrencyId})
+				if(currency){
+					currency = currency.currencyName
+				}
+				return getPaymentLink(alreadyExists.proposedAmount,schedule.summerCampTitle,currency,alreadyExists._id,res)
+			}
 		}
+
 	} catch (error) {
-		console.log(error);
-		return res.json({
-			error: 'Something went wrong!!',
-		});
+		console.log(error)
+		return res.status(500).json({
+			error:"Something went wrong!!"
+		})
 	}
-};
+}
+
+exports.onSummerCampSuccessfulPayment = async (req,res) => {
+	try {
+		const { customerId } = req.params;
+		const { PayerID, paymentId } = req.query;
+		const customer = await CustomerModel.findById(customerId).select(
+			"firstName lastName className proposedAmount proposedCurrencyId tempScheduleId"
+		  );	
+		  const currency = await CurrencyModel.findOne({
+			id: customer.proposedCurrencyId,
+		  });
+		  const execute_payment_json = {
+			payer_id: PayerID,
+			transactions: [
+			  {
+				amount: {
+				  currency: currency.currencyName || "USD",
+				  total: customer.proposedAmount.toString(),
+				},
+			  },
+			],
+		  };
+		  paypal.payment.execute(paymentId, execute_payment_json, async (error,payment) =>{
+			if (error) {
+				console.log(error);
+				return res.status(400).send(
+				  "Error Validating Payment!",
+				);
+			  } else {
+				let schedule = await SchedulerModel.findById(customer.tempScheduleId)
+				schedule.students.push(customer._id);
+				await schedule.save()
+				customer.className = schedule.className
+				customer.meetingLink = schedule.meetingLink
+				customer.teacherId = schedule.teacher
+				customer.classStatusId = "113975223750050"
+				await customer.save()
+				const newPayment = new PaymentModel({
+					customerId,
+					status: "SUCCESS",
+					paymentData: payment,
+				  });
+				  newPayment
+					.save()
+					.then(async (data) => {
+					  return res.redirect(
+						`${process.env.USER_CLIENT_URL}/payment-success`
+					  );
+					})
+					.catch((err) => {
+						console.log(err)
+					  return res.json({
+						error: "Internal Server Error",
+					  });
+					});
+			  }
+		  })
+	} catch (error) {
+		console.log(error)
+		return res.status(500).send(
+			"Something went wrong!"
+		)
+	}
+}
+
+exports.onSummerCampFailurePayment = async (req,res) =>{
+	try {
+		const { customerId } = req.params;
+		const newPayment = new Payment({
+			customerId,
+			status: "CANCELLED",
+			paymentData: null,
+		  });
+		  newPayment
+			.save()
+			.then((data) => {
+			  return res.redirect(`${process.env.USER_CLIENT_URL}/payment-failed`);
+			})
+			.catch((err) => {
+			  console.log(err);
+			  return res.send(
+				"Internal server Error",
+			  );
+			});
+	} catch (error) {
+		console.log(error)
+		return res.status(500).send(
+			"Internal Server Error, Try again after Sometime or Contact Admin",
+		  );
+	}
+}
+
+exports.getSummerCampStudents = async (req,res) =>{
+	try {
+		let customers = await CustomerModel.find({
+			isSummerCampStudent:true
+		})
+		return res.json({
+			result:customers,
+			message:"Customers retrieved successfully!"
+		})
+	} catch (error) {
+		console.log(error)
+		return res.status(500).json({
+			error:"Something went wrong!!"
+		})
+	}
+}

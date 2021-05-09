@@ -572,7 +572,6 @@ module.exports = {
       const { userId } = req.params;
       const user = await AdminModel.findById(userId).select("settings");
       let query = {
-        isSummerCampStudent:false
       };
       if (
         user &&
@@ -631,7 +630,7 @@ module.exports = {
             res.status(200).json({
               message: "Customer data retrieved",
               status: "OK",
-              result,
+              result:result.filter(customer => !customer.isSummerCampStudent),
             });
           })
           .catch((err) => {
@@ -651,7 +650,7 @@ module.exports = {
             res.status(200).json({
               message: "Customer data retrieved",
               status: "OK",
-              result,
+              result:result.filter(customer => !customer.isSummerCampStudent),
             });
           })
           .catch((err) => {
