@@ -8,6 +8,7 @@ const CurrencyModel = require('../models/Currency.model')
 require("dotenv").config();
 const paypal = require("paypal-rest-sdk");
 const shortid = require("shortid");
+const ClassHistoryModel = require('../models/ClassHistory.model');
 
 paypal.configure({
 	mode: process.env.PAYPAL_MODE,
@@ -174,7 +175,14 @@ exports.onSummerCampSuccessfulPayment = async (req,res) => {
 				customer.meetingLink = schedule.meetingLink
 				customer.teacherId = schedule.teacher
 				customer.classStatusId = "113975223750050"
-				customer.numberOfClassesBought = schedule.summerCampClassNumberOfDays
+				let newUpdate = new ClassHistoryModel({
+					previousValue:customer.numberOfClassesBought || 0,
+					nextValue: customer.numberOfClassesBought ? customer.numberOfClassesBought + schedule.summerCampClassNumberOfDays : schedule.summerCampClassNumberOfDays,
+					comment:"Successful Payment!",
+					customerId:id
+				  })
+				  await newUpdate.save()
+				customer.numberOfClassesBought = customer.numberOfClassesBought ? customer.numberOfClassesBought + schedule.summerCampClassNumberOfDays : schedule.summerCampClassNumberOfDays 
 				await customer.save()
 				const newPayment = new PaymentModel({
 					customerId,
