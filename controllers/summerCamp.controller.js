@@ -92,8 +92,9 @@ exports.registerCustomer = async (req,res) => {
 		let schedule = await SchedulerModel.findById(scheduleId).populate("subject")
 		req.body.subjectId = schedule.subject.id
 		req.body.proposedAmount = schedule.summerCampAmount
+		req.body.firstName = req.body.firstName + " " + schedule.subject.subjectName
 		if(!alreadyExists){
-			if(!req.body.firstName){
+			if(!req.body.firstName || !req.body.lastName){
 				return res.status(500).json({
 					error:"Please complete the registration!!"
 				})
@@ -146,7 +147,7 @@ exports.onSummerCampSuccessfulPayment = async (req,res) => {
 		const { PayerID, paymentId } = req.query;
 		const customer = await CustomerModel.findById(customerId).select(
 			"firstName lastName className proposedAmount proposedCurrencyId numberOfClassesBought tempScheduleId"
-		  );	
+		  );
 		  const currency = await CurrencyModel.findOne({
 			id: customer.proposedCurrencyId,
 		  });

@@ -385,7 +385,7 @@ exports.addSchedule = async (req, res) => {
 		});
 	}
 	let scheduleDescription = scheduleDescriptionGenerator(slotees);
-
+	console.log(summerCampImage);
 	const schedule = new Schedule({
 		meetingAccount,
 		meetingLink,
