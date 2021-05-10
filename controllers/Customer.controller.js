@@ -332,10 +332,13 @@ module.exports = {
               numberOfClassesBought: customer.numberOfClassesBought,
               paidTill: customer.paidTill,
               scheduleDescription: customer.scheduleDescription,
-              scheduleDescription2: generateScheduleDescription(
+              scheduleDescription2: !actualSchedule.isSummerCampClass ? generateScheduleDescription(
                 actualSchedule.slots,
                 selectedZones[0]
-              ),
+              ) : "Monday to Friday - " + generateScheduleDescription(
+                actualSchedule.slots,
+                selectedZones[0]
+              ).split("and")[0].split("-")[1],
               scheduleDays: generateScheduleDays(
                 actualSchedule.slots,
                 selectedZones[0]
