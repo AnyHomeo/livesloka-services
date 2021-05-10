@@ -84,6 +84,14 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
           objToPush.name = teacher.TeacherName;
           let allAttendecesTakenByThisTeacher = allTeacherAttendances.filter(
             (singleAttendance, index) => {
+
+              if(
+                singleAttendance.scheduleId &&
+                singleAttendance.scheduleId.isSummerCampClass
+              ){
+                return false
+              }
+
               if (
                 singleAttendance.scheduleId &&
                 singleAttendance.scheduleId.teacher === teacher.id &&
@@ -225,6 +233,9 @@ exports.getSalariesOfTeacherByMonthAndId = async (req, res) => {
   let finalObject = {};
   AttendanceByThisTeacher.forEach((attendance) => {
     if (attendance.scheduleId && attendance.scheduleId._id) {
+      if(attendance.scheduleId.isSummerCampClass){
+        return 
+      }
       if (!attendance.scheduleId.demo || teacherData.isDemoIncludedInSalaries) {
         if (!finalObject[attendance.scheduleId._id]) {
           let id = attendance.scheduleId._id;

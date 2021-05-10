@@ -313,7 +313,8 @@ exports.addSchedule = async (req, res) => {
 		summerCampDescription,
 		summerCampSchedule,
 		summerCampImage,
-		summerCampStudentsLimit
+		summerCampStudentsLimit,
+		summerCampClassNumberOfDays
 	} = req.body;
 
 	let slotees = {
@@ -415,7 +416,8 @@ exports.addSchedule = async (req, res) => {
 		summerCampDescription,
 		summerCampSchedule,
 		summerCampImage,
-		summerCampStudentsLimit
+		summerCampStudentsLimit,
+		summerCampClassNumberOfDays
 	});
 	schedule
 		.save()

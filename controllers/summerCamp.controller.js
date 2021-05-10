@@ -144,7 +144,7 @@ exports.onSummerCampSuccessfulPayment = async (req,res) => {
 		const { customerId } = req.params;
 		const { PayerID, paymentId } = req.query;
 		const customer = await CustomerModel.findById(customerId).select(
-			"firstName lastName className proposedAmount proposedCurrencyId tempScheduleId"
+			"firstName lastName className proposedAmount proposedCurrencyId numberOfClassesBought tempScheduleId"
 		  );	
 		  const currency = await CurrencyModel.findOne({
 			id: customer.proposedCurrencyId,
@@ -174,6 +174,7 @@ exports.onSummerCampSuccessfulPayment = async (req,res) => {
 				customer.meetingLink = schedule.meetingLink
 				customer.teacherId = schedule.teacher
 				customer.classStatusId = "113975223750050"
+				customer.numberOfClassesBought = schedule.summerCampClassNumberOfDays
 				await customer.save()
 				const newPayment = new PaymentModel({
 					customerId,

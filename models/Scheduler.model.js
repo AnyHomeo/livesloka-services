@@ -114,6 +114,9 @@ const SchedulerSchema = new mongoose.Schema(
     summerCampStudentsLimit:{
       type:Number,
     },
+    summerCampClassNumberOfDays:{
+      type:Number,
+    }
   },
   { timestamps: true }
 );
