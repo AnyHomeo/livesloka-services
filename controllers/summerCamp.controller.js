@@ -179,7 +179,7 @@ exports.onSummerCampSuccessfulPayment = async (req,res) => {
 					previousValue:customer.numberOfClassesBought || 0,
 					nextValue: customer.numberOfClassesBought ? customer.numberOfClassesBought + schedule.summerCampClassNumberOfDays : schedule.summerCampClassNumberOfDays,
 					comment:"Successful Payment!",
-					customerId:id
+					customerId:customerId
 				  })
 				  await newUpdate.save()
 				customer.numberOfClassesBought = customer.numberOfClassesBought ? customer.numberOfClassesBought + schedule.summerCampClassNumberOfDays : schedule.summerCampClassNumberOfDays 
