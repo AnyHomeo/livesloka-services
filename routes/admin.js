@@ -13,9 +13,9 @@ router.get("/otp/:number",(req,res)=>{
     const { number } = req.params
 	let otp = Math.floor(Math.random()*10000)
     client.messages.create({
-        body: `Hello, Your OTP is ${otp}`,
+        body: `Live Sloka:Your OTP for Registration is ${otp}`,
         to: number,  // Text this number
-        from: '+17035961891' // From a valid Twilio number
+        from: process.env.TWILIO_NUMBER // From a valid Twilio number
     })
     .then((message) => {
         console.log(message)

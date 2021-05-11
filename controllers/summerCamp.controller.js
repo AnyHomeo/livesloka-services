@@ -195,9 +195,9 @@ exports.onSummerCampSuccessfulPayment = async (req,res) => {
 					.save()
 					.then(async (data) => {
 						await client.messages.create({
-							body: `Payment Successful!, ${data._id ?  "PaymentId: " + data._id : ""}. Your Slot was booked for ${schedule.summerCampTitle}`,
+							body: `Live Sloka: Payment Successful!, ${data._id ?  "PaymentId: " + data._id : ""}. Your Slot for ${schedule.summerCampTitle} is booked.For any queries please reachout to info@livesloka.com`,
 							to: customer.whatsAppnumber,
-							from: '+17035961891'
+							from: process.env.TWILIO_NUMBER
 						})
 					  return res.redirect(
 						`${process.env.USER_CLIENT_URL}/payment-success`
