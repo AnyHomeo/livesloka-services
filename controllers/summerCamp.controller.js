@@ -1,14 +1,15 @@
 const SchedulerModel = require('../models/Scheduler.model');
 const CustomerModel = require('../models/Customer.model');
 const AdminModel = require('../models/Admin.model');
-const SubjectModel = require('../models/Subject.model');
 const TeacherModel = require('../models/Teacher.model');
 const PaymentModel = require('../models/Payments')
 const CurrencyModel = require('../models/Currency.model')
 require("dotenv").config();
 const paypal = require("paypal-rest-sdk");
-const shortid = require("shortid");
 const ClassHistoryModel = require('../models/ClassHistory.model');
+var twilio = require('twilio');
+var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
+
 
 paypal.configure({
 	mode: process.env.PAYPAL_MODE,
@@ -146,7 +147,7 @@ exports.onSummerCampSuccessfulPayment = async (req,res) => {
 		const { customerId } = req.params;
 		const { PayerID, paymentId } = req.query;
 		const customer = await CustomerModel.findById(customerId).select(
-			"firstName lastName className proposedAmount proposedCurrencyId numberOfClassesBought tempScheduleId"
+			"firstName lastName whatsAppnumber className proposedAmount proposedCurrencyId numberOfClassesBought tempScheduleId"
 		  );
 		  const currency = await CurrencyModel.findOne({
 			id: customer.proposedCurrencyId,
@@ -193,6 +194,11 @@ exports.onSummerCampSuccessfulPayment = async (req,res) => {
 				  newPayment
 					.save()
 					.then(async (data) => {
+						await client.messages.create({
+							body: `Payment Successful!, ${data._id ?  "PaymentId: " + data._id : ""}. Your Slot was booked for ${schedule.summerCampTitle}`,
+							to: customer.whatsAppnumber,
+							from: '+17035961891'
+						})
 					  return res.redirect(
 						`${process.env.USER_CLIENT_URL}/payment-success`
 					  );
@@ -216,14 +222,20 @@ exports.onSummerCampSuccessfulPayment = async (req,res) => {
 exports.onSummerCampFailurePayment = async (req,res) =>{
 	try {
 		const { customerId } = req.params;
-		const newPayment = new Payment({
+		let customer = await CustomerModel.findById(customerId)
+		const newPayment = new PaymentModel({
 			customerId,
 			status: "CANCELLED",
 			paymentData: null,
 		  });
 		  newPayment
 			.save()
-			.then((data) => {
+			.then(async (data) => {
+				await client.messages.create({
+					body: `Your Payment Failed!, PaymentId: ${payment._id}. Please register Again or Contact us.`,
+					to: customer.whatsAppnumber,
+					from: '+17035961891'
+				})
 			  return res.redirect(`${process.env.USER_CLIENT_URL}/payment-failed`);
 			})
 			.catch((err) => {

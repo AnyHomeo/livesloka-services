@@ -1,12 +1,35 @@
+require("dotenv").config()
 var express = require("express");
 var router = express.Router();
-
+var twilio = require('twilio');
+var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 var ctrl = require("../controllers/admin.controller");
 var customerCtrl = require("../controllers/Customer.controller");
 
 router.post("/login", ctrl.authentication);
 router.post("/ChangePassword", ctrl.ChangePassword);
 router.post("/register", ctrl.register);
+router.get("/otp/:number",(req,res)=>{
+    const { number } = req.params
+	let otp = Math.floor(Math.random()*10000)
+    client.messages.create({
+        body: `Hello, Your OTP is ${otp}`,
+        to: number,  // Text this number
+        from: '+17035961891' // From a valid Twilio number
+    })
+    .then((message) => {
+        console.log(message)
+        return res.json({
+            message:"Otp sent!",
+            result:otp+3456
+        })
+    }).catch(err =>{
+        console.log(err)
+        return res.status(500).json({
+            error:"Something went wrong!!"
+        })
+    })
+});
 
 router.post("/customer/registerCustomer", customerCtrl.registerCustomer);
 router.get("/customer/details", customerCtrl.details);
