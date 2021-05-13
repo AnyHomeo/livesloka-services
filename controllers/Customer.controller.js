@@ -179,31 +179,30 @@ module.exports = {
   },
 
   deleteCustomer: async (req, res) => {
-    const { customerId } = req.params;
-    CustomerModel.findByIdAndDelete(customerId, (err, data) => {
-      if (err) {
-        return res.status(500).json({
-          error: "error in Deleting customer",
-          result: null,
-        });
+    try {
+      const { customerId } = req.params;
+      let customer = await CustomerModel.findById(customerId)
+      let allCustomersWithThatEmail = await CustomerModel.find({
+        email:customer.email
+      })
+      await CustomerModel.findByIdAndDelete(customerId)
+      if(allCustomersWithThatEmail && allCustomersWithThatEmail.length === 1) {
+        await AdminModel.deleteOne({
+          userId:customer.email
+        })
+        return res.json({
+          message:"Deleted customer and their Login Details Successfully!"
+        })
       }
-      AdminModel.findOneAndDelete(
-        {
-          customerId,
-        },
-        (err, docs) => {
-          if (err) {
-            return res.status(500).json({
-              error: "error in Deleting customer",
-              result: null,
-            });
-          }
-          return res.status(200).json({
-            message: "Customer Deleted Successfully",
-          });
-        }
-      );
-    });
+      return res.json({
+        message:"Deleted Successfully!"
+      })
+    } catch (error) {
+      console.log(error)
+      return res.status(500).json({
+        error:"Something went wrong!!"
+      })
+    }
   },
 
   getCustomerData: (req, res) => {
@@ -830,4 +829,38 @@ module.exports = {
       });
     }
   },
+  getInclassAndDemoStudents: async (req,res) => {
+    try {
+      let allDemoAndInclassSchedules = await ScheduleModel.find({
+        isDeleted:{
+          $ne: true
+        },
+      }).select("students teacher className demo").populate("students","firstName lastName email").lean()
+      let allCustomers = []
+      console.log(allDemoAndInclassSchedules.length)
+      allDemoAndInclassSchedules.forEach(schedule => {
+        if(schedule.students && schedule.students.length){
+          schedule.students.forEach(student => {
+            if(student){
+              allCustomers.push({
+                ...student,
+                ...schedule,
+                customerId:student._id,
+                students:undefined
+              })
+            }
+          })
+        }
+      })
+      return res.json({
+        message:"All inclass and demo students retrieved",
+        result:allCustomers
+      })
+    } catch (error) {
+      console.log(error)
+      return res.json({
+        error:"Something went wrong"
+      })
+    }
+  }
 };

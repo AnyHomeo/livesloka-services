@@ -722,6 +722,8 @@ exports.editSchedule = async (req, res) => {
 															scheduleDescription: schdDescription,
 															meetingLink: req.body.meetingLink,
 															teacherId: selectedTeacher.id,
+															numberOfClassesBought:
+																demo ? 1 : data.numberOfClassesBought,
 															classStatusId: demo
 																? '38493085684944'
 																: anyPayments
