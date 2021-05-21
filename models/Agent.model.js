@@ -24,6 +24,12 @@ var AgentSchema = new mongoose.Schema(
       type:String,
       default:""
     },
+    AgentTimeZone:{
+      type:String,
+      trim:true,
+      default:"IST",
+      uppercase:true
+    },
     AgentRole:{
       type:Number,
       default:3

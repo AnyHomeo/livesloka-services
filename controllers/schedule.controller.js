@@ -314,7 +314,7 @@ exports.addSchedule = async (req, res) => {
 		summerCampSchedule,
 		summerCampImage,
 		summerCampStudentsLimit,
-		summerCampClassNumberOfDays
+		summerCampClassNumberOfDays,
 	} = req.body;
 
 	let slotees = {
@@ -417,7 +417,7 @@ exports.addSchedule = async (req, res) => {
 		summerCampSchedule,
 		summerCampImage,
 		summerCampStudentsLimit,
-		summerCampClassNumberOfDays
+		summerCampClassNumberOfDays,
 	});
 	schedule
 		.save()
@@ -580,6 +580,9 @@ exports.editSchedule = async (req, res) => {
 		let isNewMeetingLinkNeeded = !equal(oldScheduleSlots, newSlots) || isMeetingLinkChangeNeeded;
 		let { monday, tuesday, wednesday, thursday, friday, saturday, sunday } = oldSchedule.slots;
 		let allSlots = [...monday, ...tuesday, ...wednesday, ...thursday, ...friday, ...saturday, ...sunday];
+		let newStudents = students.filter(
+			(student) => !oldSchedule.students.filter((oldStudent) => oldStudent.equals(student)).length
+		);
 
 		oldTeacher.availableSlots = oldTeacher.availableSlots.concat(allSlots);
 		oldTeacher.availableSlots = [...new Set(oldTeacher.availableSlots)];
@@ -701,12 +704,14 @@ exports.editSchedule = async (req, res) => {
 								.catch((error) => {
 									console.log(error);
 								});
+							console.log('hey here');
 							for (x = 0; x < students.length; x++) {
+								console.log(x);
 								Customer.findOne({ _id: students[x] })
 									.then((data) => {
 										let stud_id = data._id;
 										let { timeZoneId } = data;
-
+										console.log('hey', stud_id);
 										timzone
 											.findOne({ id: timeZoneId })
 											.then(async (dat) => {
@@ -723,12 +728,14 @@ exports.editSchedule = async (req, res) => {
 															meetingLink: req.body.meetingLink,
 															teacherId: selectedTeacher.id,
 															numberOfClassesBought:
-																demo ? 1 : data.numberOfClassesBought,
-															classStatusId: demo
-																? '38493085684944'
-																: anyPayments
-																? '113975223750050'
-																: '121975682530440',
+															(demo && newStudents.filter(student => stud_id.equals(student)).length) || !oldSchedule.demo
+																? data.numberOfClassesBought + 1
+																: data.numberOfClassesBought,
+														classStatusId: demo
+															? '38493085684944'
+															: anyPayments
+															? '113975223750050'
+															: '121975682530440',
 														},
 													}
 												);
@@ -811,6 +818,7 @@ exports.editSchedule = async (req, res) => {
 									let anyPayments = await Payments.countDocuments({
 										customerId: data._id,
 									});
+													console.log((demo && newStudents.filter(student => stud_id.equals(student)).length) || !oldSchedule.demo)
 									await Customer.updateOne(
 										{ _id: stud_id },
 										{
@@ -818,6 +826,10 @@ exports.editSchedule = async (req, res) => {
 												scheduleDescription: schdDescription,
 												meetingLink: req.body.meetingLink,
 												teacherId: selectedTeacher.id,
+												numberOfClassesBought:
+													(demo && newStudents.filter(student => stud_id.equals(student)).length) || !oldSchedule.demo
+														? data.numberOfClassesBought + 1
+														: data.numberOfClassesBought,
 												classStatusId: demo
 													? '38493085684944'
 													: anyPayments
@@ -876,6 +888,7 @@ exports.editSchedule = async (req, res) => {
 			});
 		}
 	} catch (error) {
+		console.log(error);
 		return res.status(500).json({
 			error: 'Zoom not available',
 		});
@@ -886,6 +899,7 @@ exports.deleteScheduleById = async (req, res) => {
 	const { id } = req.params;
 	try {
 		let schedule = await Schedule.findById(id);
+		let { students } = schedule;
 		let teacherOfSchedule = await Teacher.findOne({ id: schedule.teacher });
 		const { monday, tuesday, wednesday, thursday, friday, saturday, sunday } = schedule.slots;
 		let slotsOfSchedule = monday

@@ -141,6 +141,7 @@ exports.onSuccess = async (req, res) => {
           error: "Something went wrong!",
         });
       } else {
+        console.log(customer.noOfClasses)
         if (customer.noOfClasses != 0 && !!customer.noOfClasses) {
           previousValue = customer.numberOfClassesBought
           customer.numberOfClassesBought =
