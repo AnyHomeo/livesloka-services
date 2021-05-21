@@ -23,6 +23,11 @@ var SubjectSchema = new mongoose.Schema(
       type: Number,
       default:0
     },
+    imageLink:{
+      type:String,
+      default:"",
+      trim:true 
+    }
   },
   { timestamps: true }
 );
