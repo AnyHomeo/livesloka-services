@@ -12,7 +12,8 @@ const {
   getSingleUser,
   getStatistics,
   updateLastTimeJoined,
-  getInclassAndDemoStudents
+  getInclassAndDemoStudents,
+  insertCustomersFromWebsite
 } = require("../controllers/Customer.controller");
 const router = express.Router();
 
@@ -28,5 +29,6 @@ router.post("/customer/wixs", insertDataFromWix);
 router.get("/customer/stats/:day", getStatistics);
 router.post("/customer/join/:scheduleId/:email",updateLastTimeJoined);
 router.get("/customer/class/dashboard", getClassDashBoardData);
+router.post("/register/customer",insertCustomersFromWebsite);
 
 module.exports = router;

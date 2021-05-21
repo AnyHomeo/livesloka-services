@@ -862,5 +862,56 @@ module.exports = {
         error:"Something went wrong"
       })
     }
+  },
+  insertCustomersFromWebsite:async (req,res) => {
+    try {
+        const { subjects,email } = req.body
+        req.body.gender = req.body.gender ? req.body.gender.toLowerCase() : "male"
+        if(!email){
+          return res.status(400).json({
+            error:'Email is Required'
+          })
+        }
+        if(Array.isArray(subjects) && !subjects.length){
+          return res.status(400).json({
+            error:"Subjects are required!"
+          })
+        }
+        let allSubjects = await SubjectModel.find({
+          id:{
+            $in: subjects
+          }
+        })
+        let allCustomers = allSubjects.map(subject => ({
+          ...req.body,
+          subjectId:subject.id,
+          firstName:req.body.firstName + " " + subject.subjectName,
+          proposedAmount:subject.amount
+        }))
+        let insertedCustomers = await CustomerModel.insertMany(allCustomers)
+        let userAlreadyExists = await AdminModel.findOne({
+          userId:email
+        });
+        if(!userAlreadyExists){
+          const newUser = new AdminModel({
+            userId:email,
+            roleId:1,
+            customerId:insertedCustomers[0]._id,
+            userName:req.body.firstName
+          })
+          await newUser.save()
+          return res.json({
+            message:"Registered Successfully!!"
+          })
+        }
+        return res.json({
+          message:"Registered Successfully!"
+        })
+    } catch (error) {
+      console.log(error)
+      return res.status(500).json({
+        error:"Something went wrong!!"
+      })
+    }
   }
 };
