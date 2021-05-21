@@ -91,11 +91,12 @@ exports.CancelAClass = async (req, res) => {
       console.log(timeFromEndDay,timeFromStartDay)
       if(timeFromStartDay){
         timeFromStartDay = timeFromStartDay.split("-")[0].trim()
-        req.body.cancelledDate = new Date(momentTZ(startOfSelectedDay.format("YYYY-MM-DD") + " " + timeFromStartDay).tz("Asia/Kolkata").format())
+        req.body.cancelledDate = momentTZ(startOfSelectedDay.format("YYYY-MM-DD") + " " + timeFromStartDay,"Asia/Kolkata").format()
       } else if(timeFromEndDay){
         timeFromEndDay = timeFromEndDay.split("-")[0].trim()
-        req.body.cancelledDate = new Date(momentTZ(endOfSelectedDay.format("YYYY-MM-DD") + " " + timeFromEndDay).tz("Asia/Kolkata").format())
+        req.body.cancelledDate = momentTZ(endOfSelectedDay.format("YYYY-MM-DD") + " " + timeFromEndDay,"Asia/Kolkata").format()
       }
+      console.log(req.body.cancelledDate)
       let alreadyExists = await CancelledClassesModel.findOne({studentId:req.body.studentId,scheduleId:req.body.scheduleId})
       let oldDate =  alreadyExists ? alreadyExists.cancelledDate : ""
       let newDate = req.body.cancelledDate
