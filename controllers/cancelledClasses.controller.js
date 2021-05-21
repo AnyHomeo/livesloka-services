@@ -100,29 +100,47 @@ exports.CancelAClass = async (req, res) => {
         timeFromStartDay = timeFromStartDay.split("-")[0].trim()
         let isAm = timeFromStartDay.split(" ")[1].toLowerCase() === "am"
         let time = timeFromStartDay.split(" ")[0]
-        req.body.cancelledDate = momentTZ.tz(startOfSelectedDay.format("YYYY-MM-DD") + " " + (isAm ? time : add12(time)) ,"Asia/Kolkata").clone().tz("Europe/London").format()
+        console.log(momentTZ.tz(startOfSelectedDay.format("YYYY-MM-DD") + " " + (isAm ? time : add12(time)) ,"Asia/Kolkata").format())
+        req.body.cancelledDate = moment(momentTZ.tz(startOfSelectedDay.format("YYYY-MM-DD") + " " + (isAm ? time : add12(time)) ,"Asia/Kolkata").format()).subtract(5.5,"hours").format()
+        console.log(req.body.cancelledDate)
+        let alreadyExists = await CancelledClassesModel.findOne({studentId:req.body.studentId,scheduleId:req.body.scheduleId})
+        let oldDate =  alreadyExists ? alreadyExists.cancelledDate : ""
+        let newDate = req.body.cancelledDate
+        console.log(req.body.cancelledDate)
+        alreadyExists = JSON.stringify(oldDate).split("T")[0] === JSON.stringify(newDate).split("T")[0]
+        if(!alreadyExists){
+          const cancelledClass = new CancelledClassesModel(req.body);
+          await cancelledClass.save();
+          return res.status(200).json({
+            message: "applied for Leave successfully!",
+          });
+        }
+        return res.status(400).json({
+          error:"Already Applied on same day!"
+        })
       } else if(timeFromEndDay){
         timeFromEndDay = timeFromEndDay.split("-")[0].trim()
         let isAm = timeFromEndDay.split(" ")[1].toLowerCase() === "am"
         let time = timeFromEndDay.split(" ")[0]
-        req.body.cancelledDate = momentTZ.tz(endOfSelectedDay.format("YYYY-MM-DD") + " " + (isAm ? time : add12(time)) ,"Asia/Kolkata").clone().tz("Europe/London").format()
+        console.log(momentTZ.tz(endOfSelectedDay.format("YYYY-MM-DD") + " " + (isAm ? time : add12(time)) ,"Asia/Kolkata").format())
+        req.body.cancelledDate = moment(momentTZ.tz(endOfSelectedDay.format("YYYY-MM-DD") + " " + (isAm ? time : add12(time)) ,"Asia/Kolkata").format()).subtract(5.5,"hours").format()
+        console.log(req.body.cancelledDate)
+        let alreadyExists = await CancelledClassesModel.findOne({studentId:req.body.studentId,scheduleId:req.body.scheduleId})
+        let oldDate =  alreadyExists ? alreadyExists.cancelledDate : ""
+        let newDate = req.body.cancelledDate
+        console.log(req.body.cancelledDate)
+        alreadyExists = JSON.stringify(oldDate).split("T")[0] === JSON.stringify(newDate).split("T")[0]
+        if(!alreadyExists){
+          const cancelledClass = new CancelledClassesModel(req.body);
+          await cancelledClass.save();
+          return res.status(200).json({
+            message: "applied for Leave successfully!",
+          });
+        }
+        return res.status(400).json({
+          error:"Already Applied on same day!"
+        })
       }
-      console.log(req.body.cancelledDate)
-      let alreadyExists = await CancelledClassesModel.findOne({studentId:req.body.studentId,scheduleId:req.body.scheduleId})
-      let oldDate =  alreadyExists ? alreadyExists.cancelledDate : ""
-      let newDate = req.body.cancelledDate
-      console.log(req.body.cancelledDate)
-      alreadyExists = JSON.stringify(oldDate).split("T")[0] === JSON.stringify(newDate).split("T")[0]
-      if(!alreadyExists){
-        const cancelledClass = new CancelledClassesModel(req.body);
-        await cancelledClass.save();
-        return res.status(200).json({
-          message: "applied for Leave successfully!",
-        });
-      }
-      return res.status(400).json({
-        error:"Already Applied on same day!"
-      })
     }
     else if(isAdmin){
       let scheduleId = await SchedulerModel.findOne({students: req.body.studentId,isDeleted:{
