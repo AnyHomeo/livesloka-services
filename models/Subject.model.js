@@ -14,6 +14,11 @@ var SubjectSchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
+    description:{
+      trim:true,
+      type:String,
+      default:""
+    },
     amount: {
       type: Number,
       default:0
