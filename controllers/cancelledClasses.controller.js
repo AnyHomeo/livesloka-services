@@ -3,6 +3,12 @@ const  moment = require('moment');
 const  momentTZ = require('moment-timezone');
 const CustomerModel = require("../models/Customer.model");
 const SchedulerModel = require("../models/Scheduler.model");
+const timeZoneModel = require("../models/timeZone.model");
+const allZones = require("../models/timeZone.json");
+const generateScheduleDays = require("../scripts/generateScheduleDays");
+const AgentModel = require("../models/Agent.model");
+const { getStartAndEndTime } = require("../scripts/getStartAndEndTime");
+
 
 exports.getAllAppliedLeaves = async (req,res) => {
   try {
@@ -34,7 +40,7 @@ exports.getAllAppliedLeavesByScheduleId = async (req,res) => {
        },
       scheduleId
   })
-  return res.json({ 
+  return res.json({
       message:"Retrieved Successfully",
       result:data
     })
@@ -76,7 +82,7 @@ exports.CancelAClass = async (req, res) => {
       }
       req.body.studentId = selectedUser
       let alreadyExists = await CancelledClassesModel.findOne({studentId:req.body.studentId,scheduleId:req.body.scheduleId})
-      
+
       let oldDate =  alreadyExists ? alreadyExists.cancelledDate : ""
       let newDate = req.body.cancelledDate
       alreadyExists = JSON.stringify(oldDate).split("T")[0] === JSON.stringify(newDate).split("T")[0]
@@ -122,7 +128,7 @@ exports.CancelAClass = async (req, res) => {
         error:"Please Contact admin,Cancelling date is less than 9 Hours"
       })
     }
-    
+
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -171,3 +177,117 @@ exports.deleteCancelledClass = async (req, res) => {
     });
   }
 };
+
+exports.getUserDaysToCancel = async (req,res) => {
+  try {
+    const { id } = req.params;
+    const { agent } = req.query;
+    let scheduleOfThisUser = await SchedulerModel.findOne({
+      isDeleted:{
+        $ne:true
+      },
+      students: {
+        $in: [id]
+      }
+    }).lean()
+    let agentData = await AgentModel.findOne({id:agent})
+    let selectedZoneUTCArray = allZones.filter(
+      (zone) => zone.abbr === agentData.AgentTimeZone
+    )[0].utc;
+    let allTimeZones = momentTZ.tz.names();
+    let selectedZone = allTimeZones.filter((name) =>
+      selectedZoneUTCArray.includes(name)
+    )[0];
+    return res.json({
+      result: scheduleOfThisUser ? generateScheduleDays(
+        scheduleOfThisUser.slots,
+        selectedZone
+      ) : []
+    })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      error:"Something went wrong!!"
+    })
+  }
+}
+
+exports.getStartTimesOfEntireDay = async (req,res) => {
+
+  try {
+    let {date,agent,customerId} = req.query
+    let agentData = await AgentModel.findOne({id:agent})
+    let schedule = await SchedulerModel.findOne({
+      isDeleted:{
+        $ne: true
+      },
+      students:{
+       $in: [customerId]
+      }
+    }).lean()
+    let selectedZoneUTCArray = allZones.filter(
+      (zone) => zone.abbr === agentData.AgentTimeZone
+    )[0].utc;
+    let allTimeZones = momentTZ.tz.names();
+    let selectedZone = allTimeZones.filter((name) =>
+      selectedZoneUTCArray.includes(name)
+    )[0];
+    let startTimeDay = momentTZ.tz(date,selectedZone).startOf("day").clone().tz("Asia/Kolkata");
+    let endTimeDay = momentTZ.tz(date,selectedZone).endOf("day").clone().tz("Asia/Kolkata");
+    let startTimeDayString = startTimeDay.format("dddd").toLowerCase();
+    let endTimeDayString = endTimeDay.format("dddd").toLowerCase();
+    if(schedule){
+      console.log(schedule.slots[startTimeDayString])
+      console.log("Start", getStartAndEndTime(schedule.slots[startTimeDayString]).split("-")[0])
+      console.log(getStartAndEndTime(schedule.slots[endTimeDayString]).split("-")[0])
+
+      if(startTimeDayString === endTimeDayString){
+        let time = getStartAndEndTime(schedule.slots[startTimeDayString]).split("-")[0]
+        return res.json({
+          result : [
+            momentTZ.tz(startTimeDay.format("YYYY-MM-DD") + " " + time,"Asia/Kolkata").format()
+          ]
+        })
+      } else {
+         let endTime = getStartAndEndTime(schedule.slots[endTimeDayString]).split("-")[0]
+         let startTime = getStartAndEndTime(schedule.slots[startTimeDayString]).split("-")[0]
+         if(startTime){
+          return res.json({
+            result:[
+              momentTZ.tz(startTimeDay.format("YYYY-MM-DD") + " " + startTime,"Asia/Kolkata").clone().tz(selectedZone).format()
+            ]
+          })
+         } else {
+           return res.json({
+             result:[
+              momentTZ.tz(endTimeDay.format("YYYY-MM-DD") + " " + endTime,"Asia/Kolkata").clone().tz(selectedZone).format()
+             ]
+           })
+         }
+        //  if(endTime){
+        //   let endTimeNumber = parseInt(endTime.split(":")[0]) + (parseInt(endTime.split(":")[1].split(" ")[0]) === 30 ? 0.5 : 0)
+        //   let secondEndTime = parseInt(endTimeDay.format("hh")) + parseInt(endTimeDay.format("mm"))/60
+        //   if(endTimeNumber > secondEndTime){
+        //     return res.json({
+        //       result:[
+        //         getStartAndEndTime(schedule.slots[endTimeDayString]).split("-")[0],
+        //         getStartAndEndTime(schedule.slots[startTimeDayString]).split("-")[0]
+        //       ]
+        //     })
+        //   }
+        //  }
+      }
+    } else {
+      return res.status(500).json({
+        error:"No Schedule For User"
+      })
+    }
+
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      error:"something went wrong"
+    })
+  }
+
+}
