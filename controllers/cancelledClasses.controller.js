@@ -61,8 +61,8 @@ exports.CancelAClass = async (req, res) => {
       let { studentId,scheduleId } = req.body
       let studentIds = await CustomerModel.find({email:studentId}).select("_id").lean()
       studentIds = studentIds.map(id => id._id)
-      let scheduleUsers = await SchedulerModel.findById(scheduleId).select("students").lean()
-      scheduleUsers = scheduleUsers.students
+      let schedule = await SchedulerModel.findById(scheduleId).select("students slots").lean()
+      let scheduleUsers = schedule.students
       let selectedUser = ""
       for (let i = 0; i < studentIds.length; i++) {
         const student = studentIds[i];
@@ -81,10 +81,25 @@ exports.CancelAClass = async (req, res) => {
         })
       }
       req.body.studentId = selectedUser
+      let startOfSelectedDay = momentTZ.tz(req.body.cancelledDate,"Europe/London").clone().tz("Asia/Kolkata").startOf("day");
+      let endOfSelectedDay = momentTZ.tz(req.body.cancelledDate,"Europe/London").clone().tz("Asia/Kolkata").endOf("day");
+      console.log(startOfSelectedDay,endOfSelectedDay)
+      let startDay = startOfSelectedDay.format("dddd").toLowerCase();
+      let endDay = endOfSelectedDay.format("dddd").toLowerCase();
+      let timeFromStartDay = getStartAndEndTime(schedule.slots[startDay])
+      let timeFromEndDay = getStartAndEndTime(schedule.slots[endDay])
+      console.log(timeFromEndDay,timeFromStartDay)
+      if(timeFromStartDay){
+        timeFromStartDay = timeFromStartDay.split("-")[0].trim()
+        req.body.cancelledDate = new Date(momentTZ(startOfSelectedDay.format("YYYY-MM-DD") + " " + timeFromStartDay).tz("Asia/Kolkata").format())
+      } else if(timeFromEndDay){
+        timeFromEndDay = timeFromEndDay.split("-")[0].trim()
+        req.body.cancelledDate = new Date(momentTZ(endOfSelectedDay.format("YYYY-MM-DD") + " " + timeFromEndDay).tz("Asia/Kolkata").format())
+      }
       let alreadyExists = await CancelledClassesModel.findOne({studentId:req.body.studentId,scheduleId:req.body.scheduleId})
-
       let oldDate =  alreadyExists ? alreadyExists.cancelledDate : ""
       let newDate = req.body.cancelledDate
+      console.log(req.body.cancelledDate)
       alreadyExists = JSON.stringify(oldDate).split("T")[0] === JSON.stringify(newDate).split("T")[0]
       if(!alreadyExists){
         const cancelledClass = new CancelledClassesModel(req.body);
