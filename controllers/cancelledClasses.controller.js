@@ -52,6 +52,13 @@ exports.getAllAppliedLeavesByScheduleId = async (req,res) => {
   }
 }
 
+const add12 = (time) => {
+  let hours = time.split(":")[0]
+  let mins = time.split(":")[1]
+console.log((parseInt(hours)+12) + ":" + mins)
+  return (parseInt(hours)+12) + ":" + mins
+}
+
 exports.CancelAClass = async (req, res) => {
   try {
     req.body.cancelledDate = new Date(req.body.cancelledDate);
@@ -91,10 +98,18 @@ exports.CancelAClass = async (req, res) => {
       console.log(timeFromEndDay,timeFromStartDay)
       if(timeFromStartDay){
         timeFromStartDay = timeFromStartDay.split("-")[0].trim()
-        req.body.cancelledDate = momentTZ(startOfSelectedDay.format("YYYY-MM-DD") + " " + timeFromStartDay,"Asia/Kolkata").format()
+        // req.body.cancelledDate = momentTZ(startOfSelectedDay.format("YYYY-MM-DD") + " " + timeFromStartDay,"Asia/Kolkata").format()
+        let isAm = timeFromStartDay.split(" ")[1].toLowerCase() === "am"
+        let time = timeFromStartDay.split(" ")[0]
+        console.log(momentTZ.tz(startOfSelectedDay.format("YYYY-MM-DD") + " " + (isAm ? time : add12(time)) ,"Asia/Kolkata").format())
+        req.body.cancelledDate = momentTZ.tz(startOfSelectedDay.format("YYYY-MM-DD") + " " + (isAm ? time : add12(time)) ,"Asia/Kolkata").format()
       } else if(timeFromEndDay){
         timeFromEndDay = timeFromEndDay.split("-")[0].trim()
-        req.body.cancelledDate = momentTZ(endOfSelectedDay.format("YYYY-MM-DD") + " " + timeFromEndDay,"Asia/Kolkata").format()
+        let isAm = timeFromEndDay.split(" ")[1].toLowerCase() === "am"
+        let time = timeFromEndDay.split(" ")[0]
+        console.log(momentTZ.tz(endOfSelectedDay.format("YYYY-MM-DD") + " " + (isAm ? time : add12(time)) ,"Asia/Kolkata").format())
+        req.body.cancelledDate = momentTZ.tz(endOfSelectedDay.format("YYYY-MM-DD") + " " + (isAm ? time : add12(time)) ,"Asia/Kolkata").format()
+        // req.body.cancelledDate = momentTZ(endOfSelectedDay.format("YYYY-MM-DD") + " " + timeFromEndDay,"Asia/Kolkata").format()
       }
       console.log(req.body.cancelledDate)
       let alreadyExists = await CancelledClassesModel.findOne({studentId:req.body.studentId,scheduleId:req.body.scheduleId})
