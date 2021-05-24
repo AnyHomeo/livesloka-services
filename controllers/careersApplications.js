@@ -18,13 +18,13 @@ exports.registerInCareers = async (req,res) =>{
                 error:"Phone number is Required"
             })
         } 
-        let newCareersApplication = new CareersApplications({...req.body})
         let alreadyApplied = await CareersApplications.findOne({email:email})
         if(alreadyApplied){
             return res.status(400).json({
                 error:"Already Applied"
             })
         }
+        let newCareersApplication = new CareersApplications({...req.body})
         await newCareersApplication.save()
         return res.json({
             message:"Applied Successfully!"
@@ -33,6 +33,20 @@ exports.registerInCareers = async (req,res) =>{
         console.log(error)
         return res.json({
             error:"Something went wrong"
+        })
+    }
+}
+
+exports.getAllApplications = async (req,res) => {
+    try {
+        let result = await CareersApplications.find().sort({createdAt:-1})
+        return res.json({
+            result
+        })
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({
+            error:"Something went wrong!"
         })
     }
 }

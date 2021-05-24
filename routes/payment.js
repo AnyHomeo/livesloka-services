@@ -7,6 +7,8 @@ const {
   getAllTransactions,
   getDailyDataGraph,
   onRazorpaySuccess,
+  razorpayWebhook,
+  validateRazorpayWebhook,
 } = require("../controllers/payment.controller");
 const router = express.Router();
 
@@ -17,4 +19,5 @@ router.get("/cancel/:id", onFailurePayment);
 router.get("/get/transactions/:id", getTransactions);
 router.get("/get/alltransactions/", getAllTransactions);
 router.get("/get/dailydatagraph/", getDailyDataGraph);
+router.post("/razorpay/webhook",validateRazorpayWebhook,razorpayWebhook);
 module.exports = router;

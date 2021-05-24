@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { registerInCareers } = require("../controllers/careersApplications")
+const { registerInCareers,getAllApplications } = require("../controllers/careersApplications")
 
-router.post("/",registerInCareers)
-
+router.post("/",registerInCareers);
+router.get("/",getAllApplications);
 module.exports = router;
