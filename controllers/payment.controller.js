@@ -55,7 +55,7 @@ exports.makePayment = async (req, res) => {
 								currency: currency.currencyName || 'USD',
 								total: price,
 							},
-							description: 'Payment for Class: ' + user.className || 'Livesloka class',
+							description: 'Payment for Class: ' + (user.className || 'Livesloka class'),
 						},
 					],
 				};
@@ -253,7 +253,6 @@ exports.onFailurePayment = async (req, res) => {
 
 exports.getTransactions = async (req, res) => {
 	const id = req.params.id;
-
 	try {
 		const userEmail = await Customer.findOne({ _id: id }).select('email');
 		const allUsers = await Customer.find({
@@ -264,7 +263,7 @@ exports.getTransactions = async (req, res) => {
 			customerId: {
 				$in: allUserIds,
 			},
-		}).populate('customerId');
+		}).populate('customerId').sort({createdAt:-1});
 
 		if (allTransactions === null) {
 			return res.status(400).json({
