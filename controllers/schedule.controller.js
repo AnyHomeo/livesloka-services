@@ -11,6 +11,7 @@ const TeacherModel = require('../models/Teacher.model');
 var equal = require('fast-deep-equal');
 const moment = require('moment');
 const Payments = require('../models/Payments');
+const ClassHistoryModel = require('../models/ClassHistory.model');
 require('dotenv').config();
 
 function convertTZ(date, tzString) {
@@ -460,6 +461,19 @@ exports.addSchedule = async (req, res) => {
 							.then(async (dat) => {
 								let rec = SlotConverter(scheduledData.slots, dat.timeZoneName);
 								let schdDescription = postProcess(rec, Subjectname);
+								let previousValue = data.numberOfClassesBought
+								let nextValue =  demo
+								? data.numberOfClassesBought + 1
+								: data.numberOfClassesBought
+								if(previousValue !== nextValue){
+									let newUpdate = new ClassHistoryModel({
+										previousValue,
+										nextValue,
+										comment: 'Scheduled a Demo class',
+										customerId: stud_id,
+									});
+									 await newUpdate.save()
+								}
 								await Customer.updateOne(
 									{ _id: stud_id },
 									{
@@ -469,17 +483,19 @@ exports.addSchedule = async (req, res) => {
 											teacherId: selectedTeacher.id,
 											classStatusId: demo ? '38493085684944' : '121975682530440',
 										},
-										numberOfClassesBought: demo ? 1 : undefined,
+										numberOfClassesBought: demo
+											? data.numberOfClassesBought + 1
+											: data.numberOfClassesBought,
 									}
 								);
 							})
 							.catch((err) => {
 								console.log(err);
-							}); // error in fetching the timezones from database
+							});
 					})
 					.catch((error) => {
 						console.log(error);
-					}); // error in fetching the students from DB
+					});
 			}
 
 			Teacher.findOne({ id: teacher }).then((data) => {
@@ -580,9 +596,9 @@ exports.editSchedule = async (req, res) => {
 		let isNewMeetingLinkNeeded = !equal(oldScheduleSlots, newSlots) || isMeetingLinkChangeNeeded;
 		let { monday, tuesday, wednesday, thursday, friday, saturday, sunday } = oldSchedule.slots;
 		let allSlots = [...monday, ...tuesday, ...wednesday, ...thursday, ...friday, ...saturday, ...sunday];
-		let newStudents = students.filter(
-			(student) => !oldSchedule.students.filter((oldStudent) => oldStudent.equals(student)).length
-		);
+		let newStudents = students
+			.filter((student) => !oldSchedule.students.filter((oldStudent) => oldStudent.equals(student)).length)
+			.map((student) => student.toString());
 
 		oldTeacher.availableSlots = oldTeacher.availableSlots.concat(allSlots);
 		oldTeacher.availableSlots = [...new Set(oldTeacher.availableSlots)];
@@ -704,7 +720,6 @@ exports.editSchedule = async (req, res) => {
 								.catch((error) => {
 									console.log(error);
 								});
-							console.log('hey here');
 							for (x = 0; x < students.length; x++) {
 								console.log(x);
 								Customer.findOne({ _id: students[x] })
@@ -720,6 +735,20 @@ exports.editSchedule = async (req, res) => {
 												let anyPayments = await Payments.countDocuments({
 													customerId: data._id,
 												});
+												let previousValue = data.numberOfClassesBought
+												let nextValue = (demo && newStudents.includes(stud_id.toString())) ||
+												demo && !oldSchedule.demo
+													? data.numberOfClassesBought + 1
+													: data.numberOfClassesBought
+												if(previousValue !== nextValue){
+													let newUpdate = new ClassHistoryModel({
+														previousValue,
+														nextValue,
+														comment: 'Scheduled a Demo class',
+														customerId: stud_id,
+													});
+													 await newUpdate.save()
+												}
 												await Customer.updateOne(
 													{ _id: stud_id },
 													{
@@ -728,14 +757,15 @@ exports.editSchedule = async (req, res) => {
 															meetingLink: req.body.meetingLink,
 															teacherId: selectedTeacher.id,
 															numberOfClassesBought:
-															(demo && newStudents.filter(student => stud_id.equals(student)).length) || !oldSchedule.demo
-																? data.numberOfClassesBought + 1
-																: data.numberOfClassesBought,
-														classStatusId: demo
-															? '38493085684944'
-															: anyPayments
-															? '113975223750050'
-															: '121975682530440',
+																(demo && newStudents.includes(stud_id.toString())) ||
+																	demo && !oldSchedule.demo
+																	? data.numberOfClassesBought + 1
+																	: data.numberOfClassesBought,
+															classStatusId: demo
+																? '38493085684944'
+																: anyPayments
+																? '113975223750050'
+																: '121975682530440',
 														},
 													}
 												);
@@ -817,8 +847,22 @@ exports.editSchedule = async (req, res) => {
 									let schdDescription = postProcess(rec, Subjectname);
 									let anyPayments = await Payments.countDocuments({
 										customerId: data._id,
+										status: 'SUCCESS',
 									});
-													console.log((demo && newStudents.filter(student => stud_id.equals(student)).length) || !oldSchedule.demo)
+									let previousValue = data.numberOfClassesBought
+									let nextValue = (demo && newStudents.includes(stud_id.toString())) ||
+									demo && !oldSchedule.demo
+										? data.numberOfClassesBought + 1
+										: data.numberOfClassesBought
+									if(previousValue !== nextValue){
+										let newUpdate = new ClassHistoryModel({
+											previousValue,
+											nextValue,
+											comment: 'Scheduled a Demo class',
+											customerId: stud_id,
+										});
+									 	await newUpdate.save()
+									}
 									await Customer.updateOne(
 										{ _id: stud_id },
 										{
@@ -827,7 +871,8 @@ exports.editSchedule = async (req, res) => {
 												meetingLink: req.body.meetingLink,
 												teacherId: selectedTeacher.id,
 												numberOfClassesBought:
-													(demo && newStudents.filter(student => stud_id.equals(student)).length) || !oldSchedule.demo
+													(demo && newStudents.includes(stud_id.toString())) ||
+													demo && !oldSchedule.demo
 														? data.numberOfClassesBought + 1
 														: data.numberOfClassesBought,
 												classStatusId: demo
