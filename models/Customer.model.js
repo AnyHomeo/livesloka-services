@@ -128,6 +128,9 @@ const Customer = new mongoose.Schema(
     },
     tempScheduleId:{
       type:String
+    },
+    requestedSubjects:{
+      type:Array
     }
   },
 
