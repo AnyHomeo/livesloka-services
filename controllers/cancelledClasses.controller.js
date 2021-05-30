@@ -88,8 +88,8 @@ exports.CancelAClass = async (req, res) => {
         })
       }
       req.body.studentId = selectedUser
-      let startOfSelectedDay = momentTZ.tz(req.body.cancelledDate,"Europe/London").clone().tz("Asia/Kolkata").startOf("day");
-      let endOfSelectedDay = momentTZ.tz(req.body.cancelledDate,"Europe/London").clone().tz("Asia/Kolkata").endOf("day");
+      let startOfSelectedDay = momentTZ(req.body.cancelledDate).clone().tz("Asia/Kolkata").startOf("day");
+      let endOfSelectedDay = momentTZ(req.body.cancelledDate).clone().tz("Asia/Kolkata").endOf("day");
       console.log(startOfSelectedDay,endOfSelectedDay)
       let startDay = startOfSelectedDay.format("dddd").toLowerCase();
       let endDay = endOfSelectedDay.format("dddd").toLowerCase();
