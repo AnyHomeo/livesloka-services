@@ -102,12 +102,14 @@ exports.CancelAClass = async (req, res) => {
         })
       }
       req.body.studentId = selectedUser
-      let startOfSelectedDay = momentTZ.tz(req.body.cancelledDate,timeZoneString).clone().tz("Asia/Kolkata").startOf("day");
-      let endOfSelectedDay = momentTZ.tz(req.body.cancelledDate,timeZoneString).clone().tz("Asia/Kolkata").endOf("day");
+      let startOfSelectedDay = momentTZ(req.body.cancelledDate).tz(timeZoneString).tz("Asia/Kolkata").startOf("day");
+      let endOfSelectedDay = momentTZ(req.body.cancelledDate).tz(timeZoneString).tz("Asia/Kolkata").endOf("day");
+      console.log(momentTZ(req.body.cancelledDate))
       let startDay = startOfSelectedDay.format("dddd").toLowerCase();
       let endDay = endOfSelectedDay.format("dddd").toLowerCase();
       let timeFromStartDay = getStartAndEndTime(schedule.slots[startDay])
       let timeFromEndDay = getStartAndEndTime(schedule.slots[endDay])
+      console.log(timeFromStartDay,timeFromEndDay,startDay,endDay,schedule.slots)
       if(timeFromStartDay){
         timeFromStartDay = timeFromStartDay.split("-")[0].trim()
         let isAm = timeFromStartDay.split(" ")[1].toLowerCase() === "am"

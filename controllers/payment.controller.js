@@ -310,7 +310,7 @@ exports.getDailyDataGraph = async (req, res) => {
 
 		data &&
 			data.forEach((val) => {
-				if (val.paymentData !== null) {
+				if (val.paymentData !== null && val.type === "PAYPAL") {
 					const date = moment(val.paymentData.create_time).format('MMMM D YYYY');
 					dailyData[date] = dailyData[date] || {
 						responses: [],
