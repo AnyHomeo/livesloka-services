@@ -59,17 +59,31 @@ console.log((parseInt(hours)+12) + ":" + mins)
   return (parseInt(hours)+12) + ":" + mins
 }
 
+const getTimeZoneString = (tz) => {
+  let selectedZoneUTCArray = allZones.filter(
+    (zone) => zone.abbr === tz
+  )[0].utc;
+  let allTimeZones = momentTZ.tz.names();
+  let selectedZones = allTimeZones.filter((name) =>
+    selectedZoneUTCArray.includes(name)
+  );
+    console.log(selectedZones[0])
+  return selectedZones[0]
+}
+
 exports.CancelAClass = async (req, res) => {
   try {
-    req.body.cancelledDate = new Date(req.body.cancelledDate);
     const { isAdmin } = req.query
-    var diff = Math.abs(req.body.cancelledDate.getTime() - new Date().getTime()) / 3600000;
+    let { studentId,scheduleId } = req.body
+    let schedule = await SchedulerModel.findById(scheduleId).select("students slots ").lean()
+    let studentIds = await CustomerModel.find({email:studentId}).select("_id timeZoneId").lean()
+    let timeZone = await timeZoneModel.findOne({id:studentIds[0].timeZoneId}).lean()
+    let timeZoneString = getTimeZoneString(timeZone.timeZoneName)
+    studentIds = studentIds.map(id => id._id)
+    let scheduleUsers = schedule.students
+    let diffDate = new Date(req.body.cancelledDate)
+    var diff = Math.abs(diffDate.getTime() - new Date().getTime()) / 3600000;
     if(diff >= 9 && !isAdmin){
-      let { studentId,scheduleId } = req.body
-      let studentIds = await CustomerModel.find({email:studentId}).select("_id").lean()
-      studentIds = studentIds.map(id => id._id)
-      let schedule = await SchedulerModel.findById(scheduleId).select("students slots").lean()
-      let scheduleUsers = schedule.students
       let selectedUser = ""
       for (let i = 0; i < studentIds.length; i++) {
         const student = studentIds[i];
@@ -88,25 +102,22 @@ exports.CancelAClass = async (req, res) => {
         })
       }
       req.body.studentId = selectedUser
-      let startOfSelectedDay = momentTZ.tz(req.body.cancelledDate,"Europe/London").clone().tz("Asia/Kolkata").startOf("day");
-      let endOfSelectedDay = momentTZ.tz(req.body.cancelledDate,"Europe/London").clone().tz("Asia/Kolkata").endOf("day");
-      console.log(startOfSelectedDay,endOfSelectedDay)
+      let startOfSelectedDay = momentTZ(req.body.cancelledDate).tz(timeZoneString).tz("Asia/Kolkata").startOf("day");
+      let endOfSelectedDay = momentTZ(req.body.cancelledDate).tz(timeZoneString).tz("Asia/Kolkata").endOf("day");
+      console.log(momentTZ(req.body.cancelledDate))
       let startDay = startOfSelectedDay.format("dddd").toLowerCase();
       let endDay = endOfSelectedDay.format("dddd").toLowerCase();
       let timeFromStartDay = getStartAndEndTime(schedule.slots[startDay])
       let timeFromEndDay = getStartAndEndTime(schedule.slots[endDay])
-      console.log(timeFromEndDay,timeFromStartDay,startDay,endDay)
+      console.log(timeFromStartDay,timeFromEndDay,startDay,endDay,schedule.slots)
       if(timeFromStartDay){
         timeFromStartDay = timeFromStartDay.split("-")[0].trim()
         let isAm = timeFromStartDay.split(" ")[1].toLowerCase() === "am"
         let time = timeFromStartDay.split(" ")[0]
-        console.log(momentTZ.tz(startOfSelectedDay.format("YYYY-MM-DD") + " " + (isAm ? time : add12(time)) ,"Asia/Kolkata").format())
         req.body.cancelledDate = moment(momentTZ.tz(startOfSelectedDay.format("YYYY-MM-DD") + " " + (isAm ? time : add12(time)) ,"Asia/Kolkata").format()).subtract(5.5,"hours").format()
-        console.log(req.body.cancelledDate)
         let alreadyExists = await CancelledClassesModel.findOne({studentId:req.body.studentId,scheduleId:req.body.scheduleId})
         let oldDate =  alreadyExists ? alreadyExists.cancelledDate : ""
         let newDate = req.body.cancelledDate
-        console.log(req.body.cancelledDate)
         alreadyExists = JSON.stringify(oldDate).split("T")[0] === JSON.stringify(newDate).split("T")[0]
         if(!alreadyExists){
           const cancelledClass = new CancelledClassesModel(req.body);

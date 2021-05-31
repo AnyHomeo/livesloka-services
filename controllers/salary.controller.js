@@ -263,7 +263,7 @@ exports.getSalariesOfTeacherByMonthAndId = async (req, res) => {
           totalStudents += customerObj.numberOfStudents;
           return customerObj.firstName;
         });
-        objectToPush.presentees = attendance.requestedPaidStudents.map((customerObj) => {
+        objectToPush.requestedPaidStudents = attendance.requestedPaidStudents.map((customerObj) => {
           totalStudents += customerObj.numberOfStudents;
           return customerObj.firstName;
         });
