@@ -113,15 +113,15 @@ exports.CancelAClass = async (req, res) => {
       }
       req.body.studentId = selectedUser
       console.log(req.body.cancelledDate)
-      let startOfSelectedDay = momentTZ(momentTZ(req.body.cancelledDate,"YYYY-MM-DD hh:mm A").tz(timeZoneString).format()).tz("Asia/Kolkata").startOf("day");
-      let endOfSelectedDay = momentTZ(momentTZ(req.body.cancelledDate,"YYYY-MM-DD hh:mm A").tz(timeZoneString).format()).tz("Asia/Kolkata").endOf("day");
+      let startOfSelectedDay = momentTZ(momentTZ(req.body.cancelledDate,"YYYY-MM-DD hh:mm A").tz(timeZoneString).startOf("day").format()).tz("Asia/Kolkata");
+      let endOfSelectedDay = momentTZ(momentTZ(req.body.cancelledDate,"YYYY-MM-DD hh:mm A").tz(timeZoneString).endOf("day").format()).tz("Asia/Kolkata");
       console.log(startOfSelectedDay,endOfSelectedDay)
       let startDay = startOfSelectedDay.format("dddd").toLowerCase();
       let endDay = endOfSelectedDay.format("dddd").toLowerCase();
       let timeFromStartDay = getStartAndEndTime(schedule.slots[startDay])
       let timeFromEndDay = getStartAndEndTime(schedule.slots[endDay])
       console.log(timeFromStartDay,timeFromEndDay,startDay,endDay,schedule.slots)
-      if(timeFromStartDay){
+      if(timeFromStartDay && !timeFromStartDay.includes("Infinity")){
         timeFromStartDay = timeFromStartDay.split("-")[0].trim()
         let isAm = timeFromStartDay.split(" ")[1].toLowerCase() === "am"
         let time = timeFromStartDay.split(" ")[0]
