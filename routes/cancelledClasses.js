@@ -14,7 +14,7 @@ router.get('/', getAllAppliedLeaves);
 router.get('/days/:id', getUserDaysToCancel);
 router.get("/start/end",getStartTimesOfEntireDay);
 router.post('/', CancelAClass);
-router.post('/:scheduleId', getAllAppliedLeavesByScheduleId);
+router.get('/:scheduleId', getAllAppliedLeavesByScheduleId);
 router.put('/', updateCancelledClass);
 router.delete('/:id', deleteCancelledClass);
 
