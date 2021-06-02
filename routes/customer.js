@@ -13,12 +13,14 @@ const {
   getStatistics,
   updateLastTimeJoined,
   getInclassAndDemoStudents,
-  insertCustomersFromWebsite
+  insertCustomersFromWebsite,
+  getCustomerDataByFilters
 } = require("../controllers/Customer.controller");
 const router = express.Router();
 
 router.get("/user/info/:id", getSingleUser);
 router.get("/all/demo-inclass",getInclassAndDemoStudents)
+router.get("/customer/filters", getCustomerDataByFilters);
 router.get("/customer/data/:customerId", getCustomerData);
 router.get("/customer/timezone/:customerId", getUserTimeZone);
 router.get("/customers/all", getCustomersAllData);

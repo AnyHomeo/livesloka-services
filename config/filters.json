@@ -1,0 +1,25 @@
+{
+    "lessThanOrEqualToMinusTwo":{
+        "numberOfClassesBought": {
+            "$lte": -2
+        },
+        "classStatusId": "113975223750050"
+    },
+    "equalToMinusOne":{
+        "numberOfClassesBought": -1,
+        "classStatusId": "113975223750050"
+    },
+    "equalToZero":{
+        "numberOfClassesBought":0,
+        "classStatusId":"113975223750050"
+    },
+    "demo":{
+		"classStatusId": "38493085684944"
+    },
+    "new":{
+        "classStatusId":"108731321313146850"
+    },
+    "inClass":{
+        "classStatusId":"113975223750050"
+    }
+}

@@ -16,6 +16,7 @@ const timeZoneModel = require('../models/timeZone.model');
 const CancelledClassesModel = require('../models/CancelledClasses.model');
 const generateScheduleDays = require('../scripts/generateScheduleDays');
 const TeacherModel = require('../models/Teacher.model');
+let filters = require("../config/filters.json");
 
 module.exports = {
 	async registerCustomer(req, res) {
@@ -836,6 +837,7 @@ module.exports = {
 			});
 		}
 	},
+
 	insertCustomersFromWebsite: async (req, res) => {
 		try {
 			const { subjects, email } = req.body;
@@ -887,4 +889,19 @@ module.exports = {
 			});
 		}
 	},
+
+	getCustomerDataByFilters: async (req,res) => {
+		try {
+			let { filter } = req.query
+			let customerData = await CustomerModel.find(filters[filter])
+			return res.json({
+				result:customerData
+			})
+		} catch (error) {
+			console.log(error)
+			return res.status(500).json({
+				error:"Something went wrong!!"
+			})
+		}
+	}
 };
