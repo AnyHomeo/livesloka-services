@@ -11,7 +11,9 @@ module.exports = {
   authentication(req, res, next) {
     try {
       admin.findOne(
-        { userId: req.body.userId.toLowerCase()},
+        { 
+         $or : [{userId: req.body.userId.toLowerCase()},{userId: req.body.userId}]
+        },
         async (err, user) => {
           console.log(err);
           if (!user) {

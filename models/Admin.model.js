@@ -11,6 +11,7 @@ var adminSchema = new mongoose.Schema(
     userId: {
       trim: true,
       type: String,
+      lowercase:true,
       required: "email or userid is required",
     },
     roleId: {
