@@ -72,10 +72,15 @@ function generateScheduleDays(schedule, zone) {
       )
         .split("T")[0]
         .split('"')[1];
-      scheduleDays.push(
-        momentTZ(moment(dateToday).add(minStartTime, "hours").format())
+        let tempTime = momentTZ(moment(dateToday).add(minStartTime, "hours").format())
           .tz(zone)
-          .format("dddd")
+          
+      scheduleDays.push(
+        [
+          tempTime.format("dddd"),
+          tempTime.format("HH"),
+          tempTime.format("mm"),
+        ]
       );
     }
   });

@@ -131,6 +131,10 @@ const Customer = new mongoose.Schema(
     },
     requestedSubjects:{
       type:Array
+    },
+    discount:{
+      type:Number,
+      default:0
     }
   },
 

@@ -8,7 +8,7 @@ const InvoiceModel = require("../models/Invoice.model");
 const TimeZoneModel = require("../models/timeZone.model");
 
 module.exports = {
-  authentication(req, res, next) {
+  authentication(req, res) {
     try {
       admin.findOne(
         { 

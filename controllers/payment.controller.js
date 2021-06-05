@@ -24,12 +24,12 @@ exports.makePayment = async (req, res) => {
 	try {
 		const { id } = req.body;
 		const user = await Customer.findById(id).select(
-			'firstName lastName className proposedAmount proposedCurrencyId'
+			'firstName lastName className proposedAmount proposedCurrencyId discount'
 		);
 		const currency = await Currency.findOne({ id: user.proposedCurrencyId });
 		if (currency.currencyName !== 'INR') {
 			if (user.proposedAmount) {
-				let price = user.proposedAmount.toString();
+				let price = (parseInt(user.proposedAmount) - parseInt(user.discount)).toString();
 				const payment_json = {
 					intent: 'sale',
 					payer: {
@@ -83,7 +83,7 @@ exports.makePayment = async (req, res) => {
 			}
 		} else {
 			const options = {
-				amount: user.proposedAmount * 100,
+				amount: (parseInt(user.proposedAmount) - parseInt(user.discount) ) * 100,
 				currency: 'INR',
 				receipt: shortid.generate(),
 				payment_capture: 1,
@@ -111,7 +111,7 @@ exports.onSuccess = async (req, res) => {
 		let previousValue = 0;
 		let nextValue = 0;
 		const customer = await Customer.findById(id).select(
-			'firstName lastName className proposedAmount proposedCurrencyId noOfClasses paymentDate numberOfClassesBought paidTill'
+			'firstName lastName className proposedAmount proposedCurrencyId noOfClasses paymentDate numberOfClassesBought discount paidTill'
 		);
 		const currency = await Currency.findOne({
 			id: customer.proposedCurrencyId,
@@ -122,7 +122,7 @@ exports.onSuccess = async (req, res) => {
 				{
 					amount: {
 						currency: currency.currencyName || 'USD',
-						total: customer.proposedAmount.toString(),
+						total: (parseInt(customer.proposedAmount) - parseInt(customer.discount)).toString(),
 					},
 				},
 			],
@@ -263,7 +263,9 @@ exports.getTransactions = async (req, res) => {
 			customerId: {
 				$in: allUserIds,
 			},
-		}).populate('customerId').sort({createdAt:-1});
+		})
+			.populate('customerId')
+			.sort({ createdAt: -1 });
 
 		if (allTransactions === null) {
 			return res.status(400).json({
@@ -309,7 +311,7 @@ exports.getDailyDataGraph = async (req, res) => {
 
 		data &&
 			data.forEach((val) => {
-				if (val.paymentData !== null && val.type === "PAYPAL") {
+				if (val.paymentData !== null && val.type === 'PAYPAL') {
 					const date = moment(val.paymentData.create_time).format('MMMM D YYYY');
 					dailyData[date] = dailyData[date] || {
 						responses: [],
@@ -317,14 +319,11 @@ exports.getDailyDataGraph = async (req, res) => {
 						totalSum: [],
 						dates: [],
 					};
-
-					// dailyData[date].responses.push(val);
 					dailyData[date].totalAmount.push(Math.floor(val.paymentData.transactions[0].amount.total));
 					dailyData[date].dates.push(moment(val.paymentData.create_time).format('MMMM D YYYY'));
 					dailyData[date].totalSum = dailyData[date].totalAmount.reduce(function (a, b) {
 						return a + b;
 					}, 0);
-
 					dailyData[date].dates = dailyData[date].dates.filter(function (item, index, inputArray) {
 						return inputArray.indexOf(item) == index;
 					});
