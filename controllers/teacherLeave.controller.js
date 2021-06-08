@@ -8,7 +8,7 @@ exports.getAllTeachersLeaves = async (req, res) => {
 			date: {
 				$gte: moment().startOf('day'),
 			},
-		}).populate("teacherId","TeacherName").populate("scheduleId","className");
+		}).populate("teacherId","TeacherName id").populate("scheduleId","className");
 		return res.json({
 			result: allLeaves,
 		});
@@ -113,6 +113,10 @@ exports.updateALeaveByLeaveId = async (req, res) => {
 					error: 'unable to update Leave!',
 				});
 			}
+		} else {
+			return res.status(400).json({
+				error:"Invalid User Id"
+			})
 		}
 	} catch (error) {
 		console.log(error);
