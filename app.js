@@ -17,6 +17,7 @@ const cancelClassRouter = require("./routes/cancelledClasses");
 const classHistoryRouter = require("./routes/classHistory");
 const summerCampRouter = require("./routes/summerCamp");
 const CareersRouter = require("./routes/careersApplications");
+const teacherLeavesRouter = require("./routes/teacherLeaves");
 
 const app = express();
 const http = require("http").createServer(app);
@@ -44,6 +45,7 @@ app.use("/summercamps",summerCampRouter);
 app.use("/careers",CareersRouter);
 app.use("/class-history", classHistoryRouter);
 app.use("/cancelclass", cancelClassRouter);
+app.use("/teacher-leaves", teacherLeavesRouter);
 app.use("/settings", settingsRouter);
 app.use("/teacher", teacherRouter);
 app.use("/schedule", scheduleRouter);

@@ -19,7 +19,7 @@ module.exports = {
           if (!user) {
             return res
               .status(400)
-              .json({ error: "Invalid userId or Password" });
+              .json({ error: "Invalid UserId or Password" });
           } else {
             if (user.password === req.body.password) {
               var payload = {

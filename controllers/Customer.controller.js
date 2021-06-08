@@ -5,6 +5,7 @@ const SubjectsModel = require('../models/Subject.model');
 const ScheduleModel = require('../models/Scheduler.model');
 const PaymentModel = require('../models/Payments');
 const TimeZoneModel = require('../models/timeZone.model');
+const TeacherLeavesModel = require('../models/TeacherLeaves.model');
 const moment = require('moment');
 const momentTZ = require('moment-timezone');
 const SubjectModel = require('../models/Subject.model');
@@ -16,22 +17,22 @@ const timeZoneModel = require('../models/timeZone.model');
 const CancelledClassesModel = require('../models/CancelledClasses.model');
 const generateScheduleDays = require('../scripts/generateScheduleDays');
 const TeacherModel = require('../models/Teacher.model');
-let filters = require("../config/filters.json");
+let filters = require('../config/filters.json');
 
 module.exports = {
 	async registerCustomer(req, res) {
-		let { subjectId,proposedAmount } = req.body;
-    if(!subjectId){
-      return res.json({
-        error:"Subject is Required!!",
-        status: 'Internal Server Error',
-        result:null
-      })
-    }
-    if(!proposedAmount){
-      let subject = await SubjectModel.findOne({ id: subjectId }).lean();
-      req.body.proposedAmount = subject.amount ? subject.amount : 50;
-    }
+		let { subjectId, proposedAmount } = req.body;
+		if (!subjectId) {
+			return res.json({
+				error: 'Subject is Required!!',
+				status: 'Internal Server Error',
+				result: null,
+			});
+		}
+		if (!proposedAmount) {
+			let subject = await SubjectModel.findOne({ id: subjectId }).lean();
+			req.body.proposedAmount = subject.amount ? subject.amount : 50;
+		}
 		let customerRegData = new CustomerModel(req.body);
 		customerRegData
 			.save()
@@ -316,6 +317,26 @@ module.exports = {
 							scheduleId: actualSchedule._id,
 							studentId: customer._id,
 						});
+						let teacher = await TeacherModel.findOne({ id: actualSchedule.teacher }).lean();
+						let teacherLeave = await TeacherLeavesModel.countDocuments({
+							$or: [
+								{
+									scheduleId: actualSchedule._id,
+									date: {
+										$gte: moment().startOf('day'),
+										$lte: moment().endOf('day'),
+									},
+								},
+								{
+									entireDay: true,
+									teacherId: teacher._id,
+									date: {
+										$gte: moment().startOf('day'),
+										$lte: moment().endOf('day'),
+									},
+								},
+							],
+						});
 						let subject = await SubjectModel.findOne({
 							_id: actualSchedule.subject,
 						});
@@ -326,6 +347,7 @@ module.exports = {
 							.utc;
 						let allTimeZones = momentTZ.tz.names();
 						let selectedZones = allTimeZones.filter((name) => selectedZoneUTCArray.includes(name));
+
 						return {
 							...actualSchedule,
 							isJoinButtonDisabled,
@@ -340,6 +362,7 @@ module.exports = {
 								  generateScheduleDescription(actualSchedule.slots, selectedZones[0])
 										.split('and')[0]
 										.split('-')[1],
+							isTeacherOnLeave:!!teacherLeave,
 							scheduleDays: generateScheduleDays(actualSchedule.slots, selectedZones[0]),
 							subject,
 							cancelledClasses: allCancelledClasses,
@@ -890,18 +913,18 @@ module.exports = {
 		}
 	},
 
-	getCustomerDataByFilters: async (req,res) => {
+	getCustomerDataByFilters: async (req, res) => {
 		try {
-			let { filter } = req.query
-			let customerData = await CustomerModel.find(filters[filter])
+			let { filter } = req.query;
+			let customerData = await CustomerModel.find(filters[filter]);
 			return res.json({
-				result:customerData
-			})
+				result: customerData,
+			});
 		} catch (error) {
-			console.log(error)
+			console.log(error);
 			return res.status(500).json({
-				error:"Something went wrong!!"
-			})
+				error: 'Something went wrong!!',
+			});
 		}
-	}
+	},
 };

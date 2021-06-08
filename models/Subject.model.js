@@ -27,6 +27,10 @@ var SubjectSchema = new mongoose.Schema(
       type:String,
       default:"",
       trim:true 
+    },
+    sortingOrder:{
+      type:Number,
+      default:0
     }
   },
   { timestamps: true }
