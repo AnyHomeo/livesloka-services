@@ -55,10 +55,6 @@ var TeacherSchema = new mongoose.Schema(
       type: String,
       default: "0",
     },
-    Salary_tillNow: {
-      type: String,
-      default: "0",
-    },
     leaveDifferenceHours:{
       type:Number,
       default:0
