@@ -6,6 +6,7 @@ const Attendence = require("../models/Attendance");
 const { param } = require("../routes/teacher");
 const SchedulerModel = require("../models/Scheduler.model");
 const CancelledClassesModel = require("../models/CancelledClasses.model");
+const moment = require("moment");
 
 const days = [
   "MONDAY",
@@ -384,7 +385,12 @@ exports.GetTeacherMeetings = async (req, res) => {
     .lean()
     .then(async (result) => {
       result = await Promise.all(result.map(async (eachSchedule) => {
-        let cancelledClasses = await CancelledClassesModel.find({scheduleId:eachSchedule._id}).populate("studentId","firstName")
+        let cancelledClasses = await CancelledClassesModel.find({
+          scheduleId:eachSchedule._id,
+          cancelledDate:{
+            $gte:moment().startOf("day").toDate()
+          }
+        }).populate("studentId","firstName")
         return {...eachSchedule,cancelledClasses}
       }))
       return res
@@ -392,6 +398,7 @@ exports.GetTeacherMeetings = async (req, res) => {
         .json({ message: "Fetched  meetings successfully", result });
     })
     .catch((err) => {
+      console.log(err)
       return res
         .status(400)
         .json({ message: "Fetched meetings  problem", err });
