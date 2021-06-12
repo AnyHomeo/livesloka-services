@@ -305,13 +305,8 @@ exports.getOccupancyDashboardData = async (req, res) => {
       finalObject[category.categoryName] = {};
       allTeachers.forEach((teacher) => {
         if (teacher.category === category.id) {
-          const {
-            TeacherName,
-            scheduledSlots,
-            availableSlots,
-            _id,
-            id,
-          } = teacher;
+          const { TeacherName, scheduledSlots, availableSlots, _id, id } =
+            teacher;
 
           let scheduledSlotsFinal = {};
           if (scheduledSlots.length) {
@@ -384,21 +379,23 @@ exports.GetTeacherMeetings = async (req, res) => {
     .populate("students")
     .lean()
     .then(async (result) => {
-      result = await Promise.all(result.map(async (eachSchedule) => {
-        let cancelledClasses = await CancelledClassesModel.find({
-          scheduleId:eachSchedule._id,
-          cancelledDate:{
-            $gte:moment().startOf("day").toDate()
-          }
-        }).populate("studentId","firstName")
-        return {...eachSchedule,cancelledClasses}
-      }))
+      result = await Promise.all(
+        result.map(async (eachSchedule) => {
+          let cancelledClasses = await CancelledClassesModel.find({
+            scheduleId: eachSchedule._id,
+            cancelledDate: {
+              $gte: moment().startOf("day").toDate(),
+            },
+          }).populate("studentId", "firstName");
+          return { ...eachSchedule, cancelledClasses };
+        })
+      );
       return res
         .status(200)
         .json({ message: "Fetched  meetings successfully", result });
     })
     .catch((err) => {
-      console.log(err)
+      console.log(err);
       return res
         .status(400)
         .json({ message: "Fetched meetings  problem", err });
@@ -488,13 +485,36 @@ exports.joinClass = async (req, res) => {
       return res.json({
         message: "Last time joined updated Successfully!",
         link: schedule.meetingLink,
-        hostLink:schedule.wherebyHostUrl
+        hostLink: schedule.wherebyHostUrl,
       });
     }
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       error: "Something went wrong !",
+    });
+  }
+};
+
+// get teacher details by id
+exports.getTeacherDetailsById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const teacherDetails = await TeacherModel.findOne({ id });
+    if (teacherDetails) {
+      res.status(200).json({
+        message: "Fetched Successfully",
+        result: teacherDetails,
+      });
+    } else {
+      res.status(404).json({
+        message: "No teacher found",
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      error: "Something went wrong",
     });
   }
 };

@@ -14,6 +14,7 @@ const {
   GetTeacherAttendance,
   joinClass,
   GetSalaries,
+  getTeacherDetailsById,
 } = require("../controllers/teacher.controller");
 
 router.get("/join/:scheduleId/:teacherId", joinClass);
@@ -26,4 +27,6 @@ router.get("/occupancy", getOccupancyDashboardData);
 router.get("/all/slots/:id", getAllDaysSlots);
 router.get("/getTeacherMeetings/:id", GetTeacherMeetings);
 router.get("/get/salary/:id", GetSalaries);
+router.get("/get/teacherDetails/:id", getTeacherDetailsById);
+
 module.exports = router;
