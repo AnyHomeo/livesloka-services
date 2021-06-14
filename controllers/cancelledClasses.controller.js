@@ -11,15 +11,40 @@ const { getStartAndEndTime } = require('../scripts/getStartAndEndTime');
 
 exports.getAllAppliedLeaves = async (req, res) => {
 	try {
+		const { groupedByDate } = req.query
 		const today = moment().startOf('day');
-		const data = await CancelledClassesModel.find({
+		let data = await CancelledClassesModel.find({
 			cancelledDate: {
 				$gte: today.toDate(),
 			},
 		})
 			.populate('studentId', 'firstName lastName')
 			.populate('scheduleId', 'className')
-			.sort('createdAt');
+			.sort('createdAt')
+			.lean();
+		if(groupedByDate === "yes"){
+			let allUniqueDates = {}
+			data.forEach(leave => {
+				if(leave.cancelledDate){
+					const { cancelledDate } = leave
+					let formattedDate = moment(cancelledDate).format("MMMM Do YYYY")
+					if(!allUniqueDates[formattedDate]){
+						allUniqueDates[formattedDate] = [leave]
+					} else {
+						allUniqueDates[formattedDate].push(leave)
+					}
+				}
+			})
+			console.log(allUniqueDates)
+			data = Object.keys(allUniqueDates).map(date =>({
+				date,
+				data:allUniqueDates[date]
+			}))
+			return res.json({
+				message: 'Grouped Data Retrieved successfully!!',
+				result: data,
+			});			
+		}
 		return res.json({
 			message: 'Retrieved successfully!!',
 			result: data,
@@ -66,7 +91,7 @@ exports.getAllAppliedLeavesByScheduleId = async (req, res) => {
 exports.CancelAClass = async (req, res) => {
 	try {
 		const { isAdmin } = req.query;
-		let { studentId, scheduleId,cancelledDate } = req.body;
+		let { studentId, scheduleId, cancelledDate } = req.body;
 		let diff = Math.abs(new Date(cancelledDate).getTime() - new Date().getTime()) / 3600000;
 		if (diff >= 9 && !isAdmin) {
 			let schedule = await SchedulerModel.findById(scheduleId).select('students').lean();
@@ -95,10 +120,10 @@ exports.CancelAClass = async (req, res) => {
 			let alreadyExists = await CancelledClassesModel.findOne({
 				studentId: req.body.studentId,
 				scheduleId: req.body.scheduleId,
-        cancelledDate: {
-          $gte: moment(req.body.cancelledDate).startOf("day"), 
-          $lte: moment(req.body.cancelledDate).endOf("day") 
-        }
+				cancelledDate: {
+					$gte: moment(req.body.cancelledDate).startOf('day'),
+					$lte: moment(req.body.cancelledDate).endOf('day'),
+				},
 			});
 			if (!alreadyExists) {
 				const cancelledClass = new CancelledClassesModel(req.body);
@@ -209,7 +234,9 @@ exports.getUserDaysToCancel = async (req, res) => {
 		let allTimeZones = momentTZ.tz.names();
 		let selectedZone = allTimeZones.filter((name) => selectedZoneUTCArray.includes(name))[0];
 		return res.json({
-			result: scheduleOfThisUser ? generateScheduleDays(scheduleOfThisUser.slots, selectedZone).map(day => day[0]) : [],
+			result: scheduleOfThisUser
+				? generateScheduleDays(scheduleOfThisUser.slots, selectedZone).map((day) => day[0])
+				: [],
 		});
 	} catch (error) {
 		console.log(error);
