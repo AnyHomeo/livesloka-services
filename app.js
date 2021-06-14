@@ -18,6 +18,7 @@ const classHistoryRouter = require("./routes/classHistory");
 const summerCampRouter = require("./routes/summerCamp");
 const CareersRouter = require("./routes/careersApplications");
 const teacherLeavesRouter = require("./routes/teacherLeaves");
+const AdMessagesRouter = require("./routes/adMessage");
 
 const app = express();
 const http = require("http").createServer(app);
@@ -41,6 +42,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", indexRouter);
 app.use("/", customerRouter);
 app.use("/", attendanceRouter);
+app.use("/messages",AdMessagesRouter);
 app.use("/summercamps",summerCampRouter);
 app.use("/careers",CareersRouter);
 app.use("/class-history", classHistoryRouter);

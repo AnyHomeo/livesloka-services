@@ -179,13 +179,14 @@ module.exports.deletecomment = (req, res) => {
 
 module.exports.getCorrespondingData = (req, res) => {
   try {
-    let { select } = req.query;
+    let { select,populate,populateFields } = req.query;
     if (typeof select === "string") {
       select = select.split(",").join(" ");
     }
     const Model = require(`../models/${req.params.name}.model`);
     Model.find({})
       .select(select ? select : "-__v -createdAt -updatedAt ")
+      .populate(populate,populateFields)
       .then((result) => {
         res.status("200").send({
           message: req.params.name + " retrieved successfully",
@@ -330,6 +331,7 @@ module.exports.DeleteCorrespondingData = (req, res) => {
         .send({ message: "deleted successfully", status: "ok", result });
     })
     .catch((err) => {
+      console.log(err)
       res.status("400").send({ message: "something went wrong !!", err });
     });
 };
