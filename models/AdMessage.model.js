@@ -8,6 +8,8 @@ const AdMessageSchema = new mongoose.Schema({
     background:String,
     message:String,
     id:Number,
+    icon:String,
+    title:String,
     isForAll:Boolean
 },{
     timeStamps:true
