@@ -27,7 +27,7 @@ exports.getAllAppliedLeaves = async (req, res) => {
 			data.forEach(leave => {
 				if(leave.cancelledDate){
 					const { cancelledDate } = leave
-					let formattedDate = moment(cancelledDate).format("MMMM Do YYYY")
+					let formattedDate = new Date(moment(cancelledDate).format("YYYY-MM-DD")).getTime()
 					if(!allUniqueDates[formattedDate]){
 						allUniqueDates[formattedDate] = [leave]
 					} else {
@@ -42,7 +42,7 @@ exports.getAllAppliedLeaves = async (req, res) => {
 			}))
 			return res.json({
 				message: 'Grouped Data Retrieved successfully!!',
-				result: data,
+				result: data.sort((x,y) =>y.date-x.date),
 			});			
 		}
 		return res.json({
