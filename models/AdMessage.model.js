@@ -1,18 +1,99 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const mongooseLeanVirtuals = require('mongoose-lean-virtuals');
+const AdMessageSchema = new mongoose.Schema(
+	{
+		adminIds: [
+			{
+				type: mongoose.Schema.Types.ObjectId,
+				ref: 'Admin',
+			},
+		],
+		background: String,
+		message: String,
+		id: Number,
+		icon: String,
+		title: String,
+		isForAll: Boolean,
+		queryType: {
+			type: String,
+			enum: ['customers', 'classname', 'teacher', 'agent'],
+		},
+		broadcastedBy: {
+			type: String,
+			required: 'Agent Required',
+		},
+		acknowledgedBy: [
+			{
+				type: mongoose.Schema.Types.ObjectId,
+				ref: 'Admin',
+			},
+		],
+		scheduleIds: [
+			{
+				type: mongoose.Schema.Types.ObjectId,
+				ref: 'Schedule',
+			},
+		],
+		teacherIds: [
+			{
+				type: String,
+			},
+		],
+		agentIds: [
+			{
+				type: String,
+			},
+		],
+        expiryDate:{
+            type:Date
+        }
+	},
+	{
+		timeStamps: true,
+	}
+);
 
-const AdMessageSchema = new mongoose.Schema({
-    adminIds: [{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Admin"
-    }],
-    background:String,
-    message:String,
-    id:Number,
-    icon:String,
-    title:String,
-    isForAll:Boolean
-},{
-    timeStamps:true
-});
+AdMessageSchema.virtual('users',{
+	ref:'Admin',
+	localField:'adminIds',
+	foreignField:'_id',
+	options:{
+		limit: 8
+	}
+})
 
-module.exports = mongoose.model("AdMessages",AdMessageSchema);
+AdMessageSchema.virtual('schedules',{
+	ref:'Schedule',
+	localField:'scheduleIds',
+	foreignField:'_id',
+	options:{
+		limit: 8
+	},
+})
+
+AdMessageSchema.virtual('teachers',{
+	ref:'Teacher',
+	localField:'teacherIds',
+	foreignField:'id',
+	options:{
+		limit: 8
+	},
+})
+
+AdMessageSchema.virtual('admin',{
+	ref:'Agent',
+	localField:'broadcastedBy',
+	foreignField:'id',
+	justOne:true
+})
+
+AdMessageSchema.virtual('agents',{
+	ref:'Agent',
+	localField:'agentIds',
+	foreignField:'id',
+})
+
+
+AdMessageSchema.plugin(mongooseLeanVirtuals);
+
+module.exports = mongoose.model('AdMessages', AdMessageSchema);

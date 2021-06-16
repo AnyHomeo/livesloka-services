@@ -152,3 +152,27 @@ exports.getAdmins = (req, res) => {
 		});
 	}
 };
+
+exports.getMessages = async (req, res) => {
+	try {
+		let allMessages = await AdMessagesModel.find({
+			expiryDate: {
+				$gte: new Date(),
+			},
+		})
+			.populate('users', 'userId')
+			.populate('schedules', 'className')
+			.populate('admin', 'AgentName')
+			.populate('agents', 'AgentName')
+			.lean({ virtuals: true });
+
+		return res.json({
+			result: allMessages,
+		});
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json({
+			error: 'Something went wrong!',
+		});
+	}
+};
