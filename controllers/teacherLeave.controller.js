@@ -103,7 +103,6 @@ exports.updateALeaveByLeaveId = async (req, res) => {
 			}
 			req.body.scheduleId = scheduleId ? scheduleId : undefined;
 			let updatedLeave = await TeacherLeavesModel.updateOne({ _id: id }, { ...req.body });
-			console.log(updatedLeave);
 			if (updatedLeave.nModified === 1) {
 				return res.json({
 					message: 'Leave updated Successfully!',

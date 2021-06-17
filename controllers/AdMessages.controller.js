@@ -14,15 +14,16 @@ exports.getMessagesByEmail = async (req, res) => {
 		let allMessages = await AdMessagesModel.find({
 			$or: [
 				{
-					adminIds: {
-						$in: [admin._id],
-					},
+					adminIds: { $in: [admin._id] },
 				},
 				{ isForAll: true },
 			],
 		}).lean();
+
+		let unSeenMessages = allMessages.filter((message) => !message.acknowledgedBy.some((id) => id.equals(admin._id)));
+
 		return res.json({
-			result: allMessages,
+			result: {allMessages,unSeenMessages},
 			messages: 'Retrieved Messages Successfully!',
 		});
 	} catch (error) {
@@ -160,15 +161,41 @@ exports.getMessages = async (req, res) => {
 				$gte: new Date(),
 			},
 		})
-			.populate('users', 'userId')
+			.populate('users', 'username')
 			.populate('schedules', 'className')
 			.populate('admin', 'AgentName')
+			.populate('teachers', 'TeacherName')
 			.populate('agents', 'AgentName')
 			.lean({ virtuals: true });
 
 		return res.json({
-			result: allMessages,
+			result: allMessages.map((message) => ({ ...message, adminIds: undefined, scheduleIds: undefined })),
 		});
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json({
+			error: 'Something went wrong!',
+		});
+	}
+};
+
+exports.addAcknowledgedCustomer = async (req, res) => {
+	try {
+		const { notificationId, userId } = req.body;
+		let adminId = await AdminModel.findOne({ userId }).select('');
+		let notification = await AdMessagesModel.findOne({ _id: notificationId });
+		if (!notification.acknowledgedBy.map((id) => id.toString()).includes(adminId._id)) {
+			notification.acknowledgedBy.push(adminId._id);
+			console.log(notification);
+			await notification.save();
+			return res.status(200).json({
+				message: 'You will not see the notification again',
+			});
+		} else {
+			return res.status(400).json({
+				message: 'Already closed once',
+			});
+		}
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json({

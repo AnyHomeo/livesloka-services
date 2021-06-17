@@ -9,6 +9,14 @@ const generateScheduleDays = require('../scripts/generateScheduleDays');
 const AgentModel = require('../models/Agent.model');
 const { getStartAndEndTime } = require('../scripts/getStartAndEndTime');
 
+const getTimeStamp = (date,timeZone) => {
+	console.log(date,timeZone)
+	// let selectedZoneUTCArray = allZones.filter((zone) => zone.abbr === timeZone)[0].utc;
+	let allTimeZones = momentTZ.tz.names();
+	// let selectedZone = allTimeZones.filter((name) => selectedZoneUTCArray.includes(name))[0];	
+	return "hello"
+}
+
 exports.getAllAppliedLeaves = async (req, res) => {
 	try {
 		const { groupedByDate } = req.query
@@ -18,7 +26,7 @@ exports.getAllAppliedLeaves = async (req, res) => {
 				$gte: today.toDate(),
 			},
 		})
-			.populate('studentId', 'firstName lastName')
+			.populate('studentId', 'firstName lastName timeZoneId')
 			.populate('scheduleId', 'className')
 			.sort('createdAt')
 			.lean();
@@ -27,9 +35,9 @@ exports.getAllAppliedLeaves = async (req, res) => {
 			data.forEach(leave => {
 				if(leave.cancelledDate){
 					const { cancelledDate } = leave
-					let formattedDate = new Date(moment(cancelledDate).format("YYYY-MM-DD")).getTime()
+					let formattedDate = new Date(momentTZ(cancelledDate).tz("Asia/Kolkata").format("YYYY-MM-DD")).getTime()
 					if(!allUniqueDates[formattedDate]){
-						allUniqueDates[formattedDate] = [leave]
+						allUniqueDates[formattedDate] = [{...leave,customerTime:getTimeStamp(leave.cancelledDate,leave.studentId.timeZoneId)}]
 					} else {
 						allUniqueDates[formattedDate].push(leave)
 					}

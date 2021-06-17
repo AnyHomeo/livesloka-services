@@ -1236,7 +1236,6 @@ exports.editIfWhereby = async (req, res, next) => {
 						}
 					);
 					deletedMeeting = await deletedMeeting.json();
-					console.log(deletedMeeting);
 				}
 				const data = {
 					startDate: moment().format(),
@@ -1256,7 +1255,6 @@ exports.editIfWhereby = async (req, res, next) => {
 					body: JSON.stringify(data),
 				});
 				meetingLinkData = await meetingLinkData.json();
-				console.log(meetingLinkData);
 				req.body.wherebyMeetingId = meetingLinkData.meetingId;
 				req.body.wherebyHostUrl = meetingLinkData.hostRoomUrl;
 				req.body.meetingLink = meetingLinkData.roomUrl;

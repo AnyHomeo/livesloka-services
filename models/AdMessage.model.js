@@ -53,12 +53,20 @@ const AdMessageSchema = new mongoose.Schema(
 	}
 );
 
+AdMessageSchema.virtual('usersCount').get(function(){
+	return this.adminIds.length
+})
+
+AdMessageSchema.virtual('schedulesCount').get(function(){
+	return this.scheduleIds.length
+})
+
 AdMessageSchema.virtual('users',{
 	ref:'Admin',
 	localField:'adminIds',
 	foreignField:'_id',
 	options:{
-		limit: 8
+		limit: 5
 	}
 })
 
@@ -67,7 +75,7 @@ AdMessageSchema.virtual('schedules',{
 	localField:'scheduleIds',
 	foreignField:'_id',
 	options:{
-		limit: 8
+		limit: 3
 	},
 })
 
@@ -75,9 +83,6 @@ AdMessageSchema.virtual('teachers',{
 	ref:'Teacher',
 	localField:'teacherIds',
 	foreignField:'id',
-	options:{
-		limit: 8
-	},
 })
 
 AdMessageSchema.virtual('admin',{
