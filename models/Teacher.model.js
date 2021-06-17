@@ -72,6 +72,14 @@ var TeacherSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    firebaseLocation:{
+      default:"",
+      type:String 
+    },
+    ifsc:{
+      default:"",
+      type:String 
+    }
   },
   { timestamps: true }
 );
