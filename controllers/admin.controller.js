@@ -476,7 +476,12 @@ module.exports.deleteInvoice = (req, res) => {
 
 module.exports.resetPassword = (req, res) => {
   const { id } = req.params;
-  AdminModel.findById(id)
+  AdminModel.findOne({
+    $or:[
+      {_id:id},
+      {userId:id}
+    ]
+  })
     .then((userData) => {
       userData.password = "livesloka";
       userData.firstTimeLogin = "Y";
