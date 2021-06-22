@@ -476,12 +476,9 @@ module.exports.deleteInvoice = (req, res) => {
 
 module.exports.resetPassword = (req, res) => {
   const { id } = req.params;
-  AdminModel.findOne({
-    $or:[
-      {_id:id},
-      {userId:id}
-    ]
-  })
+  const { isEmail } = req.query;
+  if(!isEmail){
+    AdminModel.findById(id)
     .then((userData) => {
       userData.password = "livesloka";
       userData.firstTimeLogin = "Y";
@@ -504,6 +501,31 @@ module.exports.resetPassword = (req, res) => {
         .status(500)
         .json({ error: "error in password reset,Try again later" });
     });
+  } else {
+    AdminModel.findOne({userId:id})
+    .then((userData) => {
+      userData.password = "livesloka";
+      userData.firstTimeLogin = "Y";
+      userData
+        .save()
+        .then((response) => {
+          return res.status(200).json({
+            message: "password reset successful",
+          });
+        })
+        .catch((error) => {
+          return res.status(400).json({
+            error: "error in password reset",
+          });
+        });
+    })
+    .catch((err) => {
+      console.log(err);
+      return res
+        .status(500)
+        .json({ error: "error in password reset,Try again later" });
+    });
+  } 
 };
 
 module.exports.getAllAdmins = (req, res) => {
