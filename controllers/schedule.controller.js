@@ -461,18 +461,16 @@ exports.addSchedule = async (req, res) => {
 							.then(async (dat) => {
 								let rec = SlotConverter(scheduledData.slots, dat.timeZoneName);
 								let schdDescription = postProcess(rec, Subjectname);
-								let previousValue = data.numberOfClassesBought
-								let nextValue =  demo
-								? data.numberOfClassesBought + 1
-								: data.numberOfClassesBought
-								if(previousValue !== nextValue){
+								let previousValue = data.numberOfClassesBought;
+								let nextValue = demo ? data.numberOfClassesBought + 1 : data.numberOfClassesBought;
+								if (previousValue !== nextValue) {
 									let newUpdate = new ClassHistoryModel({
 										previousValue,
 										nextValue,
 										comment: 'Scheduled a Demo class',
 										customerId: stud_id,
 									});
-									 await newUpdate.save()
+									await newUpdate.save();
 								}
 								await Customer.updateOne(
 									{ _id: stud_id },
@@ -735,19 +733,20 @@ exports.editSchedule = async (req, res) => {
 												let anyPayments = await Payments.countDocuments({
 													customerId: data._id,
 												});
-												let previousValue = data.numberOfClassesBought
-												let nextValue = (demo && newStudents.includes(stud_id.toString())) ||
-												demo && !oldSchedule.demo
-													? data.numberOfClassesBought + 1
-													: data.numberOfClassesBought
-												if(previousValue !== nextValue){
+												let previousValue = data.numberOfClassesBought;
+												let nextValue =
+													(demo && newStudents.includes(stud_id.toString())) ||
+													(demo && !oldSchedule.demo)
+														? data.numberOfClassesBought + 1
+														: data.numberOfClassesBought;
+												if (previousValue !== nextValue) {
 													let newUpdate = new ClassHistoryModel({
 														previousValue,
 														nextValue,
 														comment: 'Scheduled a Demo class',
 														customerId: stud_id,
 													});
-													 await newUpdate.save()
+													await newUpdate.save();
 												}
 												await Customer.updateOne(
 													{ _id: stud_id },
@@ -758,7 +757,7 @@ exports.editSchedule = async (req, res) => {
 															teacherId: selectedTeacher.id,
 															numberOfClassesBought:
 																(demo && newStudents.includes(stud_id.toString())) ||
-																	demo && !oldSchedule.demo
+																(demo && !oldSchedule.demo)
 																	? data.numberOfClassesBought + 1
 																	: data.numberOfClassesBought,
 															classStatusId: demo
@@ -849,19 +848,20 @@ exports.editSchedule = async (req, res) => {
 										customerId: data._id,
 										status: 'SUCCESS',
 									});
-									let previousValue = data.numberOfClassesBought
-									let nextValue = (demo && newStudents.includes(stud_id.toString())) ||
-									demo && !oldSchedule.demo
-										? data.numberOfClassesBought + 1
-										: data.numberOfClassesBought
-									if(previousValue !== nextValue){
+									let previousValue = data.numberOfClassesBought;
+									let nextValue =
+										(demo && newStudents.includes(stud_id.toString())) ||
+										(demo && !oldSchedule.demo)
+											? data.numberOfClassesBought + 1
+											: data.numberOfClassesBought;
+									if (previousValue !== nextValue) {
 										let newUpdate = new ClassHistoryModel({
 											previousValue,
 											nextValue,
 											comment: 'Scheduled a Demo class',
 											customerId: stud_id,
 										});
-									 	await newUpdate.save()
+										await newUpdate.save();
 									}
 									await Customer.updateOne(
 										{ _id: stud_id },
@@ -872,7 +872,7 @@ exports.editSchedule = async (req, res) => {
 												teacherId: selectedTeacher.id,
 												numberOfClassesBought:
 													(demo && newStudents.includes(stud_id.toString())) ||
-													demo && !oldSchedule.demo
+													(demo && !oldSchedule.demo)
 														? data.numberOfClassesBought + 1
 														: data.numberOfClassesBought,
 												classStatusId: demo
@@ -1396,3 +1396,68 @@ exports.editIfWhereby = async (req, res, next) => {
 		}
 	}
 };
+
+exports.changeZoomLink = async (req, res) => {
+	try {
+		const { scheduleId } = req.params;
+		console.log(scheduleId)
+		let schedule = await SchedulerModel.findById(scheduleId).populate('meetingAccount');
+		console.log(schedule)
+		const {
+			meetingLink,
+			meetingAccount: { zoomJwt, zoomEmail, zoomPassword },
+		} = schedule;
+
+		if (meetingLink && meetingLink.includes('zoom')) {
+			await fetch(`https://api.zoom.us/v2/meetings/${meetingLink.split('/')[4].split('?')[0]}`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${zoomJwt}`,
+				},
+			});
+		}
+		const formData = {
+			topic: 'Livesloka Online Class',
+			type: 3,
+			password: zoomPassword,
+			settings: {
+				host_video: true,
+				participant_video: true,
+				join_before_host: true,
+				jbh_time: 0,
+				mute_upon_entry: true,
+				watermark: false,
+				use_pmi: false,
+				approval_type: 2,
+				audio: 'both',
+				auto_recording: 'none',
+				waiting_room: false,
+				meeting_authentication: false,
+			},
+		};
+		let data = await fetch(`https://api.zoom.us/v2/users/${zoomEmail}/meetings`, {
+			method: 'post',
+			body: JSON.stringify(formData),
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${zoomJwt}`,
+			},
+		});
+		let response = await data.json();
+		schedule.meetingLink = response.join_url;
+		await schedule.save()
+		return res.status(200).json({
+			message:"Meeting Link Updated successfully!"
+		})
+	} catch (err) {
+		console.log(err);
+		return res.status(500).json({
+			error: 'Something went wrong',
+		});
+	}
+};
+
+exports.getScheduleByTeacherIdAndSlot = (req, res) => {
+	
+}

@@ -1,6 +1,9 @@
 const TeacherLeavesModel = require('../models/TeacherLeaves.model');
 const moment = require('moment');
 const TeacherModel = require('../models/Teacher.model');
+const SchedulerModel = require('../models/Scheduler.model');
+const AdminModel = require('../models/Admin.model');
+const AdMessagesModel = require('../models/AdMessage.model');
 
 exports.getAllTeachersLeaves = async (req, res) => {
 	try {
@@ -8,7 +11,9 @@ exports.getAllTeachersLeaves = async (req, res) => {
 			date: {
 				$gte: moment().startOf('day'),
 			},
-		}).populate("teacherId","TeacherName id").populate("scheduleId","className");
+		})
+			.populate('teacherId', 'TeacherName id')
+			.populate('scheduleId', 'className');
 		return res.json({
 			result: allLeaves,
 		});
@@ -27,7 +32,9 @@ exports.getTeacherLeavesByTeacherId = async (req, res) => {
 		if (teacher) {
 			let leavesByTeacher = await TeacherLeavesModel.find({
 				teacherId: teacher._id,
-			}).populate("scheduleId","className").lean();
+			})
+				.populate('scheduleId', 'className')
+				.lean();
 			return res.json({
 				result: leavesByTeacher,
 				message: 'Leaves of Teacher Retrieved Sucessfully!',
@@ -48,7 +55,7 @@ exports.getTeacherLeavesByTeacherId = async (req, res) => {
 exports.postALeave = async (req, res) => {
 	try {
 		let { teacherId, scheduleId, date } = req.body;
-		let teacher = await TeacherModel.findOne({ id:teacherId }).lean();
+		let teacher = await TeacherModel.findOne({ id: teacherId }).lean();
 		if (teacher) {
 			teacherId = teacher._id;
 			req.body.teacherId = teacher._id;
@@ -68,9 +75,58 @@ exports.postALeave = async (req, res) => {
 			req.body.scheduleId = scheduleId ? scheduleId : undefined;
 			let leave = new TeacherLeavesModel({ ...req.body });
 			await leave.save();
-			return res.json({
-				message: 'Applied Leave Successfully!',
-			});
+			let newAdMessage = {};
+			if (scheduleId) {
+				let schedule = await SchedulerModel.findById(scheduleId)
+					.select('students')
+					.populate('students', 'email');
+				if (schedule) {
+					let adminIds = await AdminModel.find({
+						userId: { $in: schedule.students.map((student) => student.email) },
+					}).lean();
+					adminIds = adminIds.map((adminId) => adminId._id);
+					newAdMessage = {
+						adminIds,
+						message: teacher.TeacherName + ' Teacher Applied for a Leave on ',
+						teacherLeaveDate: date,
+						icon: 'alert-circle',
+						title: 'Leave Alert',
+						broadCastTo: 'customers',
+						expiryDate: moment(date).format(),
+					};
+					let notification = new AdMessagesModel(newAdMessage);
+					await notification.save();
+					return res.json({
+						message: 'Applied Leave Successfully!',
+					});
+				}
+			} else if (req.body.entireDay) {
+				let day = momentTZ(date).tz('Asia/Kolkata').format('dddd').toLowerCase();
+				let allSchedules = await Schedule.find({
+					['slots.' + day + '.0']: { $exists: true },
+					teacher: teacher.id,
+				}).populate('students', 'email');
+				let allEmails = [];
+				allSchedules.forEach((schedule) => allEmails.push(schedule.students.map((student) => student.email)));
+				let adminIds = await adminModel.find({ userId: { $in: allEmails} });
+				adminIds = adminIds.map((admin) =>admin._id);
+
+				newAdMessage = {
+					adminIds,
+					message: teacher.TeacherName + ' Teacher Applied for a Leave on ',
+					teacherLeaveDate: date,
+					icon: 'alert-circle',
+					title: 'Leave Alert',
+					broadCastTo: 'customers',
+					expiryDate: moment(date).format(),
+				};
+				let notification = new AdMessagesModel(newAdMessage);
+				await notification.save();
+				return res.json({
+					message: 'Applied Leave Successfully!',
+				});
+
+			}
 		}
 	} catch (error) {
 		console.log(error);
@@ -84,7 +140,7 @@ exports.updateALeaveByLeaveId = async (req, res) => {
 	try {
 		let { id } = req.params;
 		let { teacherId, scheduleId, date } = req.body;
-		let teacher = await TeacherModel.findOne({ id:teacherId }).lean();
+		let teacher = await TeacherModel.findOne({ id: teacherId }).lean();
 		if (teacher) {
 			teacherId = teacher._id;
 			req.body.teacherId = teacher._id;
@@ -114,8 +170,8 @@ exports.updateALeaveByLeaveId = async (req, res) => {
 			}
 		} else {
 			return res.status(400).json({
-				error:"Invalid User Id"
-			})
+				error: 'Invalid User Id',
+			});
 		}
 	} catch (error) {
 		console.log(error);

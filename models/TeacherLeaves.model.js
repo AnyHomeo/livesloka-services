@@ -9,7 +9,7 @@ const TeacherLeaves = new mongoose.Schema(
 		date: {
 			type: Date,
 		},
-		entireDay: {
+		entireDay: { 
 			type: Boolean,
 			default: false,
 		},

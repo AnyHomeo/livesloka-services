@@ -7,19 +7,20 @@ const timeZoneModel = require('../models/timeZone.model');
 const allZones = require('../models/timeZone.json');
 const generateScheduleDays = require('../scripts/generateScheduleDays');
 const AgentModel = require('../models/Agent.model');
+const AdMessagesModel = require('../models/AdMessage.model');
 const { getStartAndEndTime } = require('../scripts/getStartAndEndTime');
 
-const getTimeStamp = (date,timeZone) => {
-	console.log(date,timeZone)
+const getTimeStamp = (date, timeZone) => {
+	console.log(date, timeZone);
 	// let selectedZoneUTCArray = allZones.filter((zone) => zone.abbr === timeZone)[0].utc;
 	let allTimeZones = momentTZ.tz.names();
-	// let selectedZone = allTimeZones.filter((name) => selectedZoneUTCArray.includes(name))[0];	
-	return "hello"
-}
+	// let selectedZone = allTimeZones.filter((name) => selectedZoneUTCArray.includes(name))[0];
+	return 'hello';
+};
 
 exports.getAllAppliedLeaves = async (req, res) => {
 	try {
-		const { groupedByDate } = req.query
+		const { groupedByDate } = req.query;
 		const today = moment().startOf('day');
 		let data = await CancelledClassesModel.find({
 			cancelledDate: {
@@ -30,28 +31,31 @@ exports.getAllAppliedLeaves = async (req, res) => {
 			.populate('scheduleId', 'className')
 			.sort('createdAt')
 			.lean();
-		if(groupedByDate === "yes"){
-			let allUniqueDates = {}
-			data.forEach(leave => {
-				if(leave.cancelledDate){
-					const { cancelledDate } = leave
-					let formattedDate = new Date(momentTZ(cancelledDate).tz("Asia/Kolkata").format("YYYY-MM-DD")).getTime()
-					if(!allUniqueDates[formattedDate]){
-						allUniqueDates[formattedDate] = [{...leave,customerTime:getTimeStamp(leave.cancelledDate,leave.studentId.timeZoneId)}]
+		if (groupedByDate === 'yes') {
+			let allUniqueDates = {};
+			data.forEach((leave) => {
+				if (leave.cancelledDate) {
+					const { cancelledDate } = leave;
+					let formattedDate = new Date(
+						momentTZ(cancelledDate).tz('Asia/Kolkata').format('YYYY-MM-DD')
+					).getTime();
+					if (!allUniqueDates[formattedDate]) {
+						allUniqueDates[formattedDate] = [
+							{ ...leave, customerTime: getTimeStamp(leave.cancelledDate, leave.studentId.timeZoneId) },
+						];
 					} else {
-						allUniqueDates[formattedDate].push(leave)
+						allUniqueDates[formattedDate].push(leave);
 					}
 				}
-			})
-			console.log(allUniqueDates)
-			data = Object.keys(allUniqueDates).map(date =>({
+			});
+			data = Object.keys(allUniqueDates).map((date) => ({
 				date,
-				data:allUniqueDates[date]
-			}))
+				data: allUniqueDates[date],
+			}));
 			return res.json({
 				message: 'Grouped Data Retrieved successfully!!',
-				result: data.sort((x,y) =>y.date-x.date),
-			});			
+				result: data.sort((x, y) => y.date - x.date),
+			});
 		}
 		return res.json({
 			message: 'Retrieved successfully!!',
@@ -102,7 +106,7 @@ exports.CancelAClass = async (req, res) => {
 		let { studentId, scheduleId, cancelledDate } = req.body;
 		let diff = Math.abs(new Date(cancelledDate).getTime() - new Date().getTime()) / 3600000;
 		if (diff >= 9 && !isAdmin) {
-			let schedule = await SchedulerModel.findById(scheduleId).select('students').lean();
+			let schedule = await SchedulerModel.findById(scheduleId).select('students teacher').lean();
 			let studentIds = await CustomerModel.find({ email: studentId }).lean();
 			studentIds = studentIds.map((id) => id._id);
 			let scheduleUsers = schedule.students;
@@ -124,7 +128,6 @@ exports.CancelAClass = async (req, res) => {
 				});
 			}
 			req.body.studentId = selectedUser;
-			console.log(req.body.cancelledDate);
 			let alreadyExists = await CancelledClassesModel.findOne({
 				studentId: req.body.studentId,
 				scheduleId: req.body.scheduleId,
@@ -136,6 +139,20 @@ exports.CancelAClass = async (req, res) => {
 			if (!alreadyExists) {
 				const cancelledClass = new CancelledClassesModel(req.body);
 				await cancelledClass.save();
+				let customer = await CustomerModel.findById(req.body.studentId).lean();
+				let newAdMessage = {
+					message:
+						customer.firstName +
+						' Applied for a Leave on ' +
+						momentTZ(req.body.cancelledDate).tz('Asia/Kolkata').format('Do of MMMM'),
+					icon: 'alert-circle',
+					title: 'Leave Alert',
+					broadCastTo: 'teachers',
+					broadCastedToTeachers: [schedule.teacher],
+					expiryDate: moment(req.body.cancelledDate).format(),
+				};
+				let notification = new AdMessagesModel(newAdMessage);
+				await notification.save();
 				return res.status(200).json({
 					message: 'applied for Leave successfully!',
 				});
@@ -145,11 +162,13 @@ exports.CancelAClass = async (req, res) => {
 			});
 		} else if (isAdmin) {
 			let scheduleId = await SchedulerModel.findOne({
-				students: req.body.studentId,
+				students: {
+					$in: [req.body.studentId],
+				},
 				isDeleted: {
 					$ne: true,
 				},
-			});
+			}).lean();
 			if (scheduleId) {
 				req.body.scheduleId = scheduleId._id;
 				let alreadyExists = await CancelledClassesModel.findOne({
@@ -162,6 +181,20 @@ exports.CancelAClass = async (req, res) => {
 				if (!alreadyExists) {
 					const cancelledClass = new CancelledClassesModel(req.body);
 					await cancelledClass.save();
+					let customer = await CustomerModel.findById(req.body.studentId).lean();
+					let newAdMessage = {
+						message:
+							customer.firstName +
+							' Applied for a Leave on ' +
+							momentTZ(req.body.cancelledDate).tz('Asia/Kolkata').format('Do of MMMM'),
+						icon: 'alert-circle',
+						title: 'Leave Alert',
+						broadCastTo: 'teachers',
+						broadCastedToTeachers: [scheduleId.teacher],
+						expiryDate: moment(req.body.cancelledDate).format(),
+					};
+					let notification = new AdMessagesModel(newAdMessage);
+					await notification.save();
 					return res.status(200).json({
 						message: 'applied for Leave successfully!',
 					});

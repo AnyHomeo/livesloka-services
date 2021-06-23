@@ -17,6 +17,7 @@ var adminSchema = new mongoose.Schema(
     roleId: {
       trim: true,
       type: Number,
+      default:1
     },
     firstTimeLogin: {
       type: String,

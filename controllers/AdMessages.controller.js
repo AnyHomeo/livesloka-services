@@ -6,27 +6,42 @@ const CustomerModel = require('../models/Customer.model');
 exports.getMessagesByEmail = async (req, res) => {
 	try {
 		const { email } = req.params;
-		const admin = await AdminModel.findOne({
-			userId: email,
-		})
-			.select('_id')
-			.lean();
-		let allMessages = await AdMessagesModel.find({
-			$or: [
-				{
-					adminIds: { $in: [admin._id] },
-				},
-				{ isForAll: true },
-			],
-		}).lean();
+		const { isTeacher } = req.query;
+		if (!(isTeacher == 1)) {
+			const admin = await AdminModel.findOne({
+				userId: email,
+			})
+				.select('_id')
+				.lean();
+			let allMessages = await AdMessagesModel.find({
+				$or: [
+					{
+						adminIds: { $in: [admin._id] },
+					},
+					{ isForAll: true },
+				],
+			}).lean();
 
-		let timeRightNow = new Date().getTime()
-		let unSeenMessages = allMessages.filter((message) => !message.acknowledgedBy.some((id) => id.equals(admin._id)) && new Date(message.expiryDate).getTime() > timeRightNow );
+			let timeRightNow = new Date().getTime();
+			let unSeenMessages = allMessages.filter(
+				(message) =>
+					!message.acknowledgedBy.some((id) => id.equals(admin._id)) &&
+					new Date(message.expiryDate).getTime() > timeRightNow
+			);
 
-		return res.json({
-			result: {allMessages,unSeenMessages},
-			messages: 'Retrieved Messages Successfully!',
-		});
+			return res.json({
+				result: { allMessages, unSeenMessages },
+				messages: 'Retrieved Messages Successfully!',
+			});
+		} else {
+			let allMessages = await AdMessagesModel.find({
+				broadCastedToTeachers: { $in: [email] },
+			}).lean();
+			return res.json({
+				result: { allMessages, unSeenMessages: [] },
+				messages: 'Retrieved Messages Successfully!',
+			});
+		}
 	} catch (error) {
 		console.log(error);
 		return res.json({
@@ -167,6 +182,7 @@ exports.getMessages = async (req, res) => {
 			.populate('admin', 'AgentName')
 			.populate('teachers', 'TeacherName')
 			.populate('agents', 'AgentName')
+			.populate('broadcastedTeachers', 'TeacherName')
 			.lean({ virtuals: true });
 
 		return res.json({
