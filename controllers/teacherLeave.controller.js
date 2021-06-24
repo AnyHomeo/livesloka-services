@@ -4,6 +4,7 @@ const TeacherModel = require('../models/Teacher.model');
 const SchedulerModel = require('../models/Scheduler.model');
 const AdminModel = require('../models/Admin.model');
 const AdMessagesModel = require('../models/AdMessage.model');
+const momentTZ = require('moment-timezone');
 
 exports.getAllTeachersLeaves = async (req, res) => {
 	try {
@@ -87,7 +88,7 @@ exports.postALeave = async (req, res) => {
 					adminIds = adminIds.map((adminId) => adminId._id);
 					newAdMessage = {
 						adminIds,
-						message: teacher.TeacherName + ' Teacher Applied for a Leave on ',
+						message: teacher.TeacherName + ' Teacher is on a Leave on ',
 						teacherLeaveDate: date,
 						icon: 'alert-circle',
 						title: 'Leave Alert',
@@ -113,7 +114,7 @@ exports.postALeave = async (req, res) => {
 
 				newAdMessage = {
 					adminIds,
-					message: teacher.TeacherName + ' Teacher Applied for a Leave on ',
+					message: teacher.TeacherName + ' Teacher is on a Leave on ',
 					teacherLeaveDate: date,
 					icon: 'alert-circle',
 					title: 'Leave Alert',
