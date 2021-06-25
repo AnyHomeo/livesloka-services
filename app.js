@@ -19,6 +19,7 @@ const summerCampRouter = require("./routes/summerCamp");
 const CareersRouter = require("./routes/careersApplications");
 const teacherLeavesRouter = require("./routes/teacherLeaves");
 const AdMessagesRouter = require("./routes/adMessage");
+const allocateRouter = require("./routes/AgentsAssignmentsToClass");
 
 const app = express();
 const http = require("http").createServer(app);
@@ -55,6 +56,7 @@ app.use("/payment", paymentRouter);
 app.use("/link", zoomlink);
 app.use("/salary", salaryRouter);
 app.use("/uploads", uploadRouter);
+app.use("/allocate",allocateRouter);
 
 const PORT = process.env.PORT || 5000;
 
@@ -65,6 +67,10 @@ io.on("connection", (socket) => {
   socket.on("student-joined-class", (msg) => {
     io.emit("student-joined", msg);
   });
+
+  socket.on("agent-assigned-class",(data) => {
+    socket.broadcast.emit("agent-assigned", data)
+  })
 });
 
 http.listen(PORT, () => {
