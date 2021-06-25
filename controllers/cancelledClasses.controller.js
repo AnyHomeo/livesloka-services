@@ -21,7 +21,7 @@ const getTimeStamp = (date, timeZone) => {
 exports.getAllAppliedLeaves = async (req, res) => {
 	try {
 		const { groupedByDate } = req.query;
-		const today = moment().startOf('day');
+		const today = moment().subtract(2,'months');
 		let data = await CancelledClassesModel.find({
 			cancelledDate: {
 				$gte: today.toDate(),
