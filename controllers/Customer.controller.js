@@ -834,7 +834,6 @@ module.exports = {
 				.populate('students', 'firstName lastName email')
 				.lean();
 			let allCustomers = [];
-			console.log(allDemoAndInclassSchedules.length);
 			allDemoAndInclassSchedules.forEach((schedule) => {
 				if (schedule.students && schedule.students.length) {
 					schedule.students.forEach((student) => {

@@ -87,7 +87,6 @@ exports.getAllAppliedLeavesByScheduleId = async (req, res) => {
 		}
 
 		let data = await CancelledClassesModel.find(query);
-		console.log(data, noSchedule);
 		return res.json({
 			message: 'Retrieved Successfully',
 			result: data,
@@ -307,10 +306,6 @@ exports.getStartTimesOfEntireDay = async (req, res) => {
 		let startTimeDayString = startTimeDay.format('dddd').toLowerCase();
 		let endTimeDayString = endTimeDay.format('dddd').toLowerCase();
 		if (schedule) {
-			console.log(schedule.slots[startTimeDayString]);
-			console.log('Start', getStartAndEndTime(schedule.slots[startTimeDayString]).split('-')[0]);
-			console.log(getStartAndEndTime(schedule.slots[endTimeDayString]).split('-')[0]);
-
 			if (startTimeDayString === endTimeDayString) {
 				let time = getStartAndEndTime(schedule.slots[startTimeDayString]).split('-')[0];
 				return res.json({

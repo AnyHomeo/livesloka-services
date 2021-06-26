@@ -337,7 +337,6 @@ exports.addSchedule = async (req, res) => {
 	let className = '';
 	let wherebyMeetingId = undefined;
 	let wherebyHostUrl = undefined;
-	console.log(isZoomMeeting);
 	if (isZoomMeeting) {
 		meetingLink = meetingLink.startsWith('http') ? meetingLink : 'https://' + meetingLink;
 	} else {
@@ -360,7 +359,6 @@ exports.addSchedule = async (req, res) => {
 				body: JSON.stringify(data),
 			});
 			meetingLinkData = await meetingLinkData.json();
-			console.log(meetingLinkData);
 			wherebyMeetingId = meetingLinkData.meetingId;
 			wherebyHostUrl = meetingLinkData.hostRoomUrl;
 			meetingLink = meetingLinkData.roomUrl;
@@ -386,7 +384,6 @@ exports.addSchedule = async (req, res) => {
 		});
 	}
 	let scheduleDescription = scheduleDescriptionGenerator(slotees);
-	console.log(summerCampImage);
 	const schedule = new Schedule({
 		meetingAccount,
 		meetingLink,
@@ -634,7 +631,6 @@ exports.editSchedule = async (req, res) => {
 					throw Error('no Zoom Account!');
 				}
 				const { _id, zoomEmail, zoomJwt, zoomPassword } = availableZoomAccount;
-				console.log('YES');
 				const { meetingLink } = oldSchedule;
 				if (meetingLink && meetingLink.includes('zoom')) {
 					await fetch(`https://api.zoom.us/v2/meetings/${meetingLink.split('/')[4].split('?')[0]}`, {
@@ -674,13 +670,11 @@ exports.editSchedule = async (req, res) => {
 				})
 					.then((res) => res.json())
 					.then((json) => {
-						console.log(json);
 						if (json.code === 1001) {
 							return res.status(400).json({
 								message: 'Error while creating meeting link',
 							});
 						}
-						console.log(json.join_url);
 						req.body.meetingLink = json.join_url;
 						req.body.meetingAccount = _id;
 						Schedule.updateOne({ _id: id }, { ...req.body, scheduleDescription }, (err, response) => {
@@ -719,12 +713,10 @@ exports.editSchedule = async (req, res) => {
 									console.log(error);
 								});
 							for (x = 0; x < students.length; x++) {
-								console.log(x);
 								Customer.findOne({ _id: students[x] })
 									.then((data) => {
 										let stud_id = data._id;
 										let { timeZoneId } = data;
-										console.log('hey', stud_id);
 										timzone
 											.findOne({ id: timeZoneId })
 											.then(async (dat) => {
