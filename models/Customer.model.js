@@ -61,7 +61,7 @@ const Customer = new mongoose.Schema(
       type: String,
     },
     timeZoneId: {
-      trim: true,
+      trim: true, 
       type: String,
     },
     numberOfStudents: {

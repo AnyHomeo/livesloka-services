@@ -5,6 +5,7 @@ var twilio = require('twilio');
 var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 var ctrl = require("../controllers/admin.controller");
 var customerCtrl = require("../controllers/Customer.controller");
+const { addOtpToAdminCollection, validateOtpAndResetPassword } = require("../controllers/admin.controller");
 
 router.post("/login", ctrl.authentication);
 router.post("/ChangePassword", ctrl.ChangePassword);
@@ -66,4 +67,8 @@ router.get("/admin/reset/:id", ctrl.resetPassword);
 router.get("/all/admins", ctrl.getAllAdmins);
 
 router.get("/admin/getSingleTeacher/:id", ctrl.getSingleTeacher)
+
+
+router.post("/forgot-password",addOtpToAdminCollection);
+router.post("/user/password-reset",validateOtpAndResetPassword);
 module.exports = router;

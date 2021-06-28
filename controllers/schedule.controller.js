@@ -1,4 +1,5 @@
 const Schedule = require('../models/Scheduler.model');
+const Attendance = require('../models/Attendance');
 const Customer = require('../models/Customer.model');
 const Teacher = require('../models/Teacher.model');
 const Subject = require('../models/Subject.model');
@@ -1392,9 +1393,9 @@ exports.editIfWhereby = async (req, res, next) => {
 exports.changeZoomLink = async (req, res) => {
 	try {
 		const { scheduleId } = req.params;
-		console.log(scheduleId)
+		console.log(scheduleId);
 		let schedule = await SchedulerModel.findById(scheduleId).populate('meetingAccount');
-		console.log(schedule)
+		console.log(schedule);
 		const {
 			meetingLink,
 			meetingAccount: { zoomJwt, zoomEmail, zoomPassword },
@@ -1438,10 +1439,10 @@ exports.changeZoomLink = async (req, res) => {
 		});
 		let response = await data.json();
 		schedule.meetingLink = response.join_url;
-		await schedule.save()
+		await schedule.save();
 		return res.status(200).json({
-			message:"Meeting Link Updated successfully!"
-		})
+			message: 'Meeting Link Updated successfully!',
+		});
 	} catch (err) {
 		console.log(err);
 		return res.status(500).json({
@@ -1450,6 +1451,31 @@ exports.changeZoomLink = async (req, res) => {
 	}
 };
 
-exports.getScheduleByTeacherIdAndSlot = (req, res) => {
-	
-}
+exports.getSchedulesByScheduleIdAndTime = (req, res) => {
+	const { scheduleId, date } = req.params;
+	let month = parseInt(date.split('-')[1]) - 1;
+	let year = date.split('-')[0];
+	Attendance.find({
+		scheduleId,
+		createdAt: {
+			$gte: moment().set('month', month).set('year', year).startOf('month').format(),
+			$lte: moment().set('month', month).set('year', year).endOf('month').format(),
+		},
+	})
+		.populate('customers', 'firstName email')
+		.populate('requestedStudents', 'firstName email')
+		.populate('requestedPaidStudents', 'firstName email')
+		.populate('absentees', 'firstName email')
+		.then((data) => {
+			return res.json({
+				message: 'Attendance retrieved successfully',
+				result: data,
+			});
+		})
+		.catch((err) => {
+			console.log(err);
+			return res.status(500).json({
+				error: 'error in retrieving Attendance',
+			});
+		});
+};
