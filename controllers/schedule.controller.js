@@ -1,3 +1,4 @@
+require('dotenv').config();
 const Schedule = require('../models/Scheduler.model');
 const Attendance = require('../models/Attendance');
 const Customer = require('../models/Customer.model');
@@ -13,7 +14,7 @@ var equal = require('fast-deep-equal');
 const moment = require('moment');
 const Payments = require('../models/Payments');
 const ClassHistoryModel = require('../models/ClassHistory.model');
-require('dotenv').config();
+const times = require('../models/times.json');
 
 function convertTZ(date, tzString) {
 	return new Date(
@@ -1466,7 +1467,7 @@ exports.getSchedulesByScheduleIdAndTime = (req, res) => {
 		.populate('requestedStudents', 'firstName email')
 		.populate('requestedPaidStudents', 'firstName email')
 		.populate('absentees', 'firstName email')
-		.populate('requestedPaidStudents','firstName email')
+		.populate('requestedPaidStudents', 'firstName email')
 		.then((data) => {
 			return res.json({
 				message: 'Attendance retrieved successfully',
@@ -1479,4 +1480,55 @@ exports.getSchedulesByScheduleIdAndTime = (req, res) => {
 				error: 'error in retrieving Attendance',
 			});
 		});
+};
+
+const getNextSlot = (scheduledSlots, slot, presentMeetingSlots) => {
+	let day = slot.split('-')[0].toUpperCase();
+	let slotWithoutDay = slot.split('-')[1] + '-' + slot.split('-')[2];
+	let index = times.indexOf(slotWithoutDay);
+	let allNextSlots = times.slice(index);
+	let nextSlot = '';
+	for (let i = 0; i < allNextSlots.length; i++) {
+		let x = day + '-' + allNextSlots[i];
+		if (scheduledSlots.includes(x) && !presentMeetingSlots.includes(x)) {
+			nextSlot = x;
+			break;
+		}
+	}
+	return nextSlot;
+};
+
+exports.getPresentAndNextScheduleOfATeacher = async (req, res) => {
+	try {
+		const { teacherId, slot } = req.params;
+		let teacher = await Teacher.findOne({ id: teacherId }).lean();
+		let { scheduledSlots } = teacher;
+		let day = slot.split('-')[0].toLowerCase();
+		let scheduleRightNow = await SchedulerModel.findOne({
+			teacher: teacherId,
+			[`slots.${day}`]: {
+				$in: [slot],
+			},
+			isDeleted: false,
+		}).populate("students","firstName");
+		let nextSlot = '';
+		if (scheduleRightNow) {
+			nextSlot = getNextSlot(scheduledSlots, slot, scheduleRightNow.slots[day]);
+		}
+		let nextSchedule = await SchedulerModel.findOne({
+			teacher: teacherId,
+			[`slots.${day}`]: {
+				$in: [nextSlot],
+			},
+			isDeleted: false,
+		}).populate("students","firstName");
+		return res.json({
+			result: { scheduleRightNow, nextSchedule },
+		});
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json({
+			error: 'Something went wrong!',
+		});
+	}
 };

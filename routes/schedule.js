@@ -11,7 +11,8 @@ const {
   dangerousScheduleUpdate,
   editIfWhereby,
   changeZoomLink,
-  getSchedulesByScheduleIdAndTime
+  getSchedulesByScheduleIdAndTime,
+  getPresentAndNextScheduleOfATeacher
 } = require("../controllers/schedule.controller");
 
 router.post("/", addSchedule);
@@ -24,5 +25,5 @@ router.get("/zoom/:id", getAllSchedulesByZoomAccountId);
 router.get("/:id", getScheduleById);
 router.put('/zoom/:scheduleId',changeZoomLink);
 router.get('/salary/:scheduleId/:date',getSchedulesByScheduleIdAndTime)
-
+router.get('/teacher/present/:teacherId/:slot',getPresentAndNextScheduleOfATeacher)
 module.exports = router;
