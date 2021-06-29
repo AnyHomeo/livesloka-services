@@ -20,7 +20,7 @@ exports.getMessagesByEmail = async (req, res) => {
 					},
 					{ isForAll: true },
 				],
-			}).lean();
+			}).sort({_id:-1}).lean();
 
 			let timeRightNow = new Date().getTime();
 			let unSeenMessages = allMessages.filter(
@@ -183,6 +183,7 @@ exports.getMessages = async (req, res) => {
 			.populate('teachers', 'TeacherName')
 			.populate('agents', 'AgentName')
 			.populate('broadcastedTeachers', 'TeacherName')
+			.sort({_id:-1})
 			.lean({ virtuals: true });
 
 		return res.json({

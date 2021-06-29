@@ -1,4 +1,6 @@
+require('dotenv').config();
 const Schedule = require('../models/Scheduler.model');
+const Attendance = require('../models/Attendance');
 const Customer = require('../models/Customer.model');
 const Teacher = require('../models/Teacher.model');
 const Subject = require('../models/Subject.model');
@@ -12,7 +14,7 @@ var equal = require('fast-deep-equal');
 const moment = require('moment');
 const Payments = require('../models/Payments');
 const ClassHistoryModel = require('../models/ClassHistory.model');
-require('dotenv').config();
+const times = require('../models/times.json');
 
 function convertTZ(date, tzString) {
 	return new Date(
@@ -337,7 +339,6 @@ exports.addSchedule = async (req, res) => {
 	let className = '';
 	let wherebyMeetingId = undefined;
 	let wherebyHostUrl = undefined;
-	console.log(isZoomMeeting);
 	if (isZoomMeeting) {
 		meetingLink = meetingLink.startsWith('http') ? meetingLink : 'https://' + meetingLink;
 	} else {
@@ -360,7 +361,6 @@ exports.addSchedule = async (req, res) => {
 				body: JSON.stringify(data),
 			});
 			meetingLinkData = await meetingLinkData.json();
-			console.log(meetingLinkData);
 			wherebyMeetingId = meetingLinkData.meetingId;
 			wherebyHostUrl = meetingLinkData.hostRoomUrl;
 			meetingLink = meetingLinkData.roomUrl;
@@ -386,7 +386,6 @@ exports.addSchedule = async (req, res) => {
 		});
 	}
 	let scheduleDescription = scheduleDescriptionGenerator(slotees);
-	console.log(summerCampImage);
 	const schedule = new Schedule({
 		meetingAccount,
 		meetingLink,
@@ -634,7 +633,6 @@ exports.editSchedule = async (req, res) => {
 					throw Error('no Zoom Account!');
 				}
 				const { _id, zoomEmail, zoomJwt, zoomPassword } = availableZoomAccount;
-				console.log('YES');
 				const { meetingLink } = oldSchedule;
 				if (meetingLink && meetingLink.includes('zoom')) {
 					await fetch(`https://api.zoom.us/v2/meetings/${meetingLink.split('/')[4].split('?')[0]}`, {
@@ -674,13 +672,11 @@ exports.editSchedule = async (req, res) => {
 				})
 					.then((res) => res.json())
 					.then((json) => {
-						console.log(json);
 						if (json.code === 1001) {
 							return res.status(400).json({
 								message: 'Error while creating meeting link',
 							});
 						}
-						console.log(json.join_url);
 						req.body.meetingLink = json.join_url;
 						req.body.meetingAccount = _id;
 						Schedule.updateOne({ _id: id }, { ...req.body, scheduleDescription }, (err, response) => {
@@ -719,12 +715,10 @@ exports.editSchedule = async (req, res) => {
 									console.log(error);
 								});
 							for (x = 0; x < students.length; x++) {
-								console.log(x);
 								Customer.findOne({ _id: students[x] })
 									.then((data) => {
 										let stud_id = data._id;
 										let { timeZoneId } = data;
-										console.log('hey', stud_id);
 										timzone
 											.findOne({ id: timeZoneId })
 											.then(async (dat) => {
@@ -1400,9 +1394,9 @@ exports.editIfWhereby = async (req, res, next) => {
 exports.changeZoomLink = async (req, res) => {
 	try {
 		const { scheduleId } = req.params;
-		console.log(scheduleId)
+		console.log(scheduleId);
 		let schedule = await SchedulerModel.findById(scheduleId).populate('meetingAccount');
-		console.log(schedule)
+		console.log(schedule);
 		const {
 			meetingLink,
 			meetingAccount: { zoomJwt, zoomEmail, zoomPassword },
@@ -1446,10 +1440,10 @@ exports.changeZoomLink = async (req, res) => {
 		});
 		let response = await data.json();
 		schedule.meetingLink = response.join_url;
-		await schedule.save()
+		await schedule.save();
 		return res.status(200).json({
-			message:"Meeting Link Updated successfully!"
-		})
+			message: 'Meeting Link Updated successfully!',
+		});
 	} catch (err) {
 		console.log(err);
 		return res.status(500).json({
@@ -1458,6 +1452,103 @@ exports.changeZoomLink = async (req, res) => {
 	}
 };
 
-exports.getScheduleByTeacherIdAndSlot = (req, res) => {
-	
-}
+exports.getSchedulesByScheduleIdAndTime = (req, res) => {
+	const { scheduleId, date } = req.params;
+	let month = parseInt(date.split('-')[1]) - 1;
+	let year = date.split('-')[0];
+	Attendance.find({
+		scheduleId,
+		createdAt: {
+			$gte: moment().set('month', month).set('year', year).startOf('month').format(),
+			$lte: moment().set('month', month).set('year', year).endOf('month').format(),
+		},
+	})
+		.populate('customers', 'firstName email')
+		.populate('requestedStudents', 'firstName email')
+		.populate('requestedPaidStudents', 'firstName email')
+		.populate('absentees', 'firstName email')
+		.populate('requestedPaidStudents', 'firstName email')
+		.then((data) => {
+			return res.json({
+				message: 'Attendance retrieved successfully',
+				result: data,
+			});
+		})
+		.catch((err) => {
+			console.log(err);
+			return res.status(500).json({
+				error: 'error in retrieving Attendance',
+			});
+		});
+};
+
+const getNextSlot = (scheduledSlots, slot, presentMeetingSlots) => {
+	let day = slot.split('-')[0].toUpperCase();
+	let slotWithoutDay = slot.split('-')[1] + '-' + slot.split('-')[2];
+	let index = times.indexOf(slotWithoutDay);
+	let allNextSlots = times.slice(index);
+	let nextSlot = '';
+	for (let i = 0; i < allNextSlots.length; i++) {
+		let x = day + '-' + allNextSlots[i];
+		if (scheduledSlots.includes(x) && !presentMeetingSlots.includes(x)) {
+			nextSlot = x;
+			break;
+		}
+	}
+	return nextSlot;
+};
+
+exports.getPresentAndNextScheduleOfATeacher = async (req, res) => {
+	try {
+		const { teacherId, slot } = req.params;
+		let teacher = await Teacher.findOne({ id: teacherId }).lean();
+		let { scheduledSlots } = teacher;
+		let day = slot.split('-')[0].toLowerCase();
+		let scheduleRightNow = await SchedulerModel.findOne({
+			teacher: teacherId,
+			[`slots.${day}`]: {
+				$in: [slot],
+			},
+			isDeleted: false,
+		}).populate('students', 'firstName');
+		let nextSlot = '';
+		if (scheduleRightNow) {
+			nextSlot = getNextSlot(scheduledSlots, slot, scheduleRightNow.slots[day]);
+		} else {
+			nextSlot = getNextSlot(scheduledSlots, slot, []);
+		}
+		let nextSchedule = await SchedulerModel.findOne({
+			teacher: teacherId,
+			[`slots.${day}`]: {
+				$in: [nextSlot],
+			},
+			isDeleted: false,
+		}).populate('students', 'firstName');
+
+		let idsToNotToRetrieve = [];
+		if (scheduleRightNow) {
+			idsToNotToRetrieve.push(scheduleRightNow._id);
+		}
+		if (nextSchedule) {
+			idsToNotToRetrieve.push(nextSchedule._id);
+		}
+
+		let otherSchedules = await SchedulerModel.find({
+			_id: {
+				$nin: idsToNotToRetrieve,
+			},
+			teacher: teacherId,
+			['slots.' + day + '.0']: { $exists: true },
+			isDeleted: false,
+		});
+
+		return res.json({
+			result: { scheduleRightNow, nextSchedule,otherSchedules },
+		});
+	} catch (error) {
+		console.log(error);
+		return res.status(500).json({
+			error: 'Something went wrong!',
+		});
+	}
+};

@@ -890,7 +890,6 @@ module.exports = {
         .populate("students", "firstName lastName email")
         .lean();
       let allCustomers = [];
-      console.log(allDemoAndInclassSchedules.length);
       allDemoAndInclassSchedules.forEach((schedule) => {
         if (schedule.students && schedule.students.length) {
           schedule.students.forEach((student) => {
@@ -1013,7 +1012,6 @@ module.exports = {
       let { email, profilePic, location } = req.body;
       let data = await AdminModel.findOne({ userId: email });
 
-      console.log(email, profilePic);
       if (data) {
         data.profilePic = profilePic;
         data.profileLocation = location;

@@ -53,6 +53,7 @@ var adminSchema = new mongoose.Schema(
       minlength: [3, "Password must be atleast 4 character long"],
     },
     settings: mongoose.Schema.Types.Mixed,
+    otp:Number
   },
   { timestamps: true }
 );
