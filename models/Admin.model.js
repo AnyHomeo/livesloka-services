@@ -26,6 +26,7 @@ var adminSchema = new mongoose.Schema(
     profileLocation: {
       trim: true,
       type: String,
+      default: "null",
     },
     firstTimeLogin: {
       type: String,
@@ -53,7 +54,7 @@ var adminSchema = new mongoose.Schema(
       minlength: [3, "Password must be atleast 4 character long"],
     },
     settings: mongoose.Schema.Types.Mixed,
-    otp:Number
+    otp: Number,
   },
   { timestamps: true }
 );

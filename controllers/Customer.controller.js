@@ -1023,12 +1023,7 @@ module.exports = {
 
         await data.save();
         return res.json({
-          result: {
-            username: data.username,
-            email: data.userId,
-            profilePic: data.profilePic,
-            profileLocation: data.profileLocation,
-          },
+          result: "Updated successfully",
         });
       } else {
         return res.status(400).json({
