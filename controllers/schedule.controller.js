@@ -1510,10 +1510,12 @@ exports.getPresentAndNextScheduleOfATeacher = async (req, res) => {
 				$in: [slot],
 			},
 			isDeleted: false,
-		}).populate("students","firstName");
+		}).populate('students', 'firstName');
 		let nextSlot = '';
 		if (scheduleRightNow) {
 			nextSlot = getNextSlot(scheduledSlots, slot, scheduleRightNow.slots[day]);
+		} else {
+			nextSlot = getNextSlot(scheduledSlots, slot, []);
 		}
 		let nextSchedule = await SchedulerModel.findOne({
 			teacher: teacherId,
@@ -1521,9 +1523,27 @@ exports.getPresentAndNextScheduleOfATeacher = async (req, res) => {
 				$in: [nextSlot],
 			},
 			isDeleted: false,
-		}).populate("students","firstName");
+		}).populate('students', 'firstName');
+
+		let idsToNotToRetrieve = [];
+		if (scheduleRightNow) {
+			idsToNotToRetrieve.push(scheduleRightNow._id);
+		}
+		if (nextSchedule) {
+			idsToNotToRetrieve.push(nextSchedule._id);
+		}
+
+		let otherSchedules = await SchedulerModel.find({
+			_id: {
+				$nin: idsToNotToRetrieve,
+			},
+			teacher: teacherId,
+			['slots.' + day + '.0']: { $exists: true },
+			isDeleted: false,
+		});
+
 		return res.json({
-			result: { scheduleRightNow, nextSchedule },
+			result: { scheduleRightNow, nextSchedule,otherSchedules },
 		});
 	} catch (error) {
 		console.log(error);
