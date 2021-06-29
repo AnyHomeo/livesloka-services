@@ -11,13 +11,21 @@ var adminSchema = new mongoose.Schema(
     userId: {
       trim: true,
       type: String,
-      lowercase:true,
+      lowercase: true,
       required: "email or userid is required",
     },
     roleId: {
       trim: true,
       type: Number,
-      default:1
+      default: 1,
+    },
+    profilePic: {
+      trim: true,
+      type: String,
+    },
+    profileLocation: {
+      trim: true,
+      type: String,
     },
     firstTimeLogin: {
       type: String,
