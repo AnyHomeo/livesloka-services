@@ -992,7 +992,12 @@ module.exports = {
 
       if (data) {
         return res.json({
-          result: data,
+          result: {
+            username: data.username,
+            email: data.userId,
+            profilePic: data.profilePic,
+            profileLocation: data.profileLocation,
+          },
         });
       } else {
         return res.status(400).json({
@@ -1018,7 +1023,12 @@ module.exports = {
 
         await data.save();
         return res.json({
-          result: data,
+          result: {
+            username: data.username,
+            email: data.userId,
+            profilePic: data.profilePic,
+            profileLocation: data.profileLocation,
+          },
         });
       } else {
         return res.status(400).json({
