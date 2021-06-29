@@ -1466,6 +1466,7 @@ exports.getSchedulesByScheduleIdAndTime = (req, res) => {
 		.populate('requestedStudents', 'firstName email')
 		.populate('requestedPaidStudents', 'firstName email')
 		.populate('absentees', 'firstName email')
+		.populate('requestedPaidStudents','firstName email')
 		.then((data) => {
 			return res.json({
 				message: 'Attendance retrieved successfully',
