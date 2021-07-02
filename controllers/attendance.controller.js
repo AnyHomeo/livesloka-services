@@ -138,7 +138,7 @@ const postAttendance = (req, res) => {
 const getAllAttendanceByScheduleIdAndDate = (req, res) => {
   const { scheduleId } = req.params;
   const { date } = req.query;
-  Attendance.findOne({ scheduleId, date })
+  Attendance.findOne({ scheduleId, date:momentTZ.tz(date,'Asia/Kolkata').format('') })
     .then((data) => {
       return res.json({
         message: "Attendance retrieved successfully",
