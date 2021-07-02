@@ -20,6 +20,8 @@ const CareersRouter = require("./routes/careersApplications");
 const teacherLeavesRouter = require("./routes/teacherLeaves");
 const AdMessagesRouter = require("./routes/adMessage");
 const allocateRouter = require("./routes/AgentsAssignmentsToClass");
+const extraAmountsRouter = require("./routes/extraAmounts");
+
 
 const app = express();
 const http = require("http").createServer(app);
@@ -57,6 +59,7 @@ app.use("/link", zoomlink);
 app.use("/salary", salaryRouter);
 app.use("/uploads", uploadRouter);
 app.use("/allocate",allocateRouter);
+app.use('/extra',extraAmountsRouter);
 
 const PORT = process.env.PORT || 5000;
 
