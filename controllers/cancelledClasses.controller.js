@@ -75,8 +75,8 @@ exports.getAllAppliedLeavesByScheduleId = async (req, res) => {
 		const { noSchedule } = req.query;
 		let query = {
 			cancelledDate: {
-				$gte: moment().startOf('day').toDate(),
-				$lte: moment().endOf('day').toDate(),
+				$gte: momentTZ().tz('Asia/Kolkata').startOf('day').toDate(),
+				$lte: momentTZ().tz('Asia/Kolkata').endOf('day').toDate(),
 			},
 		};
 		if (!noSchedule) {
