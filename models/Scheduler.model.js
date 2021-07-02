@@ -6,7 +6,7 @@ const SchedulerSchema = new mongoose.Schema(
 			type: String,
 			trim: true,
 			required: 'Teacher is Required',
-		},
+		}, 
 		students: [
 			{
 				type: mongoose.Schema.Types.ObjectId,

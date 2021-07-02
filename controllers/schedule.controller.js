@@ -12,9 +12,12 @@ const SchedulerModel = require('../models/Scheduler.model');
 const TeacherModel = require('../models/Teacher.model');
 var equal = require('fast-deep-equal');
 const moment = require('moment');
+const momentTZ = require('moment-timezone');
 const Payments = require('../models/Payments');
 const ClassHistoryModel = require('../models/ClassHistory.model');
 const times = require('../models/times.json');
+const CancelledClassesModel = require('../models/CancelledClasses.model');
+
 
 function convertTZ(date, tzString) {
 	return new Date(
@@ -1542,8 +1545,34 @@ exports.getPresentAndNextScheduleOfATeacher = async (req, res) => {
 			isDeleted: false,
 		});
 
+		let teacherSchedules = await SchedulerModel.find({
+			teacher:teacherId,
+		}).select("_id")
+
+		teacherSchedules = teacherSchedules.map((schedule) => schedule._id)
+
+		let todayLeaves = await CancelledClassesModel.find({
+			scheduleId:{
+				$in:teacherSchedules
+			},
+			cancelledDate:{
+				$gte:momentTZ().tz('Asia/Kolkata').startOf('day').format(),
+				$lte:momentTZ().tz('Asia/Kolkata').endOf('day').format(),
+			}
+		}).populate('studentId','firstName').populate('scheduleId','className')
+
+		let tomorrowLeaves = await CancelledClassesModel.find({
+			scheduleId:{
+				$in:teacherSchedules
+			},
+			cancelledDate:{
+				$gte:momentTZ().tz('Asia/Kolkata').add(1,'day').startOf('day').format(),
+				$lte:momentTZ().tz('Asia/Kolkata').add(1,'day').endOf('day').format(),
+			}
+		}).populate('studentId','firstName').populate('scheduleId','className')
+
 		return res.json({
-			result: { scheduleRightNow, nextSchedule,otherSchedules },
+			result: { scheduleRightNow, nextSchedule,otherSchedules,todayLeaves,tomorrowLeaves },
 		});
 	} catch (error) {
 		console.log(error);
