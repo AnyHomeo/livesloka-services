@@ -353,7 +353,7 @@ exports.GetTeacherMeetings = async (req, res) => {
 					let cancelledClasses = await CancelledClassesModel.find({
 						scheduleId: eachSchedule._id,
 						cancelledDate: {
-							$gte: moment().startOf('day').toDate(),
+							$gte: momentTZ().tz('Asia/Kolkata').startOf('day').format(),
 						},
 					}).populate('studentId', 'firstName');
 					return { ...eachSchedule, cancelledClasses };
