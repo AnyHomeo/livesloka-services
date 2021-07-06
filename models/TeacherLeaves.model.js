@@ -7,7 +7,7 @@ const TeacherLeaves = new mongoose.Schema(
 			ref: 'Teacher',
 		},
 		date: {
-			type: Date,
+			type: Date, 
 		},
 		entireDay: { 
 			type: Boolean,

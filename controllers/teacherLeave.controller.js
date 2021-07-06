@@ -203,3 +203,28 @@ exports.deleteAleaveByLeaveId = async (req, res) => {
 		});
 	}
 };
+
+exports.getTodayLeavesOfTeacher = async (req,res) => {
+	try {
+		let leavesToday = await TeacherLeavesModel.find({
+			date:{
+				$gte: momentTZ().tz("Asia/Kolkata").startOf('day').format(),
+				$lte: momentTZ().tz("Asia/Kolkata").endOf('day').format()
+			}
+		}).lean()
+		let entireDayLeaves = leavesToday.filter(leave => leave.entireDay)
+		let scheduleLeaves = leavesToday.filter(leave => !leave.entireDay)
+		return res.json({
+			message:"Today Teacher Leaves Retrieved successfully",
+			result:{
+				entireDayLeaves,
+				scheduleLeaves
+			}
+		})
+	} catch (error) {
+		console.log(error)
+		return res.status(500).json({
+			error:"Something went wrong!"
+		})
+	}
+}
