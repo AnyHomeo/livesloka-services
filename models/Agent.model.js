@@ -33,6 +33,14 @@ var AgentSchema = new mongoose.Schema(
     AgentRole:{
       type:Number,
       default:3
+    },
+    phoneNumber:{
+      type:String,
+      default:""
+    },
+    needToFinalizeSalaries:{
+      type:Boolean,
+      default:false
     }
   },
   { timestamps: true }

@@ -21,7 +21,8 @@ const teacherLeavesRouter = require("./routes/teacherLeaves");
 const AdMessagesRouter = require("./routes/adMessage");
 const allocateRouter = require("./routes/AgentsAssignmentsToClass");
 const extraAmountsRouter = require("./routes/extraAmounts");
-
+const agentsRouter = require("./routes/agents");
+const finalizedSalariesRouter = require("./routes/finalizedSalaries")
 
 const app = express();
 const http = require("http").createServer(app);
@@ -60,6 +61,8 @@ app.use("/salary", salaryRouter);
 app.use("/uploads", uploadRouter);
 app.use("/allocate",allocateRouter);
 app.use('/extra',extraAmountsRouter);
+app.use('/agent',agentsRouter);
+app.use('/finalize',finalizedSalariesRouter);
 
 const PORT = process.env.PORT || 5000;
 
