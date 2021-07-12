@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { getTransactionsData } = require('../controllers/transactions.controller');
+const { getTransactionsData, getCardsData } = require('../controllers/transactions.controller');
 const Transactions = require("../models/Transactions");
 const fs = require('fs')
 let months = ['march','april','may','june','july']
@@ -74,4 +74,5 @@ const path = require('path');
 // })
 
 router.get('/',getTransactionsData);
+router.get('/cards',getCardsData)
 module.exports = router;
