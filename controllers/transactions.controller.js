@@ -41,9 +41,9 @@ exports.getTransactionsData = async (req, res) => {
   }, {});
   let dateWiseAmount = allDates.map(
     (date) =>
-      allTransactionsOftheMonth[date]
+    allTransactionsOftheMonth[date] ? allTransactionsOftheMonth[date]
         .map((transaction) => transaction.amount)
-        .reduce((a, b) => a + b,0));
+        .reduce((a, b) => a + b,0) : 0);
   return res.json({
     allDates,
     dateWiseAmount,
