@@ -23,6 +23,7 @@ const allocateRouter = require("./routes/AgentsAssignmentsToClass");
 const extraAmountsRouter = require("./routes/extraAmounts");
 const agentsRouter = require("./routes/agents");
 const finalizedSalariesRouter = require("./routes/finalizedSalaries")
+const transactionsRouter = require("./routes/transactions")
 
 const app = express();
 const http = require("http").createServer(app);
@@ -63,6 +64,7 @@ app.use("/allocate",allocateRouter);
 app.use('/extra',extraAmountsRouter);
 app.use('/agent',agentsRouter);
 app.use('/finalize',finalizedSalariesRouter);
+app.use('/transactions',transactionsRouter);
 
 const PORT = process.env.PORT || 5000;
 

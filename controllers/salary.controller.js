@@ -44,7 +44,7 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
       finalizeSalariesDocument.finalizedSalaries
     ) {
       return res.json({
-        finalDataObjectArr:finalizeSalariesDocument.finalizedSalaries,
+        finalDataObjectArr: finalizeSalariesDocument.finalizedSalaries,
         isFinalized: true,
       });
     } else {
@@ -265,7 +265,7 @@ exports.getSalariesOfAllTeachersByMonth = async (req, res) => {
 
           return res.json({
             finalDataObjectArr,
-			isFinalized: false,
+            isFinalized: false,
           });
         }
       );
