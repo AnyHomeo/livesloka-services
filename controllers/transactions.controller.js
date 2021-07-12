@@ -104,7 +104,6 @@ const getSalariesOfMonth = async (month, teacher) => {
               return acc;
             }, 0);
             if (!objToPush.details[className]) {
-              console.log(totalStudents)
               objToPush.details[className] = {
                 scheduleId: attendance.scheduleId._id,
                 noOfDays: 1,
