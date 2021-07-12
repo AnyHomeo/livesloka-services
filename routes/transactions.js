@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { getTransactionsData } = require('../controllers/transactions.controller');
-const Transactions = require("../models/transactions");
+const Transactions = require("../models/Transactions");
 const fs = require('fs')
 let months = ['march','april','may','june','july']
 const path = require('path');

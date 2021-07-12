@@ -1,4 +1,4 @@
-const Transactions = require("../models/transactions");
+const Transactions = require("../models/Transactions");
 const momentTZ = require("moment-timezone");
 
 function getDaysInMonth(month, year) {
