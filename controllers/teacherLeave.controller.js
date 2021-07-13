@@ -10,11 +10,12 @@ exports.getAllTeachersLeaves = async (req, res) => {
 	try {
 		let allLeaves = await TeacherLeavesModel.find({
 			date: {
-				$gte: moment().startOf('day'),
+				$gte: momentTZ().tz("Asia/Kolkata").subtract(1,'month').startOf('day'),
 			},
 		})
 			.populate('teacherId', 'TeacherName id')
-			.populate('scheduleId', 'className');
+			.populate('scheduleId', 'className')
+			.sort({date: -1});
 		return res.json({
 			result: allLeaves,
 		});

@@ -113,7 +113,8 @@ const getSalariesOfMonth = async (month, teacher) => {
                 requestedPaidStudents: [mapFirstNames(requestedPaidStudents)],
                 numberOfStudents: totalStudents,
                 commission: getCommission(attendance.scheduleId, teacher),
-                totalSalary: totalStudents * getCommission(attendance.scheduleId, teacher),
+                totalSalary:
+                  totalStudents * getCommission(attendance.scheduleId, teacher),
               };
             } else {
               objToPush.details[className].numberOfStudents += totalStudents;
@@ -135,9 +136,8 @@ const getSalariesOfMonth = async (month, teacher) => {
           }
         });
         objToPush.totalSalary = Object.keys(objToPush.details).reduce(
-          (totalSalary, className) => {
-            totalSalary += objToPush.details[className].totalSalary;
-          },
+          (totalSalary, className) =>
+            (totalSalary += objToPush.details[className].totalSalary),
           0
         );
         finalDataObjectArr.push(objToPush);
@@ -258,26 +258,31 @@ exports.getCardsData = async (req, res) => {
         $lte: endOfMonth,
       },
     });
-  let { finalDataObjectArr } = await getSalariesOfMonth(month)
-  let netAmount =parseFloat(allTransactionsOftheMonth
-  .reduce((acc, next) => acc + next.amount || 0, 0)
-  .toFixed(2))
-  let salaries = finalDataObjectArr.reduce((totalSalary, teacher) => {
-    let teacherExtrasSalary = teacher.extras.reduce((total,extra) => {
-      total += extra.amount;
-      return total
-    },0)
-    let teacherSalary = Object.keys(teacher.details).reduce((total,className)=>{
-      total += teacher.details[className].totalSalary
-      return total
-    },0)
-    console.log(teacherExtrasSalary, teacherSalary)
-    return totalSalary + teacherExtrasSalary + teacherSalary
-  },0)
+    let { finalDataObjectArr } = await getSalariesOfMonth(month);
+    let netAmount = parseFloat(
+      allTransactionsOftheMonth
+        .reduce((acc, next) => acc + next.amount || 0, 0)
+        .toFixed(2)
+    );
+    let salaries = finalDataObjectArr.reduce((totalSalary, teacher) => {
+      let teacherExtrasSalary = teacher.extras.reduce((total, extra) => {
+        total += extra.amount;
+        return total;
+      }, 0);
+      let teacherSalary = Object.keys(teacher.details).reduce(
+        (total, className) => {
+          total += teacher.details[className].totalSalary;
+          return total;
+        },
+        0
+      );
+      console.log(teacherExtrasSalary, teacherSalary);
+      return totalSalary + teacherExtrasSalary + teacherSalary;
+    }, 0);
     res.json({
       netAmount,
       salaries,
-      expenses:0,
+      expenses: 0,
       profit: netAmount - salaries,
     });
   } catch (error) {
