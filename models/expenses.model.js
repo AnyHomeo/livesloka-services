@@ -2,6 +2,9 @@ const mongoose = require("mongoose");
 
 var ExpensesSchema = new mongoose.Schema(
   {
+    id:{
+      type:String
+    },
     name:{
         type:String,
     },

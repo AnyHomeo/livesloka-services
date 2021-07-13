@@ -1,6 +1,8 @@
 const express = require('express');
 const router =express.Router();
 
-// router.get('/',getExpenses)
+const { getExpenses } = require('../controllers/expenses.controller');
+
+router.get('/',getExpenses)
 
 module.exports = router;

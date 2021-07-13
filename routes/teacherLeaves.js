@@ -11,7 +11,7 @@ const router = express.Router();
 
 
 router.get('/', getAllTeachersLeaves);
-router.get('/today',getTodayLeavesOfTeacher);
+router.get('/single-day/:day',getTodayLeavesOfTeacher);
 router.post('/', postALeave);
 router.get('/:id', getTeacherLeavesByTeacherId);
 router.put('/:id', updateALeaveByLeaveId);

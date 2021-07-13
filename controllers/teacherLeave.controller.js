@@ -207,10 +207,11 @@ exports.deleteAleaveByLeaveId = async (req, res) => {
 
 exports.getTodayLeavesOfTeacher = async (req,res) => {
 	try {
+		const { day } = req.params
 		let leavesToday = await TeacherLeavesModel.find({
 			date:{
-				$gte: momentTZ().tz("Asia/Kolkata").startOf('day').format(),
-				$lte: momentTZ().tz("Asia/Kolkata").endOf('day').format()
+				$gte: momentTZ(day).tz("Asia/Kolkata").startOf('day').format(),
+				$lte: momentTZ(day).tz("Asia/Kolkata").endOf('day').format()
 			}
 		}).lean()
 		let entireDayLeaves = leavesToday.filter(leave => leave.entireDay)

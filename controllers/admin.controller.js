@@ -217,6 +217,9 @@ module.exports.updateStatus = (req, res) => {
 module.exports.updateCorrespondingData = (req, res) => {
 	try {
 		const vell = require(`../models/${req.params.name}.model`);
+		if(!req.body.id){
+			return res.status(500).json({error:"id is required"})
+		}
 		vell.updateOne({ id: req.body.id }, req.body)
 			.then(async (result) => {
 				if (req.params.name === 'Teacher') {
