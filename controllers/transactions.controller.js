@@ -294,3 +294,33 @@ exports.getCardsData = async (req, res) => {
 };
 
 exports.getSalariesOfMonth = getSalariesOfMonth;
+
+exports.getTransactionsTable = async (req,res) => {
+  try {
+   
+  const { month } = req.query;
+      let startOfMonth = momentTZ(month, "YYYY-MM")
+        .tz("Asia/Kolkata")
+        .startOf("month")
+        .format();
+      let endOfMonth = momentTZ(month, "YYYY-MM")
+        .tz("Asia/Kolkata")
+        .endOf("month")
+        .format();
+      let allTransactionsOftheMonth = await Transactions.find({
+        date: {
+          $gte: startOfMonth,
+          $lte: endOfMonth,
+        },
+      }).sort({ date: 1 }).lean();  
+      return res.json({
+        result:allTransactionsOftheMonth,
+        message:"Transactions Retrieved Successfully!"
+      })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      error: "Something went wrong!",
+    })
+  }
+}
