@@ -1,11 +1,10 @@
 const Transactions = require("../models/Transactions");
 const momentTZ = require("moment-timezone");
 const Attendance = require("../models/Attendance");
-const CustomerModel = require("../models/Customer.model");
 const TeacherModel = require("../models/Teacher.model");
-const SchedulerModel = require("../models/Scheduler.model");
 const ExtraAmountsModel = require("../models/ExtraAmounts.model");
 const FinalizedSalaries = require("../models/finalizedSalaries");
+const ExpensesModel = require("../models/expenses.model");
 
 let mapFirstNames = (arr) =>
   arr
@@ -276,14 +275,21 @@ exports.getCardsData = async (req, res) => {
         },
         0
       );
-      console.log(teacherExtrasSalary, teacherSalary);
       return totalSalary + teacherExtrasSalary + teacherSalary;
     }, 0);
+
+    let expenses = await ExpensesModel.find({
+      date:{
+        $gte : startOfMonth,
+        $lte : endOfMonth
+      }
+    }).select("amount")
+    expenses = expenses.reduce((acc, expense) => acc += expense.amount,0)
     res.json({
       netAmount,
       salaries,
-      expenses: 0,
-      profit: netAmount - salaries,
+      expenses,
+      profit: netAmount - salaries - expenses,
     });
   } catch (error) {
     console.log(error);
