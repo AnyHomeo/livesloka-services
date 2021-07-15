@@ -1,9 +1,13 @@
+require("dotenv").config();
 const Attendance = require("../models/Attendance");
 const CustomerModel = require("../models/Customer.model");
 const SchedulerModel = require("../models/Scheduler.model");
 const Payments = require("../models/Payments");
 const ClassHistoryModel = require("../models/ClassHistory.model");
 const momentTZ = require("moment-timezone");
+const { asyncForEach } = require("../config/helper");
+var twilio = require("twilio");
+var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 
 const getAttendance = (req, res) => {
   const { id } = req.params;
@@ -40,6 +44,90 @@ const getAttendance = (req, res) => {
         .status(500)
         .json({ error: "Error in Retrieving Attendance", result: null });
     });
+};
+
+const changeZoomLink = async (scheduleId) => {
+  let schedule = await SchedulerModel.findById(scheduleId).populate(
+    "meetingAccount"
+  );
+  const {
+    meetingLink,
+    meetingAccount: { zoomJwt, zoomEmail, zoomPassword },
+  } = schedule;
+
+  if (meetingLink && meetingLink.includes("zoom")) {
+    await fetch(
+      `https://api.zoom.us/v2/meetings/${
+        meetingLink.split("/")[4].split("?")[0]
+      }`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${zoomJwt}`,
+        },
+      }
+    );
+  }
+  const formData = {
+    topic: "Livesloka Online Class",
+    type: 3,
+    password: zoomPassword,
+    settings: {
+      host_video: true,
+      participant_video: true,
+      join_before_host: true,
+      jbh_time: 0,
+      mute_upon_entry: true,
+      watermark: false,
+      use_pmi: false,
+      approval_type: 2,
+      audio: "both",
+      auto_recording: "none",
+      waiting_room: false,
+      meeting_authentication: false,
+    },
+  };
+  let data = await fetch(`https://api.zoom.us/v2/users/${zoomEmail}/meetings`, {
+    method: "post",
+    body: JSON.stringify(formData),
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${zoomJwt}`,
+    },
+  });
+  let response = await data.json();
+  schedule.meetingLink = response.join_url;
+  await schedule.save();
+};
+
+const sendMessageIfClassesLessThanOrEqualToZero = async (customers, scheduleId) => {
+  let message = `
+Namaskaram,
+
+You have zero classes left in your current payment cycle. We request you to kindly complete the payment from Live Sloka app before the class starts to have uninterrupted learning. Please let us know if you have any payment-related issues.
+
+Thank you for being with us.
+Much Regards,
+Live Sloka Team
+  `;
+  let customersToSendMessage = await CustomerModel.find({
+    _id: { $in: customers },
+    numberOfClassesBought: { $lte: 0 },
+  }).select("whatsAppnumber");
+  if (customersToSendMessage.length) {
+    let customersToSendMessage = customersToSendMessage.map(
+      (customer) => customer.whatsAppnumber
+    );
+    await changeZoomLink(scheduleId);
+    await asyncForEach(customersToSendMessage, async (customer) => {
+      await client.messages.create({
+        body: message,
+        to: customer.whatsAppnumber, // Text this number
+        from: process.env.TWILIO_NUMBER, // From a valid Twilio number
+      });
+    });
+  }
 };
 
 const postAttendance = (req, res) => {
@@ -129,7 +217,11 @@ const postAttendance = (req, res) => {
             { _id: { $in: [...customers, ...absentees] } },
             { $inc: { numberOfClassesBought: -1 } }
           );
-          console.log(data)
+          console.log(data);
+          await sendMessageIfClassesLessThanOrEqualToZero(
+            [...customers, ...absentees],
+            scheduleId
+          );
           const attendance = new Attendance(req.body);
           attendance.save((err, doc) => {
             if (err) {
