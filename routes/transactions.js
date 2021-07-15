@@ -3,14 +3,14 @@ const router = express.Router();
 const { getTransactionsData, getCardsData, getTransactionsTable } = require('../controllers/transactions.controller');
 const Transactions = require("../models/Transactions");
 const fs = require('fs')
-let months = ['march','april','may','june','july']
+let months = ['july']
 const path = require('path');
 
 // router.get('/paypal',async (req,res) => {
 //     try {
 //         let finalArrToPush = []
 //         months.forEach(month => {
-//             let data = fs.readFileSync(path.join(__dirname,`../files/paypal/${month}.json`), 'utf8')
+//             let data = fs.readFileSync(path.join(__dirname,`../latest/paypal.json`), 'utf8')
 //             data = JSON.parse(data)
 //             finalArrToPush =  [...finalArrToPush, ...data.transaction_details.map(transaction => {
 //                 let { transaction_id:id,transaction_initiation_date:date,transaction_amount:{ value:amount } } = transaction.transaction_info

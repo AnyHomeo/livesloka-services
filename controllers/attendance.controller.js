@@ -3,7 +3,7 @@ const CustomerModel = require("../models/Customer.model");
 const SchedulerModel = require("../models/Scheduler.model");
 const Payments = require("../models/Payments");
 const ClassHistoryModel = require("../models/ClassHistory.model");
-const momentTZ = require("moment-timezone")
+const momentTZ = require("moment-timezone");
 
 const getAttendance = (req, res) => {
   const { id } = req.params;
@@ -43,10 +43,19 @@ const getAttendance = (req, res) => {
 };
 
 const postAttendance = (req, res) => {
-  let { scheduleId, date, customers, requestedStudents,requestedPaidStudents, absentees } = req.body;
+  let {
+    scheduleId,
+    date,
+    customers,
+    requestedStudents,
+    requestedPaidStudents,
+    absentees,
+  } = req.body;
 
   requestedStudents = Array.isArray(requestedStudents) ? requestedStudents : [];
-  requestedPaidStudents = Array.isArray(requestedPaidStudents) ? requestedPaidStudents : [];
+  requestedPaidStudents = Array.isArray(requestedPaidStudents)
+    ? requestedPaidStudents
+    : [];
   absentees = Array.isArray(absentees) ? absentees : [];
   customers = Array.isArray(customers) ? customers : [];
 
@@ -55,30 +64,38 @@ const postAttendance = (req, res) => {
       try {
         if (alreadyGivenAttendance) {
           let newlyRequestedStudents = [];
-           requestedStudents.forEach((student) => {
-            if (!alreadyGivenAttendance.requestedStudents.includes(student) && !alreadyGivenAttendance.requestedPaidStudents.includes(student)) {
+          requestedStudents.forEach((student) => {
+            if (
+              !alreadyGivenAttendance.requestedStudents.includes(student) &&
+              !alreadyGivenAttendance.requestedPaidStudents.includes(student)
+            ) {
               newlyRequestedStudents.push(student);
             }
           });
           requestedPaidStudents.forEach((student) => {
-            if (!alreadyGivenAttendance.requestedPaidStudents.includes(student) && !alreadyGivenAttendance.requestedPaidStudents.includes(student)) {
+            if (
+              !alreadyGivenAttendance.requestedPaidStudents.includes(student) &&
+              !alreadyGivenAttendance.requestedPaidStudents.includes(student)
+            ) {
               newlyRequestedStudents.push(student);
             }
           });
-          let allCustomers = await CustomerModel.find({_id:{
-            $in:newlyRequestedStudents
-          }}).select("numberOfClassesBought")
-          allCustomersHistory = allCustomers.map( customer => ({
-            customerId:customer._id,
-            previousValue:customer.numberOfClassesBought,
-            nextValue:customer.numberOfClassesBought + 1,
-            comment:"Requested for a class!"
-          }))
-          await ClassHistoryModel.insertMany(allCustomersHistory)
+          let allCustomers = await CustomerModel.find({
+            _id: {
+              $in: newlyRequestedStudents,
+            },
+          }).select("numberOfClassesBought");
+          allCustomersHistory = allCustomers.map((customer) => ({
+            customerId: customer._id,
+            previousValue: customer.numberOfClassesBought,
+            nextValue: customer.numberOfClassesBought + 1,
+            comment: "Requested for a class!",
+          }));
+          await ClassHistoryModel.insertMany(allCustomersHistory);
           await CustomerModel.updateMany(
             { _id: { $in: newlyRequestedStudents } },
             { $inc: { numberOfClassesBought: 1 } }
-          )
+          );
           alreadyGivenAttendance.customers = customers;
           alreadyGivenAttendance.absentees = absentees;
           alreadyGivenAttendance.requestedStudents = requestedStudents;
@@ -96,20 +113,23 @@ const postAttendance = (req, res) => {
             }
           });
         } else {
-          let allCustomers = await CustomerModel.find({_id:{
-            $in:[...customers, ...absentees]
-          }}).select("numberOfClassesBought")
-          allCustomersHistory = allCustomers.map( customer => ({
-            customerId:customer._id,
-            previousValue:customer.numberOfClassesBought,
-            nextValue:customer.numberOfClassesBought - 1,
-            comment:"Attendance Taken!"
-          }))
-          await ClassHistoryModel.insertMany(allCustomersHistory)
-          await CustomerModel.updateMany(
+          let allCustomers = await CustomerModel.find({
+            _id: {
+              $in: [...customers, ...absentees],
+            },
+          }).select("numberOfClassesBought");
+          allCustomersHistory = allCustomers.map((customer) => ({
+            customerId: customer._id,
+            previousValue: customer.numberOfClassesBought,
+            nextValue: customer.numberOfClassesBought - 1,
+            comment: "Attendance Taken!",
+          }));
+          await ClassHistoryModel.insertMany(allCustomersHistory);
+          let data = await CustomerModel.updateMany(
             { _id: { $in: [...customers, ...absentees] } },
             { $inc: { numberOfClassesBought: -1 } }
-          )
+          );
+          console.log(data)
           const attendance = new Attendance(req.body);
           attendance.save((err, doc) => {
             if (err) {
@@ -123,12 +143,12 @@ const postAttendance = (req, res) => {
               });
             }
           });
-        } 
+        }
       } catch (error) {
-        console.log(error)
+        console.log(error);
         return res.status(500).json({
-          error:"something went wrong!!"
-        })
+          error: "something went wrong!!",
+        });
       }
     })
     .catch((err) => {
@@ -139,7 +159,10 @@ const postAttendance = (req, res) => {
 const getAllAttendanceByScheduleIdAndDate = (req, res) => {
   const { scheduleId } = req.params;
   const { date } = req.query;
-  Attendance.findOne({ scheduleId, date:momentTZ.tz(date,'Asia/Kolkata').format('YYYY-MM-DD') })
+  Attendance.findOne({
+    scheduleId,
+    date: momentTZ.tz(date, "Asia/Kolkata").format("YYYY-MM-DD"),
+  })
     .then((data) => {
       return res.json({
         message: "Attendance retrieved successfully",
@@ -196,21 +219,23 @@ const getAttendanceWithPayments = async (req, res) => {
     let scheduleIds = schedules.map((schedule) => schedule._id);
     let result = await Promise.all(
       schedules.map(async (schedule) => {
-        let customerId = schedule.students.filter(student => customerIds.some(customer => student.equals(customer)))[0]
+        let customerId = schedule.students.filter((student) =>
+          customerIds.some((customer) => student.equals(customer))
+        )[0];
         let allAttendances = await Attendance.find({
           scheduleId: schedule._id,
         }).lean();
         let allPayments = await Payments.find({
-          customerId
-        }).lean()
-        allPayments = allPayments.map(payment => ({
-          isPaymentObject:true,
+          customerId,
+        }).lean();
+        allPayments = allPayments.map((payment) => ({
+          isPaymentObject: true,
           ...payment,
-          createdAt:new Date(payment.createdAt).getTime()
-        }))
+          createdAt: new Date(payment.createdAt).getTime(),
+        }));
         let finalAttendanceObject = allAttendances.map((attendance) => {
           return {
-            isPaymentObject:false,
+            isPaymentObject: false,
             isPresent: attendance.customers
               ? attendance.customers.some((customer) =>
                   customer.equals(customerId)
@@ -226,14 +251,18 @@ const getAttendanceWithPayments = async (req, res) => {
                   customer.equals(customerId)
                 )
               : false,
-            createdAt:new Date(attendance.createdAt).getTime()
+            createdAt: new Date(attendance.createdAt).getTime(),
           };
         });
         return {
-          data: [...finalAttendanceObject,...allPayments]
-          .sort((x, y) => {
-            return x.createdAt - y.createdAt;
-        }).map(object => ({...object,createdAt:new Date(object.createdAt)})),
+          data: [...finalAttendanceObject, ...allPayments]
+            .sort((x, y) => {
+              return x.createdAt - y.createdAt;
+            })
+            .map((object) => ({
+              ...object,
+              createdAt: new Date(object.createdAt),
+            })),
           subject: schedule.subject ? schedule.subject.subjectName : "",
         };
       })

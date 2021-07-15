@@ -3,6 +3,8 @@ const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const cors = require("cors");
+const batch = require('./config/batch');
+
 const indexRouter = require("./routes/admin");
 const customerRouter = require("./routes/customer");
 const attendanceRouter = require("./routes/attendance");
@@ -36,6 +38,7 @@ const io = require("socket.io")(http, {
 });
 require("dotenv").config();
 require("./models/db");
+batch()
 
 // view engine setup
 app.use(cors());
