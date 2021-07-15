@@ -63,9 +63,9 @@ exports.getAllAppliedLeavesByScheduleId = async (req, res) => {
   try {
     const { scheduleId } = req.params;
     let { noSchedule, date } = req.query;
-    console.log(date)
+    console.log(date);
     date = date && date != null && date != undefined ? date : undefined;
-    console.log(date)
+    console.log(date);
     let query = {
       cancelledDate: {
         $gte: momentTZ(date).tz("Asia/Kolkata").startOf("day").format(),
@@ -99,10 +99,19 @@ exports.CancelAClass = async (req, res) => {
     let diff =
       Math.abs(new Date(cancelledDate).getTime() - new Date().getTime()) /
       3600000;
+
     if (diff >= 9 && !isAdmin) {
       let schedule = await SchedulerModel.findById(scheduleId)
         .select("students teacher")
         .lean();
+
+      let startOfCancelledDateMonth = moment(cancelledDate)
+        .startOf("month")
+        .format();
+      let endOfCancelledDateMonth = moment(cancelledDate)
+        .endOf("month")
+        .format();
+
       let studentIds = await CustomerModel.find({ email: studentId }).lean();
       studentIds = studentIds.map((id) => id._id);
       let scheduleUsers = schedule.students;
@@ -124,6 +133,20 @@ exports.CancelAClass = async (req, res) => {
         });
       }
       req.body.studentId = selectedUser;
+      
+      let alreadyAppliedThatMonth = await CancelledClassesModel.findOne({
+        cancelledDate: {
+          $gte: startOfCancelledDateMonth,
+          $lte: endOfCancelledDateMonth,
+        },
+        scheduleId,
+        studentId:selectedUser,
+      });
+
+      if (alreadyAppliedThatMonth) {
+        return res.status(400).json({ error: "LEAVE LIMIT EXCEEDED" });
+      }
+
       let alreadyExists = await CancelledClassesModel.findOne({
         studentId: req.body.studentId,
         scheduleId: req.body.scheduleId,
