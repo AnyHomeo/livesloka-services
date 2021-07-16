@@ -115,15 +115,17 @@ Live Sloka Team
     _id: { $in: customers },
     numberOfClassesBought: { $lte: 0 },
   }).select("whatsAppnumber");
+  console.log(customersToSendMessage)
   if (customersToSendMessage.length) {
-    let customersToSendMessage = customersToSendMessage.map(
+    customersToSendMessage = customersToSendMessage.map(
       (customer) => customer.whatsAppnumber
     );
-    await changeZoomLink(scheduleId);
+    // await changeZoomLink(scheduleId);
     await asyncForEach(customersToSendMessage, async (customer) => {
+      console.log(customer,process.env.TWILIO_NUMBER)
       await client.messages.create({
         body: message,
-        to: customer.whatsAppnumber, // Text this number
+        to: customer, // Text this number
         from: process.env.TWILIO_NUMBER, // From a valid Twilio number
       });
     });
