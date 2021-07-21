@@ -219,11 +219,11 @@ const postAttendance = (req, res) => {
             { _id: { $in: [...customers, ...absentees] } },
             { $inc: { numberOfClassesBought: -1 } }
           );
-          console.log(data);
-          await sendMessageIfClassesLessThanOrEqualToZero(
-            [...customers, ...absentees],
-            scheduleId
-          );
+          // console.log(data);
+          // await sendMessageIfClassesLessThanOrEqualToZero(
+          //   [...customers, ...absentees],
+          //   scheduleId
+          // );
           const attendance = new Attendance(req.body);
           attendance.save((err, doc) => {
             if (err) {
