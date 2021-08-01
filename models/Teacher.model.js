@@ -6,15 +6,15 @@ var TeacherSchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
-    teacherImageLink:{
-      trim:true,
-      type:String,
-      default:""
+    teacherImageLink: {
+      trim: true,
+      type: String,
+      default: "",
     },
-    summerCampTeacherDescription:{
-        trim:true,
-        type:String,
-        default:""
+    summerCampTeacherDescription: {
+      trim: true,
+      type: String,
+      default: "",
     },
     TeacherDesc: {
       trim: true,
@@ -55,9 +55,9 @@ var TeacherSchema = new mongoose.Schema(
       type: String,
       default: "0",
     },
-    leaveDifferenceHours:{
-      type:Number,
-      default:0
+    leaveDifferenceHours: {
+      type: Number,
+      default: 0,
     },
     Bank_account: {
       type: String,
@@ -72,13 +72,20 @@ var TeacherSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    firebaseLocation:{
-      default:"",
-      type:String 
+    firebaseLocation: {
+      default: "",
+      type: String,
     },
-    ifsc:{
-      default:"",
-      type:String 
+    ifsc: {
+      default: "",
+      type: String,
+    },
+    demoPriority: {
+      type: Number,
+      default: 1,
+    },
+    subject:{
+      type:String,
     }
   },
   { timestamps: true }
