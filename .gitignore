@@ -2,3 +2,5 @@
 .env
 **/files
 **/latest
+
+yarn.lock

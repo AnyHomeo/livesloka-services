@@ -18,6 +18,11 @@ var TimeZoneSchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
+    timeZonePriority: {
+      trim: true,
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
