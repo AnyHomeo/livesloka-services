@@ -14,13 +14,34 @@ const SchedulerSchema = new mongoose.Schema(
 			},
 		],
 		slots: {
-			monday: Array,
-			tuesday: Array,
-			wednesday: Array,
-			thursday: Array,
-			friday: Array,
-			saturday: Array,
-			sunday: Array,
+			monday: {
+				type:Array,
+				default:[]
+			},
+			tuesday: {
+				type:Array,
+				default:[]
+			},
+			wednesday: {
+				type:Array,
+				default:[]
+			},
+			thursday: {
+				type:Array,
+				default:[]
+			},
+			friday: {
+				type:Array,
+				default:[]
+			},
+			saturday: {
+				type:Array,
+				default:[]
+			},
+			sunday: {
+				type:Array,
+				default:[]
+			},
 		},
 		meetingLink: {
 			trim: true,

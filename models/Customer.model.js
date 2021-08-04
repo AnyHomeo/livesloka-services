@@ -135,7 +135,11 @@ const Customer = new mongoose.Schema(
     discount:{
       type:Number,
       default:0
-    }
+    },
+    autoDemo: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   {
