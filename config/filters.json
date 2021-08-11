@@ -21,5 +21,8 @@
     },
     "inClass":{
         "classStatusId":"113975223750050"
+    },
+    "autoDemo":{
+        "autoDemo":true
     }
 }

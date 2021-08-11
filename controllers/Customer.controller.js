@@ -563,6 +563,9 @@ module.exports = {
       let customersInClass = await CustomerModel.countDocuments({
         classStatusId: "113975223750050",
       });
+      let autoDemoCustomers = await CustomerModel.countDocuments({
+        autoDemo:true
+      });
       let day = slot.split("-")[0].toLowerCase();
       let schedulesRightNow = await SchedulerModel.find({
         ["slots." + day]: {
@@ -600,6 +603,7 @@ module.exports = {
         customersInClass,
         schedulesRightNow,
         nextSchedules,
+        autoDemoCustomers
       });
     } catch (error) {
       console.log(error);
@@ -890,6 +894,7 @@ module.exports = {
         .populate("students", "firstName lastName email")
         .lean();
       let allCustomers = [];
+      let totalStudents = 0
       allDemoAndInclassSchedules.forEach((schedule) => {
         if (schedule.students && schedule.students.length) {
           schedule.students.forEach((student) => {
@@ -904,6 +909,7 @@ module.exports = {
           });
         }
       });
+
       return res.json({
         message: "All inclass and demo students retrieved",
         result: allCustomers,
