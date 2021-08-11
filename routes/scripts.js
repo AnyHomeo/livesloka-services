@@ -2,6 +2,13 @@ const express = require("express");
 const router = express.Router();
 const CustomerModel = require("../models/Customer.model");
 const SchedulerModel = require("../models/Scheduler.model");
+const fetch = require("node-fetch");
+let accessToken = ""
+let expiresAt = new Date().getTime();
+
+const isValidAccessToken = () =>{
+    return !!accessToken && expiresAt > new Date().getTime();
+}
 
 router.get('/demoAndInclass', async (req, res, next) =>{
     const { demo,inclass } = req.query;
@@ -54,6 +61,38 @@ router.get('/demoAndInclass', async (req, res, next) =>{
     return res.json({
         result:"updated successfully!"
     })
+});
+
+router.get('/paypal/access-token', async (req, res) => {
+    if(!isValidAccessToken()){
+        const paypalTokenParams = new URLSearchParams();
+        paypalTokenParams.append("grant_type", "client_credentials");
+        fetch(`${process.env.PAYPAL_API_KEY}/oauth2/token`, {
+          method: "POST",
+          body: paypalTokenParams,
+          headers: {
+            Authorization:
+              "Basic " +
+              Buffer.from(
+                `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`,
+                "binary"
+              ).toString("base64"),
+          },
+        })
+          .then((res) => res.json())
+          .then((json) => {
+              console.log(json)
+            accessToken = json["access_token"];
+            expiresAt = (json["expires_in"]*1000) + new Date().getTime()
+            return res.json({result:accessToken});
+          })
+          .catch((err) => {
+              console.log(err)
+              return res.status(500).json({error:"Error in generating Access Token"})
+          })    
+    } else {
+        return res.json({result:accessToken});
+    }
 });
 
 module.exports = router;
