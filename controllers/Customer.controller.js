@@ -327,28 +327,6 @@ module.exports = {
             let teacher = await TeacherModel.findOne({
               id: actualSchedule.teacher,
             }).lean();
-            let teacherLeave = await TeacherLeavesModel.countDocuments({
-              $or: [
-                {
-                  scheduleId: actualSchedule._id,
-                  date: {
-                    $gte: moment().startOf("day"),
-                    $lte: moment().endOf("day"),
-                  },
-                },
-                {
-                  entireDay: true,
-                  teacherId: teacher._id,
-                  date: {
-                    $gte: moment().startOf("day"),
-                    $lte: moment().endOf("day"),
-                  },
-                },
-              ],
-            });
-            let subject = await SubjectModel.findOne({
-              _id: actualSchedule.subject,
-            });
             let timeZone = await timeZoneModel.findOne({
               id: customer.timeZoneId,
             });
@@ -359,6 +337,28 @@ module.exports = {
             let selectedZones = allTimeZones.filter((name) =>
               selectedZoneUTCArray.includes(name)
             );
+            let teacherLeave = await TeacherLeavesModel.countDocuments({
+              $or: [
+                {
+                  scheduleId: actualSchedule._id,
+                  date: {
+                    $gte: momentTZ().tz(selectedZones[0]).startOf("day").format(),
+                    $lte: momentTZ().tz(selectedZones[0]).endOf("day").format(),
+                  },
+                },
+                {
+                  entireDay: true,
+                  teacherId: teacher._id,
+                  date: {
+                    $gte: momentTZ().tz(selectedZones[0]).startOf("day").format(),
+                    $lte: momentTZ().tz(selectedZones[0]).endOf("day").format(),
+                  },
+                },
+              ],
+            });
+            let subject = await SubjectModel.findOne({
+              _id: actualSchedule.subject,
+            });
 
             return {
               ...actualSchedule,
