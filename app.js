@@ -28,7 +28,7 @@ const finalizedSalariesRouter = require("./routes/finalizedSalaries")
 const transactionsRouter = require("./routes/transactions")
 const expensesRouter = require("./routes/expenses")
 const scriptsRouter = require("./routes/scripts");
-
+const subscriptionsRouter = require("./routes/subscriptions");
 
 const app = express();
 const http = require("http").createServer(app);
@@ -73,6 +73,7 @@ app.use('/finalize',finalizedSalariesRouter);
 app.use('/transactions',transactionsRouter);
 app.use('/expenses',expensesRouter);
 app.use('/scripts',scriptsRouter);
+app.use('/subscriptions',subscriptionsRouter);
 
 const PORT = process.env.PORT || 5000;
 
