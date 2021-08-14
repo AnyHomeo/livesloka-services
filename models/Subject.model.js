@@ -35,7 +35,11 @@ var SubjectSchema = new mongoose.Schema(
     category:{
       type:String,
       default:"",
-    }
+    },
+    productId:{
+      type:String,
+      default:""
+    },
   },
   { timestamps: true }
 );
