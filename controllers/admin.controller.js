@@ -13,12 +13,14 @@ var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 module.exports = {
   async authentication(req, res) {
     try {
-      let user = await admin.findOne({
-        $or: [
-          { userId: req.body.userId.toLowerCase() },
-          { userId: req.body.userId },
-        ],
-      }).lean();
+      let user = await admin
+        .findOne({
+          $or: [
+            { userId: req.body.userId.toLowerCase() },
+            { userId: req.body.userId },
+          ],
+        })
+        .lean();
       if (!user) {
         return res.status(400).json({ error: "Invalid UserId or Password" });
       }
@@ -27,14 +29,10 @@ module.exports = {
           _id: user._id,
           userId: user.userId,
         };
-        var newToken = jwt.sign(
-          payload,
-		  process.env.JWT_SECRET,
-          {
-            expiresIn: process.env.JWT_EXP,
-          }
-        );
-        delete user.password
+        var newToken = jwt.sign(payload, process.env.JWT_SECRET, {
+          expiresIn: process.env.JWT_EXP,
+        });
+        delete user.password;
         let customer = await CustomerModel.findById(user.customerId)
           .select("timeZoneId firstName lastName phone whatsAppnumber -_id")
           .lean();
