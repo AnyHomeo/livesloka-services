@@ -783,7 +783,6 @@ module.exports = {
         error: "Something went wrong!",
       });
     }
-    const { email } = req.params;
   },
 
   updateLastTimeJoined: async (req, res) => {
@@ -883,6 +882,7 @@ module.exports = {
       });
     }
   },
+  
   getInclassAndDemoStudents: async (req, res) => {
     try {
       let allDemoAndInclassSchedules = await ScheduleModel.find({

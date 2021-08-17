@@ -29,6 +29,7 @@ const transactionsRouter = require("./routes/transactions")
 const expensesRouter = require("./routes/expenses")
 const scriptsRouter = require("./routes/scripts");
 const subscriptionsRouter = require("./routes/subscriptions");
+const optionsRouter = require("./routes/options");
 
 const app = express();
 const http = require("http").createServer(app);
@@ -74,6 +75,7 @@ app.use('/transactions',transactionsRouter);
 app.use('/expenses',expensesRouter);
 app.use('/scripts',scriptsRouter);
 app.use('/subscriptions',subscriptionsRouter);
+app.use('/options',optionsRouter);
 
 const PORT = process.env.PORT || 5000;
 
