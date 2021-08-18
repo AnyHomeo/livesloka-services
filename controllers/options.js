@@ -1,5 +1,7 @@
 const CustomerModel = require("../models/Customer.model");
 const TeacherModel = require("../models/Teacher.model");
+const OptionsModel = require("../models/SlotOptions");
+const ObjectId = require('mongoose').Types.ObjectId;
 
 exports.getTeacherSlots = async (req, res) => {
   try {
@@ -41,3 +43,39 @@ exports.getOnlyDemoCustomers = async (req, res) => {
     return res.status(500).json({ error: "Something went wrong!" });
   }
 };
+
+exports.postAnOption = async (req,res) => {
+  try {
+    const { customer,slots } = req.body
+
+    if(!customer){
+      return res.status(400).json({ error: "Customer Id is Required!" });
+    }
+
+    if(!Array.isArray(slots) || !slots.length){
+      return res.status(400).json({ error: "Minimum 1 slot is required!" });   
+    }
+
+    if(!slots.some((teacher) => !!teacher.slots.length)){
+      return res.status(400).json({ error: "No slots were selected!" });
+    }
+
+    if(!ObjectId.isValid(customer)){
+      return res.status(400).json({ error: "Invalid Customer" });
+    }
+
+    if(!slots.some((teacher) => ObjectId.isValid(teacher.teacher))){
+      return res.status(400).json({ error: "Invalid Teachers" });
+    }
+
+    let newOption = new OptionsModel(req.body)
+    await newOption.save()
+    return res.json({ 
+      message:"Inserted Successfully!"
+    })
+
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ error: "Something went wrong!" });
+  }
+}
