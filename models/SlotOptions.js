@@ -5,18 +5,23 @@ const SlotOptionsSchema = new mongoose.Schema(
     customer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",
+      required: true,
     },
-    slots: [
+    options: [
       {
-        teacher: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Teacher",
-        },
-        slots: [
-          {
-            type: String,
-          },
-        ],
+        monday: [{ type: String }],
+        tuesday: [{ type: String }],
+        wednesday: [{ type: String }],
+        thursday: [{ type: String }],
+        friday: [{ type: String }],
+        saturday: [{ type: String }],
+        sunday: [{ type: String }],
+      },
+    ],
+    schedules: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Schedule",
       },
     ],
   },
