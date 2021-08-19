@@ -55,32 +55,29 @@ exports.getOnlyDemoCustomers = async (req, res) => {
 
 exports.postAnOption = async (req,res) => {
   try {
-    const { customer,slots } = req.body
+    const { customer,options,teacher } = req.body
 
     if(!customer){
       return res.status(400).json({ error: "Customer Id is Required!" });
     }
 
-    if(!Array.isArray(slots) || !slots.length){
-      return res.status(400).json({ error: "Minimum 1 slot is required!" });   
+    if(!teacher){
+      return res.status(400).json({ error: "Teacher Id is Required!" });
     }
 
-    if(!slots.some((teacher) => !!teacher.slots.length)){
-      return res.status(400).json({ error: "No slots were selected!" });
+    if(!Array.isArray(options) || !options.length){
+      return res.status(400).json({ error: "Minimum 1 slot is required!" });   
     }
 
     if(!ObjectId.isValid(customer)){
       return res.status(400).json({ error: "Invalid Customer" });
     }
 
-    if(!slots.some((teacher) => ObjectId.isValid(teacher.teacher))){
-      return res.status(400).json({ error: "Invalid Teachers" });
-    }
 
     let newOption = new OptionsModel(req.body)
     await newOption.save()
     return res.json({ 
-      message:"Inserted Successfully!"
+      message:"Options Created Successfully!"
     })
 
   } catch (error) {
