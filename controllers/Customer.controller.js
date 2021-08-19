@@ -342,16 +342,16 @@ module.exports = {
                 {
                   scheduleId: actualSchedule._id,
                   date: {
-                    $gte: momentTZ().tz(selectedZones[0]).startOf("day").format(),
-                    $lte: momentTZ().tz(selectedZones[0]).endOf("day").format(),
+                    $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
+                    $lte: momentTZ().tz("Asia/Kolkata").endOf("day").format(),
                   },
                 },
                 {
                   entireDay: true,
                   teacherId: teacher._id,
                   date: {
-                    $gte: momentTZ().tz(selectedZones[0]).startOf("day").format(),
-                    $lte: momentTZ().tz(selectedZones[0]).endOf("day").format(),
+                    $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
+                    $lte: momentTZ().tz("Asia/Kolkata").endOf("day").format(),
                   },
                 },
               ],

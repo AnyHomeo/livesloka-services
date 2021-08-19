@@ -2,19 +2,28 @@ const CustomerModel = require("../models/Customer.model");
 const TeacherModel = require("../models/Teacher.model");
 const OptionsModel = require("../models/SlotOptions");
 const ObjectId = require('mongoose').Types.ObjectId;
+const SchedulerModel = require("../models/Scheduler.model");
 
 exports.getTeacherSlots = async (req, res) => {
   try {
-    const { subject } = req.params;
-    const selectedTeachers = await TeacherModel.find({
-      subject,
+    const { teacherId } = req.params;
+    const selectedTeacher = await TeacherModel.findOne({
+      id:teacherId,
     })
-      .select("TeacherName availableSlots scheduledSlots")
+      .select("TeacherName availableSlots")
       .lean();
 
+    let schedules = await SchedulerModel.find({
+      teacher:teacherId,
+      isDeleted:{
+        $ne:true
+      },
+      demo:false
+    }).select("scheduleDescription className")
+
     return res.json({
-      result: selectedTeachers,
-      message: "Teachers retrieved successfully!!",
+      result: {...selectedTeacher,schedules},
+      message: "Teacher retrieved successfully!!",
     });
   } catch (error) {
     console.log(error);
@@ -78,4 +87,12 @@ exports.postAnOption = async (req,res) => {
     console.log(error)
     return res.status(500).json({ error: "Something went wrong!" });
   }
+}
+
+exports.getOptions = async (req,res) => {
+
+}
+
+exports.updateAnOption = async (req,res) => {
+
 }
