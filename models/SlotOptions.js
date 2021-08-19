@@ -9,13 +9,13 @@ const SlotOptionsSchema = new mongoose.Schema(
     },
     options: [
       {
-        monday: [{ type: String }],
-        tuesday: [{ type: String }],
-        wednesday: [{ type: String }],
-        thursday: [{ type: String }],
-        friday: [{ type: String }],
-        saturday: [{ type: String }],
-        sunday: [{ type: String }],
+        monday: { type: String },
+        tuesday: { type: String },
+        wednesday: { type: String },
+        thursday: { type: String },
+        friday: { type: String },
+        saturday: { type: String },
+        sunday: { type: String },
       },
     ],
     schedules: [
@@ -24,6 +24,9 @@ const SlotOptionsSchema = new mongoose.Schema(
         ref: "Schedule",
       },
     ],
+    teacher:{
+      type:String
+    }
   },
   { timestamps: true }
 );
