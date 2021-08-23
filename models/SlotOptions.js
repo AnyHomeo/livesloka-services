@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongooseLeanVirtuals = require('mongoose-lean-virtuals');
 
 const SlotOptionsSchema = new mongoose.Schema(
   {
@@ -30,5 +31,14 @@ const SlotOptionsSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+SlotOptionsSchema.virtual('teacherData', {
+	ref: 'Teacher',
+	localField: 'teacher',
+	foreignField: 'id',
+	justOne: true,
+});
+
+SlotOptionsSchema.plugin(mongooseLeanVirtuals);
 
 module.exports = mongoose.model("SlotOptions", SlotOptionsSchema);
