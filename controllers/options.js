@@ -99,3 +99,22 @@ exports.getOptions = async (req,res) => {
 exports.updateAnOption = async (req,res) => {
 
 }
+
+exports.deleteAnOption = async (req,res) => {
+  try {
+    const { optionId } = req.params;
+
+    if(!optionId) return res.status(400).json({ error: "Option Id is Required"})
+    if(!ObjectId.isValid(optionId)) return res.status(400).json({ error: "Option Id must be a valid objectId"})
+
+    const deletedOption = await OptionsModel.deleteOne({_id: optionId})
+    if(deletedOption.n && deletedOption.ok){
+      return res.json({message: "Option deleted successfully!"});
+    } else {
+      return res.status(400).json({message: "Option not deleted"})
+    }
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ error: "Something went wrong!"})
+  }
+}
