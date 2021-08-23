@@ -87,7 +87,13 @@ exports.postAnOption = async (req,res) => {
 }
 
 exports.getOptions = async (req,res) => {
-
+  try {
+    const result = await OptionsModel.find()
+    return res.json({result,message:"All Options Retrieved Successfully!!!"});
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ error: "Something went wrong!" });
+  }
 }
 
 exports.updateAnOption = async (req,res) => {
