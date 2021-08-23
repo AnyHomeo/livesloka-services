@@ -88,7 +88,7 @@ exports.postAnOption = async (req,res) => {
 
 exports.getOptions = async (req,res) => {
   try {
-    const result = await OptionsModel.find()
+    const result = await OptionsModel.find().populate("customer").populate("schedules")
     return res.json({result,message:"All Options Retrieved Successfully!!!"});
   } catch (error) {
     console.log(error)
