@@ -9,7 +9,6 @@ const times = require("../models/times.json");
 const momentTZ = require("moment-timezone");
 
 const getStartTime = (slots, zoneName) => {
-  console.log("slots", slots);
   let day = slots[0].split("-")[0].toLowerCase();
   let slotsWithoutDay = slots.map(
     (slot) => `${slot.split("-")[1]}-${slot.split("-")[2]}`
@@ -189,11 +188,9 @@ exports.getAnOption = async (req, res) => {
       } else {
         selectedZone = "Asia/Kolkata";
       }
-      console.log(selectedZone);
       let newSlots = option.options.map((optionObj) => {
         let optionSlots = {};
         Object.keys(optionObj).forEach((day) => {
-          console.log(day);
           if (day !== "_id") {
             let [dayStr, time] = getStartTime([optionObj[day]], selectedZone);
             optionSlots[dayStr.toLowerCase()] = time;
