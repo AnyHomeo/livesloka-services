@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongooseLeanVirtuals = require("mongoose-lean-virtuals");
 
 const Customer = new mongoose.Schema(
   {
@@ -140,11 +141,24 @@ const Customer = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isNewCustomer: {
+      type: Boolean,
+      default: true,
+    }
   },
 
   {
     timestamps: true,
   }
 );
+
+Customer.virtual("sunject", {
+  ref: "Subject",
+  localField: "subjectId",
+  foreignField: "id",
+  justOne: true,
+});
+
+Customer.plugin(mongooseLeanVirtuals);
 
 module.exports = mongoose.model("Customer", Customer);

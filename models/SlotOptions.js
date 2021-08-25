@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const mongooseLeanVirtuals = require('mongoose-lean-virtuals');
+const mongooseLeanVirtuals = require("mongoose-lean-virtuals");
 
 const SlotOptionsSchema = new mongoose.Schema(
   {
@@ -23,20 +23,22 @@ const SlotOptionsSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Schedule",
-      },
+      }, 
     ],
-    teacher:{
-      type:String
-    }
-  },
+    selectedSlotId: { type: String },
+    selectedSlotType: { type: String, enum: ["NEW", "EXISTING"] },
+    teacher: {
+      type: String,
+    },
+  }, 
   { timestamps: true }
 );
 
-SlotOptionsSchema.virtual('teacherData', {
-	ref: 'Teacher',
-	localField: 'teacher',
-	foreignField: 'id',
-	justOne: true,
+SlotOptionsSchema.virtual("teacherData", {
+  ref: "Teacher",
+  localField: "teacher",
+  foreignField: "id",
+  justOne: true,
 });
 
 SlotOptionsSchema.plugin(mongooseLeanVirtuals);

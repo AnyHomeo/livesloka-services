@@ -101,7 +101,17 @@ exports.getOptions = async (req, res) => {
   }
 };
 
-exports.updateAnOption = async (req, res) => {};
+exports.updateAnOption = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedOption = await OptionsModel.findByIdAndUpdate(id,req.body);
+    return res.json({message: "Option updated successfully",result:updatedOption})
+  } catch (error) { 
+    console.log(error)
+    return res.status(500).json({ error: "Something went wrong!" });
+  }
+};
+
 
 exports.deleteAnOption = async (req, res) => {
   try {
@@ -112,7 +122,7 @@ exports.deleteAnOption = async (req, res) => {
     if (!ObjectId.isValid(optionId))
       return res
         .status(400)
-        .json({ error: "Option Id must be a valid objectId" });
+        .json({ error: "Option Id must be a valid objectId" }); 
 
     const deletedOption = await OptionsModel.deleteOne({ _id: optionId });
     if (deletedOption.n && deletedOption.ok) {
