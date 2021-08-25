@@ -1,5 +1,6 @@
 const fetch = require("node-fetch");
 const { asyncForEach } = require("../config/helper");
+const CustomerModel = require("../models/Customer.model");
 const SubjectModel = require("../models/Subject.model");
 let accessToken = "";
 let expiresAt = new Date().getTime();
@@ -209,39 +210,45 @@ exports.getProducts = async (req, res) => {
 };
 
 exports.getPlansByCustomerId = async (req,res) => {
-  const { customerId } = req.params
-  const customer = await CustomerModel.findById(customerId).populate("subject","productId");
-  if(customer){
-    const {productId} = customer.subject
-    if(productId){
-      let accessToken = await getAccessToken();
-    let config = {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    };
-    let response = await fetch(
-      `${process.env.PAYPAL_API_KEY}/billing/plans?product_id=${productId}`,
-      config
-    );
-    let result = await response.json();
-    if(response.statusText !== "OK"){
-      return res.status(400).json({
+  try {
+    const { customerId } = req.params
+    const customer = await CustomerModel.findById(customerId).populate("subject","productId").lean();
+    console.log(customer)
+    if(customer){ 
+      const {productId} = customer.subject
+      if(productId){
+        let accessToken = await getAccessToken();
+      let config = {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      };
+      let response = await fetch(
+        `${process.env.PAYPAL_API_KEY}/billing/plans?product_id=${productId}`,
+        config
+      );
+      let result = await response.json();
+      if(response.statusText !== "OK"){
+        return res.status(400).json({
+          result,
+          message: "Something went wrong in retrieving plans from paypal!",
+        });
+      }
+      return res.json({
         result,
-        message: "Something went wrong in retrieving plans from paypal!",
+        message: "Plans Retrieved successfully!",
       });
-    }
-    return res.json({
-      result,
-      message: "Plans Retrieved successfully!",
-    });
+      } else {
+        return res.status(400).json({error:"No plans available for selected Subject"});
+      }
     } else {
-      return res.status(400).json({error:"No plans available for selected Subject"});
-    }
-  } else {
-    return res.status(400).json({error:"Invalid customer Id"});
+      return res.status(400).json({error:"Invalid customer Id"});
+    }      
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ error: "Something went wrong!!" });
   }
 }
 

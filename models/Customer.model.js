@@ -152,7 +152,7 @@ const Customer = new mongoose.Schema(
   }
 );
 
-Customer.virtual("sunject", {
+Customer.virtual("subject", {
   ref: "Subject",
   localField: "subjectId",
   foreignField: "id",
