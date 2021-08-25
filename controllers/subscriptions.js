@@ -235,8 +235,18 @@ exports.getPlansByCustomerId = async (req,res) => {
           message: "Something went wrong in retrieving plans from paypal!",
         });
       }
+      let plans = await Promise.all(result.plans.map(async (plan) => {
+        let planId = plan.id
+        let response = await fetch(
+          `${process.env.PAYPAL_API_KEY}/billing/plans/${planId}`,
+          config
+        );
+        let result = await response.json();
+        return result
+      })) 
+
       return res.json({
-        result,
+        result:plans,
         message: "Plans Retrieved successfully!",
       });
       } else {
@@ -476,3 +486,5 @@ exports.deactivatePlan = async (req, res) => {
     return res.status(500).json({ error: "Something went wrong!!" });
   }
 };
+
+exports.subscribeToAPlan

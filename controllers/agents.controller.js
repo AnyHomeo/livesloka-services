@@ -20,12 +20,11 @@ exports.sendOtpsForSalarysFinalisation = async (req, res) => {
 			let otpsToValidate = await Promise.all(
 				agentsToFinalize.map(async (agent) => {
 					let otp = Math.floor(1000 + Math.random() * 9000);
-					let data  = await client.messages.create({
+					await client.messages.create({
 						body: `Live Sloka: Your OTP to Finalize Salaries is ${otp}`,
 						to: agent.phoneNumber,
 						from: process.env.TWILIO_NUMBER,
 					});
-                    console.log(data)
 					return {
 						agentId: agent._id,
 						otp,
