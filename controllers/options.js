@@ -1,8 +1,35 @@
 const CustomerModel = require("../models/Customer.model");
 const TeacherModel = require("../models/Teacher.model");
 const OptionsModel = require("../models/SlotOptions");
+const TimeZoneModel = require("../models/timeZone.model");
 const ObjectId = require("mongoose").Types.ObjectId;
 const SchedulerModel = require("../models/Scheduler.model");
+const allZones = require("../models/timeZone.json");
+const times = require("../models/times.json");
+const momentTZ = require("moment-timezone");
+
+const getStartTime = (slots, zoneName) => {
+  console.log("slots", slots);
+  let day = slots[0].split("-")[0].toLowerCase();
+  let slotsWithoutDay = slots.map(
+    (slot) => `${slot.split("-")[1]}-${slot.split("-")[2]}`
+  );
+  let selectedStartTime = "";
+  for (let i = 0; i < times.length; i++) {
+    const time = times[i];
+    if (slotsWithoutDay.includes(time)) {
+      selectedStartTime = time;
+      break;
+    }
+  }
+  let time = momentTZ(
+    `${day} ${selectedStartTime.split("-")[0]}`,
+    "dddd hh:mm A"
+  )
+    .tz(zoneName)
+    .format("dddd-hh:mm A");
+  return time.split("-");
+};
 
 exports.getTeacherSlots = async (req, res) => {
   try {
@@ -104,14 +131,16 @@ exports.getOptions = async (req, res) => {
 exports.updateAnOption = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedOption = await OptionsModel.findByIdAndUpdate(id,req.body);
-    return res.json({message: "Option updated successfully",result:updatedOption})
-  } catch (error) { 
-    console.log(error)
+    const updatedOption = await OptionsModel.findByIdAndUpdate(id, req.body);
+    return res.json({
+      message: "Option updated successfully",
+      result: updatedOption,
+    });
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({ error: "Something went wrong!" });
   }
 };
-
 
 exports.deleteAnOption = async (req, res) => {
   try {
@@ -122,7 +151,7 @@ exports.deleteAnOption = async (req, res) => {
     if (!ObjectId.isValid(optionId))
       return res
         .status(400)
-        .json({ error: "Option Id must be a valid objectId" }); 
+        .json({ error: "Option Id must be a valid objectId" });
 
     const deletedOption = await OptionsModel.deleteOne({ _id: optionId });
     if (deletedOption.n && deletedOption.ok) {
@@ -133,20 +162,70 @@ exports.deleteAnOption = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: "Something went wrong!" });
-  } 
+  }
 };
 
 exports.getAnOption = async (req, res) => {
   try {
     const { id } = req.params;
     const option = await OptionsModel.findById(id)
-      .populate("customer", "id firstName lastName")
-      .populate("schedules", "scheduleDescription className")
-      .populate("teacherData", "TeacherName id");
-    if(option){
-      return res.json({message:"Option retrieved successfully",result:option});
+      .populate("customer", "id firstName lastName timeZoneId")
+      .populate("schedules", "scheduleDescription className slots")
+      .populate("teacherData", "TeacherName id")
+      .lean();
+    let selectedZone;
+    if (option) {
+      if (option.customer.timeZoneId) {
+        let timeZone = await TimeZoneModel.findOne({
+          id: option.customer.timeZoneId,
+        });
+        let selectedZoneUTCArray = allZones.filter(
+          (zone) => zone.abbr === timeZone.timeZoneName
+        )[0].utc;
+        let allTimeZones = momentTZ.tz.names();
+        selectedZone = allTimeZones.filter((name) =>
+          selectedZoneUTCArray.includes(name)
+        )[0];
+      } else {
+        selectedZone = "Asia/Kolkata";
+      }
+      console.log(selectedZone);
+      let newSlots = option.options.map((optionObj) => {
+        let optionSlots = {};
+        Object.keys(optionObj).forEach((day) => {
+          console.log(day);
+          if (day !== "_id") {
+            let [dayStr, time] = getStartTime([optionObj[day]], selectedZone);
+            optionSlots[dayStr.toLowerCase()] = time;
+          } else {
+            optionSlots[day] = option[day];
+          }
+        });
+        return optionSlots;
+      });
+
+      let scheduledSlots = option.schedules.map((schedule) => {
+        let objToReturn = {};
+        Object.keys(schedule.slots).forEach((day) => {
+          if (schedule.slots[day].length) {
+            [dayStr, time] = getStartTime(schedule.slots[day], selectedZone);
+            objToReturn[dayStr.toLowerCase()] = time;
+          }
+        });
+        return { ...objToReturn, _id: schedule._id };
+      });
+
+      return res.json({
+        message: "Option retrieved successfully",
+        result: [
+          ...newSlots.map((slot) => ({ ...slot, isScheduled: false })),
+          ...scheduledSlots.map((slot) => ({ ...slot, isScheduled: true })),
+        ],
+      });
     } else {
-      return res.status(500).json({error:"Link Expired please contact Agent for new Link"});
+      return res
+        .status(500)
+        .json({ error: "Link Expired please contact Agent for new Link" });
     }
   } catch (error) {
     console.log(error);
