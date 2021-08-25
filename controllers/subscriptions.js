@@ -213,7 +213,6 @@ exports.getPlansByCustomerId = async (req,res) => {
   try {
     const { customerId } = req.params
     const customer = await CustomerModel.findById(customerId).populate("subject","productId").lean();
-    console.log(customer)
     if(customer){ 
       const {productId} = customer.subject
       if(productId){

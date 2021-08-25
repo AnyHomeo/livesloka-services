@@ -1397,9 +1397,7 @@ exports.editIfWhereby = async (req, res, next) => {
 exports.changeZoomLink = async (req, res) => {
 	try {
 		const { scheduleId } = req.params;
-		console.log(scheduleId);
 		let schedule = await SchedulerModel.findById(scheduleId).populate('meetingAccount');
-		console.log(schedule);
 		const {
 			meetingLink,
 			meetingAccount: { zoomJwt, zoomEmail, zoomPassword },

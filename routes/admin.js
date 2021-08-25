@@ -19,7 +19,6 @@ router.get("/otp/:number",(req,res)=>{
         from: process.env.TWILIO_NUMBER // From a valid Twilio number
     })
     .then((message) => {
-        console.log(message)
         return res.json({
             message:"Otp sent!",
             result:otp+3456

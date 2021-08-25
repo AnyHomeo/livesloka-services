@@ -187,7 +187,6 @@ exports.deleteAleaveByLeaveId = async (req, res) => {
 	try {
 		let { id } = req.params;
 		let deletedLeave = await TeacherLeavesModel.deleteOne({ _id: id });
-		console.log(deletedLeave);
 		if (deletedLeave.n === 1) {
 			return res.json({
 				message: 'Deleted Sucessfully!',
