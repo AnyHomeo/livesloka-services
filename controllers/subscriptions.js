@@ -2,6 +2,7 @@ const fetch = require("node-fetch");
 const { asyncForEach } = require("../config/helper");
 const CustomerModel = require("../models/Customer.model");
 const SubjectModel = require("../models/Subject.model");
+const moment = require("moment");
 let accessToken = "";
 let expiresAt = new Date().getTime();
 
@@ -191,7 +192,7 @@ exports.getProducts = async (req, res) => {
       `${process.env.PAYPAL_API_KEY}/catalogs/products`,
       config
     );
-    let result = await response.json() 
+    let result = await response.json()
     if(response.statusText !== "OK"){
       return res.status(400).json({
         error: "Something went wrong in retrieving products from paypal!",
@@ -213,7 +214,7 @@ exports.getPlansByCustomerId = async (req,res) => {
   try {
     const { customerId } = req.params
     const customer = await CustomerModel.findById(customerId).populate("subject","productId").lean();
-    if(customer){ 
+    if(customer){
       const {productId} = customer.subject
       if(productId){
         let accessToken = await getAccessToken();
@@ -243,7 +244,7 @@ exports.getPlansByCustomerId = async (req,res) => {
         );
         let result = await response.json();
         return result
-      })) 
+      }))
 
       return res.json({
         result:plans,
@@ -254,7 +255,7 @@ exports.getPlansByCustomerId = async (req,res) => {
       }
     } else {
       return res.status(400).json({error:"Invalid customer Id"});
-    }      
+    }
   } catch (error) {
     console.log(error)
     return res.status(500).json({ error: "Something went wrong!!" });
@@ -487,4 +488,65 @@ exports.deactivatePlan = async (req, res) => {
   }
 };
 
-exports.subscribeToAPlan
+exports.subscribeCustomerToAPlan = async (req, res) => {
+  try {
+    const { customerId,planId } = req.params
+    const customer = await CustomerModel.findOne({_id: customerId}).lean()
+    if(!customer){
+      return res.status(400).json({ error: "Invalid or Deleted customer Id"})
+    }
+    let accessToken = await getAccessToken()
+    let subscriptionBody = {
+      "plan_id": planId,
+      "start_time": moment.utc().add(10,'seconds').format(),
+      "quantity": "1",
+      "subscriber": {
+        "name": {
+          "given_name": customer.firstName
+        },
+        "email_address": customer.email
+      },
+      "application_context": {
+        "brand_name": "Live Sloka",
+        "locale": "en-US",
+        "shipping_preference": "NO_SHIPPING",
+        "user_action": "SUBSCRIBE_NOW",
+        "payment_method": {
+          "payer_selected": "PAYPAL",
+          "payee_preferred": "IMMEDIATE_PAYMENT_REQUIRED"
+        },
+        "return_url": `${process.env.USER_CLIENT_URL}/subscriptions/success`,
+        "cancel_url": `${process.env.USER_CLIENT_URL}/subscriptions/failure`
+      }
+    }
+    let config = {
+      body:JSON.stringify(subscriptionBody),
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    }
+
+    let response = await fetch(
+      `${process.env.PAYPAL_API_KEY}/billing/subscriptions`,
+      config
+    );
+    let result = await response.json();
+    console.log(JSON.stringify(result,null,1))
+    console.log(response)
+    if(response.statusText !== "Created"){
+    return res.redirect(`${process.env.USER_CLIENT_URL}/subscriptions/failure`);
+    } else {
+      let redirectLink = result.links.filter(link => link.rel === "approve")[0]
+      // console.log(redirectLink)
+      // res.json(redirectLink)
+      return res.redirect(redirectLink.href)
+    }
+    // return res.redirect(`${process.env.USER_CLIENT_URL}/subscriptions/success`)
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({error:"Something went wrong!!"})
+    // return res.redirect(`${process.env.USER_CLIENT_URL}/subscriptions/failure`);
+  }
+}

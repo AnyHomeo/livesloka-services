@@ -11,8 +11,10 @@ const {
   activatePlan,
   deactivatePlan,
   getPlansByCustomerId,
+  subscribeCustomerToAPlan,
 } = require("../controllers/subscriptions");
 
+router.get('/subscribe/:customerId/:planId',subscribeCustomerToAPlan)
 router.get("/get/products", getProducts);
 router.get("/get/plans/:productId", getPlans);
 router.get("/get/plans/:planId", getPlanById);
