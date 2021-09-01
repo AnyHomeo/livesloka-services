@@ -144,6 +144,10 @@ const Customer = new mongoose.Schema(
     isNewCustomer: {
       type: Boolean,
       default: true,
+    },
+    isPaypalPaymentRequired: {
+      type:Boolean,
+      default:true
     }
   },
 

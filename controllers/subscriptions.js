@@ -5,6 +5,7 @@ const SubjectModel = require("../models/Subject.model");
 const moment = require("moment");
 let accessToken = "";
 let expiresAt = new Date().getTime();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const isValidAccessToken = () => {
   return !!accessToken && expiresAt > new Date().getTime();
@@ -35,7 +36,7 @@ const getAccessToken = async () => {
   }
 };
 
-exports.createProduct = async (req, res) => {
+exports.createProductValidations = async (req,res,next) =>{
   try {
     const { name, description, subject, image } = req.body;
     if (!name) {
@@ -50,6 +51,41 @@ exports.createProduct = async (req, res) => {
     if (!subject) {
       return res.status(400).json({ error: "Subject is Required" });
     }
+    next()
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ error:"Something went wrong in validation!"});
+  }
+}
+
+exports.createPlanValidations = async (req,res,next) => {
+  try {
+    const { productIds, name, description, months, price } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: "Name is Required" });
+    }
+    if (!description) {
+      return res.status(400).json({ error: "Description is Required" });
+    }
+    if (Array.isArray(productIds) && !productIds.length) {
+      return res.status(400).json({ error: "Minimum 1 subject required" });
+    }
+    if (!months) {
+      return res.status(400).json({ error: "Months are Required" });
+    }
+    if (!price) {
+      return res.status(400).json({ error: "Price is Required" });
+    }
+    next()
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ error:"Something went wrong in validation!"});
+  }
+}
+
+exports.createProduct = async (req, res) => {
+  try {
+    const { name, description, subject, image } = req.body;
     let subjectData = await SubjectModel.findOne({ id: subject });
     if (!subjectData) {
       return res.status(400).json({ error: "Subject is Invalid" });
@@ -79,16 +115,24 @@ exports.createProduct = async (req, res) => {
     if (response.id) {
       subjectData.productId = response.id;
       await subjectData.save();
+      const product = await stripe.products.create({
+        name,
+        description,
+        images:[
+          image
+        ],
+        livemode:!(process.env.ENVIRONMENT === "DEV"),
+        id:response.id
+      });
       return res.json({
-        result: "Subject Created Successfully",
-        result: response,
-        accessToken,
+        message: "Subject Created Successfully",
+        result: {paypal:response,stripe: product},
       });
     } else {
-      if (Array.isArray(response.details) && details.length) {
+      if (Array.isArray(response.details) && response.details.length) {
         return res
           .status(400)
-          .json({ error: `"${details[0].value}" is Invalid` });
+          .json({ error: `${response.details[0].value} is Invalid` });
       }
       return res.status(400).json({ error: "Product not created" });
     }
@@ -101,23 +145,9 @@ exports.createProduct = async (req, res) => {
 exports.createPlan = async (req, res) => {
   try {
     const { productIds, name, description, months, price } = req.body;
-    if (!name) {
-      return res.status(400).json({ error: "Name is Required" });
-    }
-    if (!description) {
-      return res.status(400).json({ error: "Description is Required" });
-    }
-    if (Array.isArray(productIds) && !productIds.length) {
-      return res.status(400).json({ error: "Minimum 1 subject required" });
-    }
-    if (!months) {
-      return res.status(400).json({ error: "Months are Required" });
-    }
-    if (!price) {
-      return res.status(400).json({ error: "Price is Required" });
-    }
     let accessToken = await getAccessToken();
     let responses = [];
+    let stripeResponses = [];
     await asyncForEach(productIds, async (productId, i) => {
       let body = JSON.stringify({
         name,
@@ -169,9 +199,16 @@ exports.createPlan = async (req, res) => {
         config
       );
       response = await response.json();
-      responses.push(response);
+      const price = await stripe.prices.create({
+        unit_amount: price,
+        currency: 'usd',
+        recurring: {interval: 'month',interval_count:months},
+        product: productId,
+        livemode: !(process.env.ENVIRONMENT === "DEV")
+      });
+      responses.push({paypal:response,stripe:price});
     });
-    return res.json({ message: "Plans Created Successfully!", responses });
+    return res.json({ message: "Plans Created Successfully!", result:{paypal:responses,stripe:stripeResponses}});
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: "Something went wrong!!" });
