@@ -18,7 +18,7 @@ const {
 } = require("../controllers/subscriptions");
 
 router.get('/subscribe/paypal/:customerId/:planId',subscribeCustomerToAPlan);
-router.post('/subscribe/stripe/:customerId/:planId',subscribeCustomerToAStripePlan);
+router.post('/subscribe/stripe/:customerId/:priceId',subscribeCustomerToAStripePlan);
 router.get("/get/products", getProducts);
 router.get("/get/plans/:productId", getPlans);
 router.get("/get/plans/:planId", getPlanById);
