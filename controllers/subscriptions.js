@@ -5,7 +5,7 @@ const SubjectModel = require("../models/Subject.model");
 const moment = require("moment");
 let accessToken = "";
 let expiresAt = new Date().getTime();
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const isValidAccessToken = () => {
   return !!accessToken && expiresAt > new Date().getTime();
@@ -27,6 +27,7 @@ const getAccessToken = async () => {
           ).toString("base64"),
       },
     });
+    console.log(response);
     let json = await response.json();
     accessToken = json["access_token"];
     expiresAt = json["expires_in"] * 1000 + new Date().getTime();
@@ -36,7 +37,7 @@ const getAccessToken = async () => {
   }
 };
 
-exports.createProductValidations = async (req,res,next) =>{
+exports.createProductValidations = async (req, res, next) => {
   try {
     const { name, description, subject, image } = req.body;
     if (!name) {
@@ -51,14 +52,16 @@ exports.createProductValidations = async (req,res,next) =>{
     if (!subject) {
       return res.status(400).json({ error: "Subject is Required" });
     }
-    next()
+    next();
   } catch (error) {
-    console.log(error)
-    return res.status(500).json({ error:"Something went wrong in validation!"});
+    console.log(error);
+    return res
+      .status(500)
+      .json({ error: "Something went wrong in validation!" });
   }
-}
+};
 
-exports.createPlanValidations = async (req,res,next) => {
+exports.createPlanValidations = async (req, res, next) => {
   try {
     const { productIds, name, description, months, price } = req.body;
     if (!name) {
@@ -76,12 +79,14 @@ exports.createPlanValidations = async (req,res,next) => {
     if (!price) {
       return res.status(400).json({ error: "Price is Required" });
     }
-    next()
+    next();
   } catch (error) {
-    console.log(error)
-    return res.status(500).json({ error:"Something went wrong in validation!"});
+    console.log(error);
+    return res
+      .status(500)
+      .json({ error: "Something went wrong in validation!" });
   }
-}
+};
 
 exports.createProduct = async (req, res) => {
   try {
@@ -118,15 +123,12 @@ exports.createProduct = async (req, res) => {
       const product = await stripe.products.create({
         name,
         description,
-        images:[
-          image
-        ],
-        livemode:!(process.env.ENVIRONMENT === "DEV"),
-        id:response.id
+        images: [image],
+        id: response.id,
       });
       return res.json({
         message: "Subject Created Successfully",
-        result: {paypal:response,stripe: product},
+        result: { paypal: response, stripe: product },
       });
     } else {
       if (Array.isArray(response.details) && response.details.length) {
@@ -144,7 +146,7 @@ exports.createProduct = async (req, res) => {
 
 exports.createPlan = async (req, res) => {
   try {
-    const { productIds, name, description, months, price } = req.body;
+    const { productIds, name, description, months } = req.body;
     let accessToken = await getAccessToken();
     let responses = [];
     let stripeResponses = [];
@@ -165,7 +167,7 @@ exports.createPlan = async (req, res) => {
             total_cycles: 0,
             pricing_scheme: {
               fixed_price: {
-                value: price.toString(),
+                value: req.body.price.toString(),
                 currency_code: "USD",
               },
             },
@@ -200,15 +202,18 @@ exports.createPlan = async (req, res) => {
       );
       response = await response.json();
       const price = await stripe.prices.create({
-        unit_amount: price,
-        currency: 'usd',
-        recurring: {interval: 'month',interval_count:months},
+        unit_amount: req.body.price,
+        currency: "usd",
+        recurring: { interval: "month", interval_count: months },
         product: productId,
-        livemode: !(process.env.ENVIRONMENT === "DEV")
       });
-      responses.push({paypal:response,stripe:price});
+      console.log(response, price);
+      responses.push({ paypal: response, stripe: price });
     });
-    return res.json({ message: "Plans Created Successfully!", result:{paypal:responses,stripe:stripeResponses}});
+    return res.json({
+      message: "Plans Created Successfully!",
+      result: { paypal: responses, stripe: stripeResponses },
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: "Something went wrong!!" });
@@ -225,21 +230,23 @@ exports.getProducts = async (req, res) => {
         "Content-Type": "application/json",
       },
     };
+    console.log("process.env.PAYPAL_API_KEY");
     let response = await fetch(
       `${process.env.PAYPAL_API_KEY}/catalogs/products`,
       config
     );
-    let result = await response.json()
-    if(response.statusText !== "OK"){
+    let result = await response.json();
+    if (response.statusText !== "OK") {
       return res.status(400).json({
         error: "Something went wrong in retrieving products from paypal!",
-        result
-      })
+        result,
+      });
     }
+    const products = await stripe.products.list({});
     return res.json({
       result: result,
+      stripe: products,
       message: "Products Retrieved successfully!",
-      accessToken,
     });
   } catch (error) {
     console.log(error);
@@ -247,57 +254,72 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-exports.getPlansByCustomerId = async (req,res) => {
+exports.getPlansByCustomerId = async (req, res) => {
   try {
-    const { customerId } = req.params
-    const customer = await CustomerModel.findById(customerId).populate("subject","productId").lean();
-    if(customer){
-      const {productId} = customer.subject
-      if(productId){
+    const { customerId } = req.params;
+    const customer = await CustomerModel.findById(customerId)
+      .populate("subject", "productId")
+      .lean();
+    if (customer) {
+      const { productId } = customer.subject;
+      if (productId) {
         let accessToken = await getAccessToken();
-      let config = {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      };
-      let response = await fetch(
-        `${process.env.PAYPAL_API_KEY}/billing/plans?product_id=${productId}`,
-        config
-      );
-      let result = await response.json();
-      if(response.statusText !== "OK"){
-        return res.status(400).json({
-          result,
-          message: "Something went wrong in retrieving plans from paypal!",
-        });
-      }
-      let plans = await Promise.all(result.plans.map(async (plan) => {
-        let planId = plan.id
+        let config = {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        };
         let response = await fetch(
-          `${process.env.PAYPAL_API_KEY}/billing/plans/${planId}`,
+          `${process.env.PAYPAL_API_KEY}/billing/plans?product_id=${productId}`,
           config
         );
         let result = await response.json();
-        return result
-      }))
+        if (response.statusText !== "OK") {
+          return res.status(400).json({
+            result,
+            message: "Something went wrong in retrieving plans from paypal!",
+          });
+        }
+        let plans = await Promise.all(
+          result.plans.map(async (plan) => {
+            let planId = plan.id;
+            let response = await fetch(
+              `${process.env.PAYPAL_API_KEY}/billing/plans/${planId}`,
+              config
+            );
+            let result = await response.json();
+            return result;
+          })
+        );
+        let stripePlans
+        try {
+          stripePlans = await stripe.prices.list({
+            product: productId,
+          });
+        } catch (error) {
+          console.log(error);
+        }
 
-      return res.json({
-        result:plans,
-        message: "Plans Retrieved successfully!",
-      });
+        return res.json({
+          result: plans,
+          stripePlans,
+          message: "Plans Retrieved successfully!",
+        });
       } else {
-        return res.status(400).json({error:"No plans available for selected Subject"});
+        return res
+          .status(400)
+          .json({ error: "No plans available for selected Subject" });
       }
     } else {
-      return res.status(400).json({error:"Invalid customer Id"});
+      return res.status(400).json({ error: "Invalid customer Id" });
     }
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.status(500).json({ error: "Something went wrong!!" });
   }
-}
+};
 
 exports.getPlans = async (req, res) => {
   try {
@@ -317,14 +339,24 @@ exports.getPlans = async (req, res) => {
       config
     );
     let result = await response.json();
-    if(response.statusText !== "OK"){
+    if (response.statusText !== "OK") {
       return res.status(400).json({
         result,
         message: "Something went wrong in retrieving plans from paypal!",
       });
     }
+    let prices;
+    try {
+      prices = await stripe.prices.list({
+        product: productId,
+      });
+    } catch (error) {
+      console.log(error);
+    }
+
     return res.json({
       result,
+      stripe: prices,
       message: "Plans Retrieved successfully!",
     });
   } catch (error) {
@@ -527,63 +559,92 @@ exports.deactivatePlan = async (req, res) => {
 
 exports.subscribeCustomerToAPlan = async (req, res) => {
   try {
-    const { customerId,planId } = req.params
-    const customer = await CustomerModel.findOne({_id: customerId}).lean()
-    if(!customer){
-      return res.status(400).json({ error: "Invalid or Deleted customer Id"})
+    const { customerId, planId } = req.params;
+    const customer = await CustomerModel.findOne({ _id: customerId }).lean();
+    if (!customer) {
+      return res.status(400).json({ error: "Invalid or Deleted customer Id" });
     }
-    let accessToken = await getAccessToken()
+    let accessToken = await getAccessToken();
     let subscriptionBody = {
-      "plan_id": planId,
-      "start_time": moment.utc().add(10,'seconds').format(),
-      "quantity": "1",
-      "subscriber": {
-        "name": {
-          "given_name": customer.firstName
+      plan_id: planId,
+      start_time: moment.utc().add(10, "seconds").format(),
+      quantity: "1",
+      subscriber: {
+        name: {
+          given_name: customer.firstName,
         },
-        "email_address": customer.email
+        email_address: customer.email,
       },
-      "application_context": {
-        "brand_name": "Live Sloka",
-        "locale": "en-US",
-        "shipping_preference": "NO_SHIPPING",
-        "user_action": "SUBSCRIBE_NOW",
-        "payment_method": {
-          "payer_selected": "PAYPAL",
-          "payee_preferred": "IMMEDIATE_PAYMENT_REQUIRED"
+      application_context: {
+        brand_name: "Live Sloka",
+        locale: "en-US",
+        shipping_preference: "NO_SHIPPING",
+        user_action: "SUBSCRIBE_NOW",
+        payment_method: {
+          payer_selected: "PAYPAL",
+          payee_preferred: "IMMEDIATE_PAYMENT_REQUIRED",
         },
-        "return_url": `${process.env.USER_CLIENT_URL}/subscriptions/success`,
-        "cancel_url": `${process.env.USER_CLIENT_URL}/subscriptions/failure`
-      }
-    }
+        return_url: `${process.env.USER_CLIENT_URL}/subscriptions/success`,
+        cancel_url: `${process.env.USER_CLIENT_URL}/subscriptions/failure`,
+      },
+    };
     let config = {
-      body:JSON.stringify(subscriptionBody),
+      body: JSON.stringify(subscriptionBody),
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
-    }
+    };
 
     let response = await fetch(
       `${process.env.PAYPAL_API_KEY}/billing/subscriptions`,
       config
     );
     let result = await response.json();
-    console.log(JSON.stringify(result,null,1))
-    console.log(response)
-    if(response.statusText !== "Created"){
-    return res.redirect(`${process.env.USER_CLIENT_URL}/subscriptions/failure`);
+    console.log(JSON.stringify(result, null, 1));
+    console.log(response);
+    if (response.statusText !== "Created") {
+      return res.redirect(
+        `${process.env.USER_CLIENT_URL}/subscriptions/failure`
+      );
     } else {
-      let redirectLink = result.links.filter(link => link.rel === "approve")[0]
-      // console.log(redirectLink)
-      // res.json(redirectLink)
-      return res.redirect(redirectLink.href)
+      let redirectLink = result.links.filter(
+        (link) => link.rel === "approve"
+      )[0];
+      return res.redirect(redirectLink.href);
     }
-    // return res.redirect(`${process.env.USER_CLIENT_URL}/subscriptions/success`)
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "Something went wrong!!" });
+  }
+};
+
+exports.subscribeCustomerToAStripePlan = async (req,res) => {
+  try {
+    const { customerId,priceId } = req.params
+    const customer = await CustomerModel.findById(customerId)
+    const stripeCustomer = await stripe.customers.create({
+      metadata: {_id:customerId},
+      email:customer.email,
+      name:customer.firstName,
+    });
+    const subscription = await stripe.subscriptions.create({
+      customer: stripeCustomer.id,
+      items: [{
+        price: priceId,
+      }],
+      payment_behavior: 'default_incomplete',
+      expand: ['latest_invoice.payment_intent'],
+    });
+    customer.stripeId = stripeCustomer.id
+    await customer.save();
+    res.json({
+      subscriptionId: subscription.id,
+      clientSecret: subscription.latest_invoice.payment_intent.client_secret,
+    });
   } catch (error) {
     console.log(error)
-    return res.status(500).json({error:"Something went wrong!!"})
-    // return res.redirect(`${process.env.USER_CLIENT_URL}/subscriptions/failure`);
+    return res.status(500).json({ error: "Something went wrong!!" });
   }
 }

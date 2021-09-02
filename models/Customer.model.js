@@ -145,8 +145,8 @@ const Customer = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    isPaypalPaymentRequired: {
-      type:Boolean,
+    stripeId: {
+      type:String,
       default:true
     }
   },
