@@ -195,7 +195,7 @@ exports.getAnOption = async (req, res) => {
             let [dayStr, time] = getStartTime([optionObj[day]], selectedZone);
             optionSlots[dayStr.toLowerCase()] = time;
           } else {
-            optionSlots[day] = option[day];
+            optionSlots[day] = optionObj[day];
           }
         });
         return optionSlots;
