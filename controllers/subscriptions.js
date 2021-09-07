@@ -764,9 +764,9 @@ exports.handleSuccessfulSubscription = async (req, res) => {
       let otherSchedulesOfCustomer = await SchedulerModel.find({
         students: {
           $in: [customer._id],
-          isDeleted: {
-            $ne: true,
-          },
+        },
+        isDeleted: {
+          $ne: true,
         },
       });
       await asyncForEach(otherSchedulesOfCustomer, async (schedule) => {
@@ -830,9 +830,9 @@ exports.handleSuccessfulSubscription = async (req, res) => {
       let otherSchedulesOfCustomer = await SchedulerModel.find({
         students: {
           $in: [customer._id],
-          isDeleted: {
-            $ne: true,
-          },
+        },
+        isDeleted: {
+          $ne: true,
         },
       });
       await asyncForEach(otherSchedulesOfCustomer, async (schedule) => {
