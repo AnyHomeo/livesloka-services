@@ -18,7 +18,6 @@ const ClassHistoryModel = require('../models/ClassHistory.model');
 const times = require('../models/times.json');
 const CancelledClassesModel = require('../models/CancelledClasses.model');
 
-
 function convertTZ(date, tzString) {
 	return new Date(
 		(typeof date === 'string' ? new Date(date) : date).toLocaleString('en-US', {

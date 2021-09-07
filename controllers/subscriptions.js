@@ -2,7 +2,13 @@ const fetch = require("node-fetch");
 const { asyncForEach } = require("../config/helper");
 const CustomerModel = require("../models/Customer.model");
 const SubjectModel = require("../models/Subject.model");
+const OptionModel = require("../models/SlotOptions");
+const times = require("../models/times.json");
 const moment = require("moment");
+const ZoomAccountModel = require("../models/ZoomAccount.model");
+const ClassHistoryModel = require("../models/ClassHistory.model");
+const SchedulerModel = require("../models/Scheduler.model");
+const TeacherModel = require("../models/Teacher.model");
 let accessToken = "";
 let expiresAt = new Date().getTime();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
@@ -293,7 +299,7 @@ exports.getPlansByCustomerId = async (req, res) => {
             return result;
           })
         );
-        let stripePlans
+        let stripePlans;
         try {
           stripePlans = await stripe.prices.list({
             product: productId,
@@ -584,7 +590,7 @@ exports.subscribeCustomerToAPlan = async (req, res) => {
           payer_selected: "PAYPAL",
           payee_preferred: "IMMEDIATE_PAYMENT_REQUIRED",
         },
-        return_url: `${process.env.USER_CLIENT_URL}/subscriptions/success`,
+        return_url: `${process.env.SERVICES_URL}/subscriptions/subscription/success/${customerId}`,
         cancel_url: `${process.env.USER_CLIENT_URL}/subscriptions/failure`,
       },
     };
@@ -620,31 +626,245 @@ exports.subscribeCustomerToAPlan = async (req, res) => {
   }
 };
 
-exports.subscribeCustomerToAStripePlan = async (req,res) => {
+exports.subscribeCustomerToAStripePlan = async (req, res) => {
   try {
-    const { customerId,priceId } = req.params
-    const customer = await CustomerModel.findById(customerId)
+    const { customerId, priceId } = req.params;
+    const customer = await CustomerModel.findById(customerId);
     const stripeCustomer = await stripe.customers.create({
-      metadata: {_id:customerId},
-      email:customer.email,
-      name:customer.firstName,
+      metadata: { _id: customerId },
+      email: customer.email,
+      name: customer.firstName,
     });
     const subscription = await stripe.subscriptions.create({
       customer: stripeCustomer.id,
-      items: [{
-        price: priceId,
-      }],
-      payment_behavior: 'default_incomplete',
-      expand: ['latest_invoice.payment_intent'],
+      items: [
+        {
+          price: priceId,
+        },
+      ],
+      payment_behavior: "default_incomplete",
+      expand: ["latest_invoice.payment_intent"],
     });
-    customer.stripeId = stripeCustomer.id
+    customer.stripeId = stripeCustomer.id;
     await customer.save();
     res.json({
       subscriptionId: subscription.id,
       clientSecret: subscription.latest_invoice.payment_intent.client_secret,
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.status(500).json({ error: "Something went wrong!!" });
   }
-}
+};
+
+const getNextSlot = (slot) => {
+  let day = slot.split("-")[0];
+  let time = slot.split("-")[1] + "-" + slot.split("-")[2];
+  let index = times.indexOf(time);
+  let nextSlot = day + "-" + times[index + 1];
+  return nextSlot;
+};
+
+const generateScheduleDescriptionAndSlots = (slots) => {
+  let scheduleDescription = [];
+  let slotsObject = Object.keys(slots).reduce((accumulator, key) => {
+    if (key === "_id") {
+      return accumulator;
+    } else {
+      let slot = slots[key];
+      let splittedSlot = slot.split("-");
+      scheduleDescription.push(
+        `${splittedSlot[0].toLowerCase()}-${splittedSlot[1]}`
+      );
+      accumulator[key.toUpperCase()] = [slot, getNextSlot(slot)];
+      return accumulator;
+    }
+  }, {});
+
+  return {
+    scheduleDescription: scheduleDescription.join(","),
+    slots: slotsObject,
+  };
+};
+
+exports.handleSuccessfulSubscription = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const option = await OptionModel.findOne({
+      customer: customerId,
+    }).lean();
+    const customer = await CustomerModel.findById(customerId);
+    const teacher = await TeacherModel.findOne({ id: option.teacher });
+    const subject = await SubjectModel.findOne({ id: customer.subjectId });
+
+    if (option.selectedSlotType === "NEW") {
+      //* 1 generate class name
+      let className = `${customer.firstName} ${
+        customer.age ? `${customer.age}Y` : ""
+      } ${subject.subjectName}- ${teacher.TeacherName}`;
+      //*  generate indian schedule description
+      let selectedOption = option.options.filter((option) =>
+        option._id.equals(option.selectedSlotId)
+      );
+      let { scheduleDescription, slots } =
+        generateScheduleDescriptionAndSlots(selectedOption);
+      let allSlots = [];
+      Object.keys(slots).forEach((day) => {
+        allSlots = [...allSlots, ...slots[day]];
+      });
+      let meetingLinkResponse = {};
+      //* 3 generate a meeting link through zoom by selecting an account incase if not able to generate link send message in chatbot
+      let availableZoomAccount = await ZoomAccountModel.findOne({
+        timeSlots: {
+          $nin: allSlots,
+        },
+      });
+      const {
+        _id: zoomAccountId,
+        zoomEmail,
+        zoomJwt,
+        zoomPassword,
+      } = availableZoomAccount;
+      const formData = {
+        topic: "Livesloka Online Class",
+        type: 3,
+        password: zoomPassword,
+        settings: {
+          host_video: true,
+          participant_video: true,
+          join_before_host: true,
+          jbh_time: 0,
+          mute_upon_entry: true,
+          watermark: false,
+          use_pmi: false,
+          approval_type: 2,
+          audio: "both",
+          auto_recording: "none",
+          waiting_room: false,
+          meeting_authentication: false,
+        },
+      };
+      meetingLinkResponse = await fetch(
+        `https://api.zoom.us/v2/users/${zoomEmail}/meetings`,
+        {
+          method: "post",
+          body: JSON.stringify(formData),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${zoomJwt}`,
+          },
+        }
+      );
+      //* 5 get the selected zoom account and update timeslots
+      allSlots.forEach((slot) => {
+        availableZoomAccount.timeSlots.push(slot);
+      });
+      await availableZoomAccount.save();
+      meetingLinkResponse = await meetingLinkResponse.json();
+      let otherSchedulesOfCustomer = await SchedulerModel.find({
+        students: {
+          $in: [customer._id],
+        },
+        isDeleted: {
+          $ne: true,
+        },
+      });
+      await asyncForEach(otherSchedulesOfCustomer, async (schedule) => {
+        let index = schedule.students.indexOf(customer._id);
+        if (index !== -1) {
+          schedule.students.splice(index, 1);
+          if (!schedule.students.length) {
+            schedule.isDeleted = true;
+          }
+          await schedule.save();
+        }
+      });
+
+      //* 4 create a schedule
+      const schedule = new SchedulerModel({
+        meetingAccount: zoomAccountId,
+        meetingLink: meetingLinkResponse.join_url || "",
+        teacher: teacher.id,
+        students: [customer._id],
+        startDate: moment().format('dd-mm-yyyy'),
+        slots,
+        demo: true,
+        OneToOne: true,
+        className,
+        subject: subject._id,
+        scheduleDescription,
+      });
+
+      await schedule.save();
+
+      //* 7 add schedule desc,meetinglink,teacherId,classStatusId as 121975682530440
+      await CustomerModel.updateOne(
+        { _id: customer._id },
+        {
+          $set: {
+            scheduleDescription,
+            meetingLink: meetingLinkResponse.join_url,
+            teacherId: teacher.id,
+            classStatusId: "121975682530440",
+            paidTill: moment().add(1, "month").format(),
+          },
+        }
+      );
+
+      //* 8 update teacher avaialable and scheduled slots
+      allSlots.forEach((slot) => {
+        let index = teacher.availableSlots.indexOf(slot);
+        if (index != -1) {
+          teacher.availableSlots.splice(index, 1);
+        }
+        teacher.scheduledSlots.push(slot);
+      });
+      teacher.availableSlots = [...new Set(teacher.availableSlots)];
+      teacher.scheduledSlots = [...new Set(teacher.scheduledSlots)];
+      await teacher.save();
+      return res.json({
+        message: "Scheduled Meeting Successfully!",
+      });
+    } else if (option.selectedSlotType === "EXISTING") {
+      //* 1 update class Name
+      let otherSchedulesOfCustomer = await SchedulerModel.find({
+        students: {
+          $in: [customer._id],
+        },
+        isDeleted: {
+          $ne: true,
+        },
+      });
+      await asyncForEach(otherSchedulesOfCustomer, async (schedule) => {
+        let index = schedule.students.indexOf(customer._id);
+        if (index !== -1) {
+          schedule.students.splice(index, 1);
+          if (!schedule.students.length) {
+            schedule.isDeleted = true;
+          }
+          await schedule.save();
+        }
+      });
+
+      let schedule = await SchedulerModel.findById(option.selectedSlotId);
+      schedule.students.push(customer._id);
+      //* 2 update schedule with new customer
+      customer.scheduleDescription = schedule.scheduleDescription;
+      customer.meetingLink = schedule.meetingLink;
+      customer.teacherId = schedule.teacher;
+      customer.classStatusId = "121975682530440";
+      await customer.save();
+
+      return res.json({
+        message: "Scheduled class Successfully!",
+      });
+    } else {
+      return res
+        .status(500)
+        .json({ error: "Please select the options initially!" });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "Something went wrong!!" });
+  }
+};

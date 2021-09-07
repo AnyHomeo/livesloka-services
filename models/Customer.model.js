@@ -120,7 +120,7 @@ const Customer = new mongoose.Schema(
       default: 0,
     },
     paidTill: {
-      type: String,
+      type: Date,
       trim: true,
     },
     isSummerCampStudent:{
