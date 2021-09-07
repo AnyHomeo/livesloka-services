@@ -8,6 +8,7 @@ const SchedulerModel = require("../models/Scheduler.model");
 const allZones = require("../models/timeZone.json");
 const times = require("../models/times.json");
 const momentTZ = require("moment-timezone");
+const twilio = require("twilio");
 var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 
 const getStartTime = (slots, zoneName) => {
@@ -101,8 +102,8 @@ exports.postAnOption = async (req, res) => {
       return res.status(400).json({ error: "Invalid Customer" });
     }
 
-    let customer = await CustomerModel.findById(customer);
-    if (!customer) {
+    let customerData = await CustomerModel.findById(customer);
+    if (!customerData) {
       return res.status(400).json({ error: "Invalid Customer" });
     }
 
@@ -110,10 +111,10 @@ exports.postAnOption = async (req, res) => {
     if (!alreadyExists) {
       let newOption = new OptionsModel(req.body);
       await newOption.save();
-      if (customer.whatsAppnumber) {
+      if (customerData.whatsAppnumber) {
         await client.messages.create({
           body: `Live Sloka: book your slot on ${process.env.USER_CLIENT_URL}/options/${newOption._id}`,
-          to: customer, // Text this number
+          to: customerData.whatsAppnumber, // Text this number
           from: process.env.TWILIO_NUMBER, // From a valid Twilio number
         });
         return res.json({
