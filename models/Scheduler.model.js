@@ -53,7 +53,7 @@ const SchedulerSchema = new mongoose.Schema(
 			ref: 'ZoomAccount',
 		},
 		startDate: {
-			type: Date, 
+			type: String, 
 			required: 'Start Date is Required',
 		},
 		subject: {

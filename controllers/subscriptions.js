@@ -786,7 +786,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
         meetingLink: meetingLinkResponse.join_url || "",
         teacher: teacher.id,
         students: [customer._id],
-        startDate: new Date(),
+        startDate: moment().format('dd-mm-yyyy'),
         slots,
         demo: true,
         OneToOne: true,
