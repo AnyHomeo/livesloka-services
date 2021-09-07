@@ -834,7 +834,7 @@ module.exports = {
         .populate("subject", "subjectName")
         .populate(
           "students",
-          "firstName lastTimeJoined lastName numberOfClassesBought email whatsAppnumber"
+          "firstName lastTimeJoined lastName numberOfClassesBought timeZoneId email whatsAppnumber"
         )
         .lean();
       let allTeachers = await TeacherModel.find({
