@@ -16,11 +16,19 @@ const addNewMessageToRoom = async (roomID, message, role, name) => {
     message,
     name,
   });
-  return await Room.findOneAndUpdate(
-    { roomID },
-    { $push: { messages: msg } },
-    { new: true, upsert: true }
-  );
+  if (role === 1) {
+    return await Room.findOneAndUpdate(
+      { roomID },
+      { $push: { messages: msg }, $set: { messageSeen: false } },
+      { new: true, upsert: true }
+    );
+  } else {
+    return await Room.findOneAndUpdate(
+      { roomID },
+      { $set: { messageSeen: true }, $push: { messages: msg } },
+      { new: true, upsert: true }
+    );
+  }
 };
 const addAgentToChatRoom = async (roomID, agentID) => {
   const user = await Room.findOne({ roomID }).select('agentID -_id');
@@ -68,6 +76,14 @@ const updateAgentInChatRoom = async (roomID, agentID) => {
   return await Room.findOneAndUpdate({ roomID }, { agentID });
 };
 
+const isLastMessage = async (roomID) => {
+  return await Room.findOne({ roomID }).select('messageSeen -_id');
+};
+
+const seeLastMessage = async (roomID) => {
+  return await Room.findOneAndUpdate({ roomID }, { messageSeen: true });
+};
+
 module.exports = {
   addNewMessageToRoom,
   createNewRoom,
@@ -79,4 +95,6 @@ module.exports = {
   findAgents,
   updateAgentInChatRoom,
   removeAgentFromChatRoom,
+  isLastMessage,
+  seeLastMessage,
 };

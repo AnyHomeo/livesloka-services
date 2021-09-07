@@ -204,6 +204,8 @@ io.on('connection', (socket) => {
           message,
           name,
         });
+
+        socket.to(roomID).emit('agent-read-message');
       } catch (error) {
         if (error) return callback(error);
       }
