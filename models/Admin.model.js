@@ -55,6 +55,14 @@ var adminSchema = new mongoose.Schema(
     },
     settings: mongoose.Schema.Types.Mixed,
     otp: Number,
+    address:{
+      address:String,
+      state:String,
+      city:String,
+      country:String,
+      zipcode:String,
+      name:String,
+    }
   },
   { timestamps: true }
 );

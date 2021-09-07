@@ -14,9 +14,11 @@ const {
   subscribeCustomerToAPlan,
   createProductValidations,
   createPlanValidations,
-  subscribeCustomerToAStripePlan
+  subscribeCustomerToAStripePlan,
+  handleSuccessfulSubscription
 } = require("../controllers/subscriptions");
 
+router.get('/subscription/success/:customerId',handleSuccessfulSubscription);
 router.get('/subscribe/paypal/:customerId/:planId',subscribeCustomerToAPlan);
 router.post('/subscribe/stripe/:customerId/:priceId',subscribeCustomerToAStripePlan);
 router.get("/get/products", getProducts);

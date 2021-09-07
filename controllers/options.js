@@ -99,11 +99,19 @@ exports.postAnOption = async (req, res) => {
       return res.status(400).json({ error: "Invalid Customer" });
     }
 
-    let newOption = new OptionsModel(req.body);
-    await newOption.save();
-    return res.json({
-      message: "Options Created Successfully!",
-    });
+    let alreadyExists = OptionsModel.countDocuments({customer});
+    if(!alreadyExists) {
+      let newOption = new OptionsModel(req.body);
+      await newOption.save();
+      
+      return res.json({
+        message: "Options Created Successfully!",
+      });
+    } else {
+      return res.status(500).json({
+        message: "Options already exists for this customer!, please delete and try again",
+      });
+    }
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error: "Something went wrong!" });
