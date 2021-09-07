@@ -36,6 +36,7 @@ const {
   addNewMessageToRoom,
   addAgentToChatRoom,
   removeAgentFromChatRoom,
+  getAgentAssignedToRoom,
 } = require('./controllers/chat.controller');
 
 const optionsRouter = require('./routes/options');
@@ -137,11 +138,17 @@ io.on('connection', (socket) => {
     async ({ roomID, userID, typeMessage }, callback) => {
       try {
         // socket.to(roomID).emit('messageToRoom', { role, message });
-        socket.broadcast.emit('userWating', {
-          userID,
-          roomID,
-          typeMessage,
-        });
+        const theAgent = await getAgentAssignedToRoom(roomID);
+        console.log(theAgent);
+
+        if (!theAgent.agentID) {
+          socket.broadcast.emit('userWating', {
+            userID,
+            roomID,
+            typeMessage,
+          });
+        }
+
         const name = userID;
         const message = typeMessage;
         if (message !== 'Please write us your query') {
@@ -289,7 +296,7 @@ io.on('connection', (socket) => {
       callback();
     }
   );
-  socket.on('disconnecting', async (reason) => {
+  socket.on('disconnect', async (reason) => {
     const agent = users[socket.id];
     if (agent) {
       delete users[socket.id];

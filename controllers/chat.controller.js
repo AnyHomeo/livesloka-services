@@ -69,7 +69,9 @@ const allRooms = async () => {
   return await Room.find().select('-_id -messages').sort('-updatedAt');
 };
 const findAgents = async () => {
-  return await AdminModel.find({ roleId: 4 }).select('userId -_id');
+  return await AdminModel.find({ roleId: { $in: [4, 5] } }).select(
+    'userId -_id'
+  );
 };
 
 const updateAgentInChatRoom = async (roomID, agentID) => {
@@ -82,6 +84,10 @@ const isLastMessage = async (roomID) => {
 
 const seeLastMessage = async (roomID) => {
   return await Room.findOneAndUpdate({ roomID }, { messageSeen: true });
+};
+
+const getAgentAssignedToRoom = async (roomID) => {
+  return await Room.findOne({ roomID }).select('agentID -_id');
 };
 
 module.exports = {
@@ -97,4 +103,5 @@ module.exports = {
   removeAgentFromChatRoom,
   isLastMessage,
   seeLastMessage,
+  getAgentAssignedToRoom,
 };
