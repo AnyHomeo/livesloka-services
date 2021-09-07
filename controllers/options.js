@@ -1,3 +1,4 @@
+require("dotenv").config();
 const CustomerModel = require("../models/Customer.model");
 const TeacherModel = require("../models/Teacher.model");
 const OptionsModel = require("../models/SlotOptions");
@@ -7,6 +8,7 @@ const SchedulerModel = require("../models/Scheduler.model");
 const allZones = require("../models/timeZone.json");
 const times = require("../models/times.json");
 const momentTZ = require("moment-timezone");
+var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 
 const getStartTime = (slots, zoneName) => {
   let day = slots[0].split("-")[0].toLowerCase();
@@ -99,17 +101,34 @@ exports.postAnOption = async (req, res) => {
       return res.status(400).json({ error: "Invalid Customer" });
     }
 
-    let alreadyExists = OptionsModel.countDocuments({customer});
-    if(!alreadyExists) {
+    let customer = await CustomerModel.findById(customer);
+    if (!customer) {
+      return res.status(400).json({ error: "Invalid Customer" });
+    }
+
+    let alreadyExists = OptionsModel.countDocuments({ customer });
+    if (!alreadyExists) {
       let newOption = new OptionsModel(req.body);
       await newOption.save();
-      
-      return res.json({
-        message: "Options Created Successfully!",
-      });
+      if (customer.whatsAppnumber) {
+        await client.messages.create({
+          body: `Live Sloka: book your slot on ${process.env.USER_CLIENT_URL}/options/${newOption._id}`,
+          to: customer, // Text this number
+          from: process.env.TWILIO_NUMBER, // From a valid Twilio number
+        });
+        return res.json({
+          message: "Options Created and Url sent successfully",
+        });
+      } else {
+        return res.json({
+          message:
+            "Options Created but message not sent as there is no Phone Number available",
+        });
+      }
     } else {
       return res.status(500).json({
-        message: "Options already exists for this customer!, please delete and try again",
+        message:
+          "Options already exists for this customer!, please delete and try again",
       });
     }
   } catch (error) {
