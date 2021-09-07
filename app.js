@@ -113,7 +113,7 @@ io.on('connection', (socket) => {
       if (error) return callback(error);
     }
     socket.join(roomID);
-    socket.emit('roomCreated');
+    // socket.emit('roomCreated');
 
     callback();
   });
@@ -132,19 +132,30 @@ io.on('connection', (socket) => {
   // 	callback()
   // })
 
-  socket.on('notifyToRoomFromUser', ({ roomID, userID }, callback) => {
-    try {
-      // socket.to(roomID).emit('messageToRoom', { role, message });
-      console.log('user wating');
-      socket.broadcast.emit('userWating', {
-        userID,
-        roomID,
-      });
-    } catch (error) {
-      if (error) return callback(error);
+  socket.on(
+    'notifyToRoomFromUser',
+    async ({ roomID, userID, typeMessage }, callback) => {
+      try {
+        // socket.to(roomID).emit('messageToRoom', { role, message });
+        socket.broadcast.emit('userWating', {
+          userID,
+          roomID,
+          typeMessage,
+        });
+        const name = userID;
+        const message = typeMessage;
+        if (message !== 'Please write us your query') {
+          await addNewMessageToRoom(roomID, message, 1, name);
+          socket
+            .to(roomID)
+            .emit('messageToRoomFromBot', { role: 1, message, name });
+        }
+      } catch (error) {
+        if (error) return callback(error);
+      }
+      callback();
     }
-    callback();
-  });
+  );
   // socket.on("notifyToNonUserRoom", ({roomID, userID}, callback) => {
   // 	try {
   // 		// socket.to(roomID).emit('messageToRoom', { role, message });
@@ -235,7 +246,7 @@ io.on('connection', (socket) => {
         const data = await addAgentToChatRoom(roomID, isAgent);
         console.log(data.agentID);
         const id = socket.id;
-        socket.broadcast.emit('agent-joined-room');
+        socket.broadcast.emit('agent-joined-room', isAgent);
         console.log('agent joined the chatroom', isAgent);
 
         const value = Object.values(users).find(

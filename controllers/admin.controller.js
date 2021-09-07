@@ -614,3 +614,42 @@ module.exports.validateOtpAndResetPassword = async (req, res) => {
       .json({ error: "error in password reset,Try again later" });
   }
 };
+
+module.exports.postAddress = async (req, res) =>{
+  try {
+    const { id } = req.params;
+    let customer = await CustomerModel.findById(id)
+    if(customer){
+      let login = await AdminModel.findOne({userId:customer.email})
+      login.address = req.body
+      await login.save()
+      return res.json({
+        message:"Address posted successfully!"
+      })
+    } else {
+      return res.status(500).join({error:"Invalid customer id"})
+    }
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ error: "error in password reset,Try again later" });
+  }
+}
+
+module.exports.getAddress = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let customer = await CustomerModel.findById(id)
+    if(customer){
+      let login = await AdminModel.findOne({userId:customer.email})
+      return res.json({
+        message:"Address retrieved successfully!",
+        result:login.address
+      })
+    } else {
+      return res.status(500).join({error:"Invalid customer id"})
+    }
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ error: "error in password reset,Try again later" });
+  }
+}

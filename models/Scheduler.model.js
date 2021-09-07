@@ -46,7 +46,6 @@ const SchedulerSchema = new mongoose.Schema(
 		meetingLink: {
 			trim: true,
 			type: String,
-			required: 'Meeting Link Is Required',
 		},
 		meetingAccount: {
 			trim: true,
@@ -54,8 +53,7 @@ const SchedulerSchema = new mongoose.Schema(
 			ref: 'ZoomAccount',
 		},
 		startDate: {
-			trim: true,
-			type: String,
+			type: String, 
 			required: 'Start Date is Required',
 		},
 		subject: {
