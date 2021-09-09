@@ -33,7 +33,6 @@ const getAccessToken = async () => {
           ).toString("base64"),
       },
     });
-    console.log(response);
     let json = await response.json();
     accessToken = json["access_token"];
     expiresAt = json["expires_in"] * 1000 + new Date().getTime();
@@ -51,9 +50,6 @@ exports.createProductValidations = async (req, res, next) => {
     }
     if (!description) {
       return res.status(400).json({ error: "Description is Required" });
-    }
-    if (!image) {
-      return res.status(400).json({ error: "Image Url is Required" });
     }
     if (!subject) {
       return res.status(400).json({ error: "Subject is Required" });
@@ -236,12 +232,12 @@ exports.getProducts = async (req, res) => {
         "Content-Type": "application/json",
       },
     };
-    console.log("process.env.PAYPAL_API_KEY");
     let response = await fetch(
-      `${process.env.PAYPAL_API_KEY}/catalogs/products`,
+      `${process.env.PAYPAL_API_KEY}/catalogs/products?page_size=100`,
       config
     );
     let result = await response.json();
+    
     if (response.statusText !== "OK") {
       return res.status(400).json({
         error: "Something went wrong in retrieving products from paypal!",
@@ -252,6 +248,7 @@ exports.getProducts = async (req, res) => {
     return res.json({
       result: result,
       stripe: products,
+      accessToken,
       message: "Products Retrieved successfully!",
     });
   } catch (error) {
@@ -266,6 +263,7 @@ exports.getPlansByCustomerId = async (req, res) => {
     const customer = await CustomerModel.findById(customerId)
       .populate("subject", "productId")
       .lean();
+      console.log(customerId)
     if (customer) {
       const { productId } = customer.subject;
       if (productId) {
@@ -282,6 +280,7 @@ exports.getPlansByCustomerId = async (req, res) => {
           config
         );
         let result = await response.json();
+        console.log(JSON.stringify(result,null,1))
         if (response.statusText !== "OK") {
           return res.status(400).json({
             result,
@@ -311,6 +310,7 @@ exports.getPlansByCustomerId = async (req, res) => {
         return res.json({
           result: plans,
           stripePlans,
+          accessToken,
           message: "Plans Retrieved successfully!",
         });
       } else {

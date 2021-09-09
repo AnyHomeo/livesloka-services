@@ -56,6 +56,7 @@ const Customer = new mongoose.Schema(
     gender: {
       trim: true,
       type: String,
+      enum: ["male", "female"]
     },
     subjectId: {
       trim: true,

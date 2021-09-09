@@ -55,9 +55,7 @@ module.exports = {
               user.username = req.body.firstName;
             } else if (req.body.lastName) {
               user.username = req.body.lastName;
-            } else if (req.body.email) {
-              user.username = req.body.email.split("@")[0];
-            } else {
+            }else {
               user.username =
                 "Livesloka User " + Math.floor(Math.random() * 1000000 + 1);
             }
@@ -120,7 +118,7 @@ module.exports = {
       })
       .catch((err) => {
         console.log(err);
-        res.status(400).json({
+        res.status(500).json({
           message: "something went Wrong",
           err,
         });

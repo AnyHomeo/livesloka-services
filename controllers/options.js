@@ -107,7 +107,8 @@ exports.postAnOption = async (req, res) => {
       return res.status(400).json({ error: "Invalid Customer" });
     }
 
-    let alreadyExists = OptionsModel.countDocuments({ customer });
+    let alreadyExists = await OptionsModel.countDocuments({ customer:customerData._id });
+    console.log(alreadyExists);
     if (!alreadyExists) {
       let newOption = new OptionsModel(req.body);
       await newOption.save();
