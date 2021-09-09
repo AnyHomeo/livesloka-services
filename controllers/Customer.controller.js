@@ -23,7 +23,7 @@ module.exports = {
   async registerCustomer(req, res) {
     let { subjectId, proposedAmount } = req.body;
     if (!subjectId) {
-      return res.json({
+      return res.status(500).json({
         error: "Subject is Required!!",
         status: "Internal Server Error",
         result: null,
