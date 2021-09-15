@@ -9,6 +9,7 @@ const ZoomAccountModel = require("../models/ZoomAccount.model");
 const ClassHistoryModel = require("../models/ClassHistory.model");
 const SchedulerModel = require("../models/Scheduler.model");
 const TeacherModel = require("../models/Teacher.model");
+const { capitalize } = require("../scripts");
 let accessToken = "";
 let expiresAt = new Date().getTime();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
@@ -237,7 +238,9 @@ exports.getProducts = async (req, res) => {
       config
     );
     let result = await response.json();
-    
+    result.products = result.products.sort((a, b) => {
+      return new Date(b.create_time) - new Date(a.create_time);
+    });
     if (response.statusText !== "OK") {
       return res.status(400).json({
         error: "Something went wrong in retrieving products from paypal!",
@@ -248,7 +251,6 @@ exports.getProducts = async (req, res) => {
     return res.json({
       result: result,
       stripe: products,
-      accessToken,
       message: "Products Retrieved successfully!",
     });
   } catch (error) {
@@ -263,7 +265,7 @@ exports.getPlansByCustomerId = async (req, res) => {
     const customer = await CustomerModel.findById(customerId)
       .populate("subject", "productId")
       .lean();
-      console.log(customerId)
+    console.log(customerId);
     if (customer) {
       const { productId } = customer.subject;
       if (productId) {
@@ -280,7 +282,7 @@ exports.getPlansByCustomerId = async (req, res) => {
           config
         );
         let result = await response.json();
-        console.log(JSON.stringify(result,null,1))
+        console.log(JSON.stringify(result, null, 1));
         if (response.statusText !== "OK") {
           return res.status(400).json({
             result,
@@ -667,22 +669,26 @@ const getNextSlot = (slot) => {
 
 const generateScheduleDescriptionAndSlots = (slots) => {
   let scheduleDescription = [];
+  console.log(slots)
   let slotsObject = Object.keys(slots).reduce((accumulator, key) => {
     if (key === "_id") {
       return accumulator;
     } else {
       let slot = slots[key];
+      console.log(slot)
       let splittedSlot = slot.split("-");
       scheduleDescription.push(
-        `${splittedSlot[0].toLowerCase()}-${splittedSlot[1]}`
+        `${capitalize(splittedSlot[0].toLowerCase())}-${splittedSlot[1]}`
       );
-      accumulator[key.toUpperCase()] = [slot, getNextSlot(slot)];
+      accumulator[key] = [slot, getNextSlot(slot)];
+      console.log(accumulator)
       return accumulator;
     }
   }, {});
+  console.log(slotsObject)
 
   return {
-    scheduleDescription: scheduleDescription.join(","),
+    scheduleDescription: "Attend class Every - " + scheduleDescription.join(","),
     slots: slotsObject,
   };
 };
@@ -703,12 +709,12 @@ exports.handleSuccessfulSubscription = async (req, res) => {
         customer.age ? `${customer.age}Y` : ""
       } ${subject.subjectName}- ${teacher.TeacherName}`;
       //*  generate indian schedule description
-      let selectedOption = option.options.filter((option) =>
-        option._id.equals(option.selectedSlotId)
-      );
+      let selectedOption = option.options.filter((singleOption) => singleOption._id.equals(option.selectedSlotId))[0];
+      console.log(selectedOption)
       let { scheduleDescription, slots } =
         generateScheduleDescriptionAndSlots(selectedOption);
       let allSlots = [];
+      console.log(slots)
       Object.keys(slots).forEach((day) => {
         allSlots = [...allSlots, ...slots[day]];
       });
@@ -786,9 +792,9 @@ exports.handleSuccessfulSubscription = async (req, res) => {
         meetingLink: meetingLinkResponse.join_url || "",
         teacher: teacher.id,
         students: [customer._id],
-        startDate: moment().format('dd-mm-yyyy'),
+        startDate: moment().format("DD-mm-yyyy"),
         slots,
-        demo: true,
+        demo: false,
         OneToOne: true,
         className,
         subject: subject._id,
@@ -797,7 +803,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
 
       await schedule.save();
 
-      //* 7 add schedule desc,meetinglink,teacherId,classStatusId as 121975682530440
+      //* 7 add schedule desc,meetinglink,teacherId,classStatusId as 113975223750050
       await CustomerModel.updateOne(
         { _id: customer._id },
         {
@@ -805,8 +811,8 @@ exports.handleSuccessfulSubscription = async (req, res) => {
             scheduleDescription,
             meetingLink: meetingLinkResponse.join_url,
             teacherId: teacher.id,
-            classStatusId: "121975682530440",
-            paidTill: moment().add(1, "month").format(),
+            classStatusId: "113975223750050",
+            paidTill: moment().add(1, "month").format("DD-MM-YYYY"),
           },
         }
       );
@@ -852,7 +858,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
       customer.scheduleDescription = schedule.scheduleDescription;
       customer.meetingLink = schedule.meetingLink;
       customer.teacherId = schedule.teacher;
-      customer.classStatusId = "121975682530440";
+      customer.classStatusId = "113975223750050";
       await customer.save();
 
       return res.json({

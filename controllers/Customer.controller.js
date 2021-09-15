@@ -397,7 +397,7 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
-      return res.json({
+      return res.status(500).json({
         error: "Error in retrieving the data",
       });
     }
@@ -727,6 +727,7 @@ module.exports = {
         "timeZoneId"
       );
       if (customerTZId) {
+        console.log(customerTZId)
         const timeZone = await TimeZoneModel.findOne({
           id: customerTZId.timeZoneId,
         }).lean();

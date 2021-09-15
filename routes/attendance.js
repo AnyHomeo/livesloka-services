@@ -74,7 +74,7 @@ router.get("/admin/attendance/:id", getAttendance);
  *        - date
  *   responses:
  *    200:
- *     description: Login Successful
+ *     description: Attendance Successful
  *    400:
  *     description: Invalid UserId or Password
  *    500:

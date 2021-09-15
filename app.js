@@ -32,6 +32,8 @@ const expensesRouter = require("./routes/expenses");
 const optionsRouter = require("./routes/options");
 const scriptsRouter = require("./routes/scripts");
 const subscriptionsRouter = require("./routes/subscriptions");
+const MobileCustomerApiRouter = require("./routes/customers");
+
 const chat = require("./routes/chat");
 const {
   createNewRoom,
@@ -111,6 +113,9 @@ app.use("/expenses", expensesRouter);
 app.use("/scripts", scriptsRouter);
 app.use("/subscriptions", subscriptionsRouter);
 app.use("/options", optionsRouter);
+
+//mobile routes
+app.use('/api/customers',MobileCustomerApiRouter);
 
 const PORT = process.env.PORT || 5000;
 

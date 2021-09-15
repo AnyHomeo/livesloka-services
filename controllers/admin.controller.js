@@ -28,6 +28,7 @@ module.exports = {
         var payload = {
           _id: user._id,
           userId: user.userId,
+          role:user.roleId
         };
         var newToken = jwt.sign(payload, process.env.JWT_SECRET, {
           expiresIn: process.env.JWT_EXP,
