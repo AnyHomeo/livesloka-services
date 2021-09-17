@@ -23,7 +23,7 @@ module.exports = {
   async registerCustomer(req, res) {
     let { subjectId, proposedAmount } = req.body;
     if (!subjectId) {
-      return res.json({
+      return res.status(500).json({
         error: 'Subject is Required!!',
         status: 'Internal Server Error',
         result: null,
@@ -55,8 +55,6 @@ module.exports = {
               user.username = req.body.firstName;
             } else if (req.body.lastName) {
               user.username = req.body.lastName;
-            } else if (req.body.email) {
-              user.username = req.body.email.split('@')[0];
             } else {
               user.username =
                 'Livesloka User ' + Math.floor(Math.random() * 1000000 + 1);
@@ -120,7 +118,7 @@ module.exports = {
       })
       .catch((err) => {
         console.log(err);
-        res.status(400).json({
+        res.status(500).json({
           message: 'something went Wrong',
           err,
         });
@@ -399,7 +397,7 @@ module.exports = {
       });
     } catch (error) {
       console.log(error);
-      return res.json({
+      return res.status(500).json({
         error: 'Error in retrieving the data',
       });
     }
@@ -729,6 +727,7 @@ module.exports = {
         'timeZoneId'
       );
       if (customerTZId) {
+        console.log(customerTZId);
         const timeZone = await TimeZoneModel.findOne({
           id: customerTZId.timeZoneId,
         }).lean();

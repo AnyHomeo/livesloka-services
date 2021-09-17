@@ -56,6 +56,7 @@ const Customer = new mongoose.Schema(
     gender: {
       trim: true,
       type: String,
+      enum: ["male", "female"]
     },
     subjectId: {
       trim: true,
@@ -120,7 +121,7 @@ const Customer = new mongoose.Schema(
       default: 0,
     },
     paidTill: {
-      type: Date,
+      type: String,
       trim: true,
     },
     isSummerCampStudent:{

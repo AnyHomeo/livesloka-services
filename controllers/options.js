@@ -106,17 +106,22 @@ exports.postAnOption = async (req, res) => {
     if (!customerData) {
       return res.status(400).json({ error: "Invalid Customer" });
     }
+    if(!customerData.whatsAppnumber.toString().startsWith("+")){
+      return res.status(400).json({ error: "Invalid Phone number" });
+    }
 
-    let alreadyExists = OptionsModel.countDocuments({ customer });
+    let alreadyExists = await OptionsModel.countDocuments({ customer:customerData._id });
     if (!alreadyExists) {
       let newOption = new OptionsModel(req.body);
       await newOption.save();
+      console.log(customerData)
       if (customerData.whatsAppnumber) {
-        await client.messages.create({
+        let messageResponse = await client.messages.create({
           body: `Live Sloka: book your slot on ${process.env.USER_CLIENT_URL}/options/${newOption._id}`,
           to: customerData.whatsAppnumber, // Text this number
           from: process.env.TWILIO_NUMBER, // From a valid Twilio number
         });
+        console.log(messageResponse)
         return res.json({
           message: "Options Created and Url sent successfully",
         });

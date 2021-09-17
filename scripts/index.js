@@ -9,3 +9,7 @@ exports.addMonths = (date, months) => {
   }
   return moment(date).format("DD-MM-YYYY");
 };
+
+exports.capitalize = (word) => {
+  return word.charAt(0).toUpperCase() + word.substring(1);
+};

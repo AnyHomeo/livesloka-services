@@ -9,9 +9,45 @@ const { addOtpToAdminCollection, validateOtpAndResetPassword,getAddress,postAddr
 
 router.get('/address/:id',getAddress);
 router.post('/address/:id',postAddress);
+
+/**
+ *@swagger
+ * tags:
+ *   name: Users
+ *   description: Apis to manage Users and Auth
+ */
+
+/**
+ * @swagger
+ *  /login:
+ *  post: 
+ *   summary: Login a User
+ *   tags: [Users]
+ *   requestBody:
+ *    content:
+ *     application/json:
+ *      schema:
+ *       properties:
+ *        userId:
+ *         type: string
+ *         example: ram
+ *        password:
+ *         type: string
+ *         example: ram
+ *       required:
+ *        - userId
+ *        - password                     
+ *   responses:
+ *    200:
+ *     description: Login Successful
+ *    400:
+ *     description: Invalid UserId or Password
+ *    500:
+ *     description: Something went wrong!
+ */
+
 router.post("/login", ctrl.authentication);
 router.post("/ChangePassword", ctrl.ChangePassword);
-router.post("/register", ctrl.register);
 router.get("/otp/:number",(req,res)=>{
     const { number } = req.params
 	let otp = Math.floor(Math.random()*10000)
@@ -33,10 +69,96 @@ router.get("/otp/:number",(req,res)=>{
     })
 });
 
+/**
+ * @swagger
+ *  /customer/registerCustomer:
+ *  post:
+ *   tags: [Users]
+ *   summary: Add a New Customer
+ *   requestBody:
+ *    content:
+ *     application/json:
+ *      schema:
+ *       properties:
+ *        firstName:
+ *         type: string
+ *         example: Customer Name
+ *        lastName:
+ *         type: string
+ *         example: Parent Name
+ *        email:
+ *         type: string
+ *         example: Parent@gmail.com
+ *        whatsAppnumber:
+ *         type: string
+ *         example: +919493454298
+ *        phone:
+ *         type: string
+ *         example: +919493454298
+ *        age:
+ *         type: number
+ *         example: 5
+ *        gender:
+ *         type: string
+ *         example: male
+ *        subjectId:
+ *         type: string
+ *         example: 12212221221232
+ *        timeZoneId:
+ *         type: string
+ *         example: 44554455544554
+ *        numberOfStudents:
+ *         type: number
+ *         example: 1
+ *        countryId:
+ *         type: string
+ *         example: 55666556665
+ *        proposedAmount:
+ *         type: number
+ *         example: 50       
+ *   responses:
+ *    200:
+ *     description: Customer Inserted SuccessfulLy
+ *    500:
+ *     description: Something went wrong!
+ */
+
 router.post("/customer/registerCustomer", customerCtrl.registerCustomer);
+
+/**
+ * @swagger
+ *  /customer/details:
+ *  get: 
+ *   summary: get all Customers data
+ *   tags: [Users]
+ *   responses:
+ *    200:
+ *     description: Retrieved All Customers Successfully
+ *    500:
+ *     description: Something went wrong!
+ */
+
 router.get("/customer/details", customerCtrl.details);
 router.get("/customer/data", customerCtrl.getRespectiveDetails);
+
 router.post("/customer/updateCustomer", customerCtrl.updateCustomer);
+
+/**
+ * @swagger
+ *  /customer/delete/{customerId}:
+ *  get:
+ *   parameters:
+ *    - in: path
+ *      name: customerId
+ *   summary: delete a customer
+ *   tags: [Users]
+ *   responses:
+ *    200:
+ *     description: Deleted the specified customer Successfully
+ *    500:
+ *     description: Something went wrong!
+ */
+
 router.get("/customer/delete/:customerId", customerCtrl.deleteCustomer);
 
 //invoice
@@ -64,6 +186,8 @@ router.post("/admin/updatecomment", ctrl.updatecomment);
 router.post("/admin/deletecomment", ctrl.deletecomment);
 
 //password reset
+
+
 router.get("/admin/reset/:id", ctrl.resetPassword);
 router.get("/all/admins", ctrl.getAllAdmins);
 
