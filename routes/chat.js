@@ -8,6 +8,7 @@ const {
   isLastMessage,
   seeLastMessage,
 } = require('../controllers/chat.controller');
+const AdminModel = require('../models/Admin.model');
 
 const router = express.Router();
 
@@ -50,8 +51,29 @@ router.post('/lastmessage/:roomID', async (req, res) => {
 router.get('/rooms', async (req, res) => {
   try {
     const result = await allRooms();
-    res.send(result);
+    const userIds = result.map((el) => el.userID);
+    console.log('result =>', result);
+
+    let userNames = await AdminModel.find({
+      userId: { $in: userIds },
+    })
+      .select('username userId -_id')
+      .lean();
+
+    console.log('userNames =>', userNames);
+    const finalData = result.map((el) => {
+      const user = userNames.find((username) => username.userId === el.userID);
+      console.log({ ...el._doc });
+
+      return {
+        ...el._doc,
+        username: user.username,
+      };
+    });
+
+    return res.send(finalData);
   } catch (error) {
+    console.log(error);
     res.status(400).send(error);
   }
 });

@@ -18,6 +18,8 @@ const {
   getCustomerByEmail,
   UpdateProfilePicByEmail,
   dataByUserID,
+  dataByUserIDs,
+  getAdminById,
 } = require('../controllers/Customer.controller');
 const router = express.Router();
 
@@ -38,5 +40,6 @@ router.post('/register/customer', insertCustomersFromWebsite);
 router.get('/get/customer/:email', getCustomerByEmail);
 router.post('/update/customerPic/', UpdateProfilePicByEmail);
 router.get('/ByUserID/:userId', dataByUserID);
+router.get('/getAdminById/:userId', getAdminById);
 
 module.exports = router;

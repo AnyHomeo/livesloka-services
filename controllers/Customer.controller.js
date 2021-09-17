@@ -820,6 +820,26 @@ module.exports = {
     }
   },
 
+  getAdminById: async (req, res) => {
+    try {
+      const { userId } = req.params;
+
+      let data = await AdminModel.findOne({
+        userId,
+      })
+        .select('username -_id')
+        .lean();
+
+      console.log(data);
+      return res.send(data);
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        error: 'Something went wrong!',
+      });
+    }
+  },
+
   updateLastTimeJoined: async (req, res) => {
     try {
       let { email, scheduleId } = req.params;
