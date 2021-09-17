@@ -237,6 +237,27 @@ io.on('connection', (socket) => {
 
   // 	callback()
   // })
+  socket.on(
+    'user-typing',
+    async ({ roomID, name, typing, message }, callback) => {
+      console.log(roomID, name, message, typing);
+
+      socket.to(roomID).emit('user-typing', { name, message, typing });
+      try {
+      } catch (error) {
+        if (error) return callback(error);
+      }
+      callback();
+    }
+  );
+  socket.on('agent-typing', async ({ roomID, name, typing }, callback) => {
+    socket.to(roomID).emit('agent-typing', { name, typing });
+    try {
+    } catch (error) {
+      if (error) return callback(error);
+    }
+    callback();
+  });
 
   socket.on('joinChatRoom', async ({ roomID, adminID }, callback) => {
     try {

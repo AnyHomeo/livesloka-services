@@ -1,31 +1,31 @@
-const CustomerModel = require("../models/Customer.model");
-const AdminModel = require("../models/Admin.model");
-const AttendanceModel = require("../models/Attendance");
-const SubjectsModel = require("../models/Subject.model");
-const ScheduleModel = require("../models/Scheduler.model");
-const PaymentModel = require("../models/Payments");
-const TimeZoneModel = require("../models/timeZone.model");
-const TeacherLeavesModel = require("../models/TeacherLeaves.model");
-const moment = require("moment");
-const momentTZ = require("moment-timezone");
-const SubjectModel = require("../models/Subject.model");
-const SchedulerModel = require("../models/Scheduler.model");
-const { nextSlotFinder } = require("../scripts/nextSlotFinder");
-const allZones = require("../models/timeZone.json");
-const generateScheduleDescription = require("../scripts/generateScheduleDescription");
-const timeZoneModel = require("../models/timeZone.model");
-const CancelledClassesModel = require("../models/CancelledClasses.model");
-const generateScheduleDays = require("../scripts/generateScheduleDays");
-const TeacherModel = require("../models/Teacher.model");
-let filters = require("../config/filters.json");
+const CustomerModel = require('../models/Customer.model');
+const AdminModel = require('../models/Admin.model');
+const AttendanceModel = require('../models/Attendance');
+const SubjectsModel = require('../models/Subject.model');
+const ScheduleModel = require('../models/Scheduler.model');
+const PaymentModel = require('../models/Payments');
+const TimeZoneModel = require('../models/timeZone.model');
+const TeacherLeavesModel = require('../models/TeacherLeaves.model');
+const moment = require('moment');
+const momentTZ = require('moment-timezone');
+const SubjectModel = require('../models/Subject.model');
+const SchedulerModel = require('../models/Scheduler.model');
+const { nextSlotFinder } = require('../scripts/nextSlotFinder');
+const allZones = require('../models/timeZone.json');
+const generateScheduleDescription = require('../scripts/generateScheduleDescription');
+const timeZoneModel = require('../models/timeZone.model');
+const CancelledClassesModel = require('../models/CancelledClasses.model');
+const generateScheduleDays = require('../scripts/generateScheduleDays');
+const TeacherModel = require('../models/Teacher.model');
+let filters = require('../config/filters.json');
 
 module.exports = {
   async registerCustomer(req, res) {
     let { subjectId, proposedAmount } = req.body;
     if (!subjectId) {
       return res.json({
-        error: "Subject is Required!!",
-        status: "Internal Server Error",
+        error: 'Subject is Required!!',
+        status: 'Internal Server Error',
         result: null,
       });
     }
@@ -44,22 +44,22 @@ module.exports = {
           });
           if (data) {
             return res.json({
-              status: "OK",
-              message: "Customer added, Use old credentials to login",
+              status: 'OK',
+              message: 'Customer added, Use old credentials to login',
               result: val,
             });
           } else {
             if (req.body.firstName && req.body.lastName) {
-              user.username = req.body.firstName + " " + req.body.lastName;
+              user.username = req.body.firstName + ' ' + req.body.lastName;
             } else if (req.body.firstName) {
               user.username = req.body.firstName;
             } else if (req.body.lastName) {
               user.username = req.body.lastName;
             } else if (req.body.email) {
-              user.username = req.body.email.split("@")[0];
+              user.username = req.body.email.split('@')[0];
             } else {
               user.username =
-                "Livesloka User " + Math.floor(Math.random() * 1000000 + 1);
+                'Livesloka User ' + Math.floor(Math.random() * 1000000 + 1);
             }
             if (req.body.email) {
               user.userId = req.body.email;
@@ -67,26 +67,26 @@ module.exports = {
               user.userId = req.body.phone;
             } else {
               user.userId =
-                "Livesloka" + Math.floor(Math.random() * 1000000 + 1);
+                'Livesloka' + Math.floor(Math.random() * 1000000 + 1);
             }
             user.roleId = 1;
             user.customerId = val._id;
-            user.password = "livesloka";
+            user.password = 'livesloka';
             let newUserdata = new AdminModel(user);
             newUserdata
               .save()
               .then((newUser) => {
                 return res.status(200).send({
-                  status: "OK",
+                  status: 'OK',
                   message:
-                    "Customer data inserted and Login Credentials created Successfully",
+                    'Customer data inserted and Login Credentials created Successfully',
                   result: val,
                 });
               })
               .catch((err) => {
                 return res.status(500).json({
-                  status: "Internal Server Error",
-                  error: "Error in creating Username and Password",
+                  status: 'Internal Server Error',
+                  error: 'Error in creating Username and Password',
                   result: null,
                 });
               });
@@ -98,8 +98,8 @@ module.exports = {
       .catch((err) => {
         console.log(err);
         res.status(400).send({
-          status: "Bad Request",
-          message: "Invalid Syntax",
+          status: 'Bad Request',
+          message: 'Invalid Syntax',
           result: null,
         });
       });
@@ -107,21 +107,21 @@ module.exports = {
 
   async details(req, res) {
     CustomerModel.find({})
-      .select("-customerId")
+      .select('-customerId')
       .sort({
         createdAt: -1,
       })
       .then((result) => {
         res.status(200).json({
-          message: "Customer data retrieved",
-          status: "OK",
+          message: 'Customer data retrieved',
+          status: 'OK',
           result,
         });
       })
       .catch((err) => {
         console.log(err);
         res.status(400).json({
-          message: "something went Wrong",
+          message: 'something went Wrong',
           err,
         });
       });
@@ -146,28 +146,28 @@ module.exports = {
           )
             .then((updatedUser) => {
               return res.status(200).send({
-                status: "OK",
-                message: "Customer data updated Successfully",
+                status: 'OK',
+                message: 'Customer data updated Successfully',
                 result: null,
               });
             })
             .catch((err) => {
               console.log(err);
               return res.status(500).json({
-                error: "error in updating userid",
+                error: 'error in updating userid',
               });
             });
         } else {
           res.status(200).send({
-            status: "OK",
-            message: "Customer data updated Successfully",
+            status: 'OK',
+            message: 'Customer data updated Successfully',
             result: null,
           });
         }
       })
       .catch((err) => {
         res.status(500).json({
-          error: "something went wrong",
+          error: 'something went wrong',
         });
         console.log(err);
       });
@@ -175,18 +175,18 @@ module.exports = {
 
   getRespectiveDetails: async (req, res) => {
     let { params } = req.query;
-    params = params.split(",").join(" ");
+    params = params.split(',').join(' ');
     AdminModel.find({})
       .select(params)
       .then((users) => {
         return res.status(200).json({
-          message: "retrieved all users",
+          message: 'retrieved all users',
           result: users,
         });
       })
       .catch((err) => {
         return res.status(500).json({
-          error: "unable to retrieve users",
+          error: 'unable to retrieve users',
           result: null,
         });
       });
@@ -205,16 +205,16 @@ module.exports = {
           userId: customer.email,
         });
         return res.json({
-          message: "Deleted customer and their Login Details Successfully!",
+          message: 'Deleted customer and their Login Details Successfully!',
         });
       }
       return res.json({
-        message: "Deleted Successfully!",
+        message: 'Deleted Successfully!',
       });
     } catch (error) {
       console.log(error);
       return res.status(500).json({
-        error: "Something went wrong!!",
+        error: 'Something went wrong!!',
       });
     }
   },
@@ -223,24 +223,24 @@ module.exports = {
     const { customerId } = req.params;
     let { params } = req.query;
     if (params) {
-      params = params.split(",").join(" ");
+      params = params.split(',').join(' ');
       CustomerModel.findById(customerId)
         .select(params)
         .then((docs) => {
           return res.status(200).json({
-            message: "data retrieved successfully",
+            message: 'data retrieved successfully',
             result: docs,
           });
         })
         .catch((err) =>
           res.status(500).json({
-            error: "Internal Server Error",
+            error: 'Internal Server Error',
             result: null,
           })
         );
     } else {
       return res.status(400).json({
-        error: "Please provide Params",
+        error: 'Please provide Params',
         result: null,
       });
     }
@@ -249,8 +249,8 @@ module.exports = {
   getCustomersAllData: async (req, res) => {
     try {
       let { params } = req.query;
-      const subjects = await SubjectsModel.find().select("subjectName id");
-      params = params.split(",").join(" ");
+      const subjects = await SubjectsModel.find().select('subjectName id');
+      params = params.split(',').join(' ');
       CustomerModel.find()
         .select(params)
         .lean()
@@ -268,14 +268,14 @@ module.exports = {
             }
           });
           return res.status(200).json({
-            message: "retrieved students successfully",
+            message: 'retrieved students successfully',
             result: data,
           });
         })
         .catch((err) => {
           console.log(err);
           return res.status(500).json({
-            message: "Error in retrieving data",
+            message: 'Error in retrieving data',
           });
         });
     } catch (error) {}
@@ -288,17 +288,17 @@ module.exports = {
         email,
       })
         .select(
-          "_id scheduleDescription firstName noOfClasses paymentDate paidTill numberOfClassesBought isJoinButtonEnabledByAdmin timeZoneId"
+          '_id scheduleDescription firstName noOfClasses paymentDate paidTill numberOfClassesBought isJoinButtonEnabledByAdmin timeZoneId'
         )
         .lean();
       let mainSchedules = await Promise.all(
         customers.map(async (customer) => {
           let isJoinButtonDisabled = true;
           if (customer.paidTill) {
-            let dateArr = customer.paidTill.split("-").map((v) => parseInt(v));
+            let dateArr = customer.paidTill.split('-').map((v) => parseInt(v));
             let dateToday = moment()
-              .format("DD-MM-YYYY")
-              .split("-")
+              .format('DD-MM-YYYY')
+              .split('-')
               .map((v) => parseInt(v));
             isJoinButtonDisabled =
               (dateArr[2] > dateToday[2] &&
@@ -342,16 +342,16 @@ module.exports = {
                 {
                   scheduleId: actualSchedule._id,
                   date: {
-                    $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
-                    $lte: momentTZ().tz("Asia/Kolkata").endOf("day").format(),
+                    $gte: momentTZ().tz('Asia/Kolkata').startOf('day').format(),
+                    $lte: momentTZ().tz('Asia/Kolkata').endOf('day').format(),
                   },
                 },
                 {
                   entireDay: true,
                   teacherId: teacher._id,
                   date: {
-                    $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
-                    $lte: momentTZ().tz("Asia/Kolkata").endOf("day").format(),
+                    $gte: momentTZ().tz('Asia/Kolkata').startOf('day').format(),
+                    $lte: momentTZ().tz('Asia/Kolkata').endOf('day').format(),
                   },
                 },
               ],
@@ -373,13 +373,13 @@ module.exports = {
                     actualSchedule.slots,
                     selectedZones[0]
                   )
-                : "Monday to Friday - " +
+                : 'Monday to Friday - ' +
                   generateScheduleDescription(
                     actualSchedule.slots,
                     selectedZones[0]
                   )
-                    .split("and")[0]
-                    .split("-")[1],
+                    .split('and')[0]
+                    .split('-')[1],
               isTeacherOnLeave: !!teacherLeave,
               scheduleDays: generateScheduleDays(
                 actualSchedule.slots,
@@ -400,7 +400,7 @@ module.exports = {
     } catch (error) {
       console.log(error);
       return res.json({
-        error: "Error in retrieving the data",
+        error: 'Error in retrieving the data',
       });
     }
   },
@@ -408,18 +408,18 @@ module.exports = {
   getRequestedData: async (req, res) => {
     try {
       let { email, q } = req.query;
-      q = q.split(",").join(" ");
+      q = q.split(',').join(' ');
       const customers = await CustomerModel.find({
         email,
       }).select(q);
       return res.json({
-        message: "Data retrieved sucessfully",
+        message: 'Data retrieved sucessfully',
         result: customers,
       });
     } catch (error) {
       console.log(error);
       return res.status(500).json({
-        error: "Internal Server error",
+        error: 'Internal Server error',
       });
     }
   },
@@ -427,15 +427,15 @@ module.exports = {
   insertDataFromWix: async (req, res) => {
     try {
       const { data } = req.body;
-      data["field:comp-kk7je66v"] =
-        typeof data["field:comp-kk7je66v"] === "string"
-          ? data["field:comp-kk7je66v"].toUpperCase()
-          : "IST";
+      data['field:comp-kk7je66v'] =
+        typeof data['field:comp-kk7je66v'] === 'string'
+          ? data['field:comp-kk7je66v'].toUpperCase()
+          : 'IST';
       let timeZoneSelected = await TimeZoneModel.findOne({
-        timeZoneName: data["field:comp-kk7je66v"],
+        timeZoneName: data['field:comp-kk7je66v'],
       }).lean();
-      let selectedSubjectNames = data["field:comp-kk7je66r1"]
-        .split(",")
+      let selectedSubjectNames = data['field:comp-kk7je66r1']
+        .split(',')
         .map((name) => name.trim());
       let selectedSubjects = await SubjectModel.find({
         subjectName: {
@@ -443,16 +443,16 @@ module.exports = {
         },
       }).lean();
       let user = {
-        lastName: data["field:comp-kk7je65y"],
-        firstName: data["field:comp-kk7je6651"],
-        timeZoneId: timeZoneSelected ? timeZoneSelected.id : "",
-        whatsAppnumber: data["field:comp-kk7je66p"],
-        email: data["field:comp-kk7je66n"],
+        lastName: data['field:comp-kk7je65y'],
+        firstName: data['field:comp-kk7je6651'],
+        timeZoneId: timeZoneSelected ? timeZoneSelected.id : '',
+        whatsAppnumber: data['field:comp-kk7je66p'],
+        email: data['field:comp-kk7je66n'],
         gender:
-          typeof data["field:comp-kk926n0p"] === "string"
-            ? data["field:comp-kk926n0p"].toLowerCase()
-            : "",
-        age: data["field:comp-kk7je668"],
+          typeof data['field:comp-kk926n0p'] === 'string'
+            ? data['field:comp-kk926n0p'].toLowerCase()
+            : '',
+        age: data['field:comp-kk7je668'],
       };
       let finalUserInsertableData = selectedSubjects.map((subject) => {
         return {
@@ -467,20 +467,20 @@ module.exports = {
           console.log(err);
         } else {
           const userIfExists = await AdminModel.findOne({
-            userId: data["field:comp-kk7je66n"],
+            userId: data['field:comp-kk7je66n'],
           });
           if (!userIfExists) {
             const newUser = new AdminModel({
-              userId: data["field:comp-kk7je66n"],
-              password: "livesloka",
+              userId: data['field:comp-kk7je66n'],
+              password: 'livesloka',
               roleId: 1,
               customerId: docs[0]._id,
-              username: data["field:comp-kk7je6651"],
+              username: data['field:comp-kk7je6651'],
             });
             newUser.save().then((savedDoc) => {
               return res.json({
                 Success: true,
-                message: "Login credentials created successfully",
+                message: 'Login credentials created successfully',
               });
             });
           } else {
@@ -494,32 +494,32 @@ module.exports = {
       console.log(error);
       const { data } = req.body;
       let user = {
-        lastName: data["field:comp-kk7je65y"],
-        firstName: data["field:comp-kk7je6651"],
-        whatsAppnumber: data["field:comp-kk7je66p"],
-        email: data["field:comp-kk7je66n"],
-        gender: data["field:comp-kk926n0p"],
-        age: data["field:comp-kk7je668"],
+        lastName: data['field:comp-kk7je65y'],
+        firstName: data['field:comp-kk7je6651'],
+        whatsAppnumber: data['field:comp-kk7je66p'],
+        email: data['field:comp-kk7je66n'],
+        gender: data['field:comp-kk926n0p'],
+        age: data['field:comp-kk7je668'],
       };
       const newCustomer = new CustomerModel(user);
       newCustomer
         .save()
         .then(async (data) => {
           const userIfExists = await AdminModel.findOne({
-            userId: data["field:comp-kk7je66n"],
+            userId: data['field:comp-kk7je66n'],
           });
           if (!userIfExists) {
             const newUser = new AdminModel({
-              userId: data["field:comp-kk7je66n"],
-              password: "livesloka",
+              userId: data['field:comp-kk7je66n'],
+              password: 'livesloka',
               roleId: 1,
               customerId: docs[0]._id,
-              username: data["field:comp-kk7je6651"],
+              username: data['field:comp-kk7je6651'],
             });
             newUser.save().then((savedDoc) => {
               return res.json({
                 Success: true,
-                message: "Login credentials created successfully",
+                message: 'Login credentials created successfully',
               });
             });
           } else {
@@ -530,7 +530,7 @@ module.exports = {
         })
         .catch((err) => {
           return res.status(500).json({
-            error: "Error in Inserting Customers",
+            error: 'Error in Inserting Customers',
           });
         });
     }
@@ -544,38 +544,38 @@ module.exports = {
         numberOfClassesBought: {
           $lte: -2,
         },
-        classStatusId: "113975223750050",
+        classStatusId: '113975223750050',
       });
       let customersEqualToMinus1 = await CustomerModel.countDocuments({
         numberOfClassesBought: -1,
-        classStatusId: "113975223750050",
+        classStatusId: '113975223750050',
       });
       let customersEqualTo0 = await CustomerModel.countDocuments({
         numberOfClassesBought: 0,
-        classStatusId: "113975223750050",
+        classStatusId: '113975223750050',
       });
       let demoCustomers = await CustomerModel.countDocuments({
-        classStatusId: "38493085684944",
+        classStatusId: '38493085684944',
       });
       let newCustomers = await CustomerModel.countDocuments({
-        classStatusId: "108731321313146850",
+        classStatusId: '108731321313146850',
       });
       let customersInClass = await CustomerModel.countDocuments({
-        classStatusId: "113975223750050",
+        classStatusId: '113975223750050',
       });
       let autoDemoCustomers = await CustomerModel.countDocuments({
-        autoDemo:true
+        autoDemo: true,
       });
-      let day = slot.split("-")[0].toLowerCase();
+      let day = slot.split('-')[0].toLowerCase();
       let schedulesRightNow = await SchedulerModel.find({
-        ["slots." + day]: {
+        ['slots.' + day]: {
           $in: [slot],
         },
         isDeleted: {
           $ne: true,
         },
       })
-        .select("meetingLink className scheduleDescription lastTimeJoinedClass")
+        .select('meetingLink className scheduleDescription lastTimeJoinedClass')
         .lean();
       schedulesRightNow = schedulesRightNow.map((schedule) => {
         return {
@@ -584,7 +584,7 @@ module.exports = {
         };
       });
       let nextSchedules = await SchedulerModel.find({
-        ["slots." + day]: {
+        ['slots.' + day]: {
           $nin: [slot],
           $in: [nextSlot],
         },
@@ -592,7 +592,7 @@ module.exports = {
           $ne: true,
         },
       })
-        .select("meetingLink className scheduleDescription")
+        .select('meetingLink className scheduleDescription')
         .lean();
       return res.json({
         customersEqualToMinus1,
@@ -603,12 +603,12 @@ module.exports = {
         customersInClass,
         schedulesRightNow,
         nextSchedules,
-        autoDemoCustomers
+        autoDemoCustomers,
       });
     } catch (error) {
       console.log(error);
       return res.status(500).json({
-        error: "Something went wrong !",
+        error: 'Something went wrong !',
       });
     }
   },
@@ -619,7 +619,7 @@ module.exports = {
 
     try {
       const { userId } = req.params;
-      const user = await AdminModel.findById(userId).select("settings");
+      const user = await AdminModel.findById(userId).select('settings');
       let query = {};
       if (
         user &&
@@ -670,14 +670,14 @@ module.exports = {
           };
         }
         CustomerModel.find(query)
-          .select("-customerId")
+          .select('-customerId')
           .sort({
             createdAt: -1,
           })
           .then((result) => {
             res.status(200).json({
-              message: "Customer data retrieved",
-              status: "OK",
+              message: 'Customer data retrieved',
+              status: 'OK',
               result: result.filter(
                 (customer) => !customer.isSummerCampStudent
               ),
@@ -686,20 +686,20 @@ module.exports = {
           .catch((err) => {
             console.log(err);
             res.status(400).json({
-              message: "something went Wrong",
+              message: 'something went Wrong',
               err,
             });
           });
       } else {
         CustomerModel.find({})
-          .select("-customerId")
+          .select('-customerId')
           .sort({
             createdAt: -1,
           })
           .then((result) => {
             res.status(200).json({
-              message: "Customer data retrieved",
-              status: "OK",
+              message: 'Customer data retrieved',
+              status: 'OK',
               result: result.filter(
                 (customer) => !customer.isSummerCampStudent
               ),
@@ -708,7 +708,7 @@ module.exports = {
           .catch((err) => {
             console.log(err);
             res.status(400).json({
-              message: "something went Wrong",
+              message: 'something went Wrong',
               err,
             });
           });
@@ -716,7 +716,7 @@ module.exports = {
     } catch (error) {
       console.log(error);
       return res.status(500).json({
-        error: "Something went wrong",
+        error: 'Something went wrong',
       });
     }
   },
@@ -726,7 +726,7 @@ module.exports = {
       const { customerId } = req.params;
 
       const customerTZId = await CustomerModel.findById(customerId).select(
-        "timeZoneId"
+        'timeZoneId'
       );
       if (customerTZId) {
         const timeZone = await TimeZoneModel.findOne({
@@ -744,17 +744,17 @@ module.exports = {
 
         return res.json({
           result: selectedZones[0],
-          message: "Timezone retrieved successfully!",
+          message: 'Timezone retrieved successfully!',
         });
       } else {
         return res.status(400).json({
-          error: "Timezone need to be added",
+          error: 'Timezone need to be added',
         });
       }
     } catch (error) {
       console.log(error);
       return res.status(500).json({
-        error: "Something went wrong",
+        error: 'Something went wrong',
       });
     }
   },
@@ -763,24 +763,59 @@ module.exports = {
     try {
       const { id } = req.params;
       let customer = await CustomerModel.findById(id)
-        .select("timeZoneId firstName lastName phone whatsAppnumber -_id")
+        .select('timeZoneId firstName lastName phone whatsAppnumber -_id')
         .lean();
       if (customer) {
         let timeZone = await TimeZoneModel.findOne({ id: customer.timeZoneId })
-          .select("timeZoneName -_id")
+          .select('timeZoneName -_id')
           .lean();
         return res.status(200).json({
-          message: "Retrieved Data successfully",
+          message: 'Retrieved Data successfully',
           result: { ...customer, timeZone: timeZone.timeZoneName },
         });
       }
       return res.status(400).json({
-        error: "No user with that Id",
+        error: 'No user with that Id',
       });
     } catch (error) {
       console.log(error);
       return res.status(500).json({
-        error: "Something went wrong!",
+        error: 'Something went wrong!',
+      });
+    }
+  },
+
+  dataByUserID: async (req, res) => {
+    try {
+      const { userId } = req.params;
+
+      let { customerId } = await AdminModel.findOne({ userId })
+        .select('customerId -_id')
+        .lean();
+      if (customerId) {
+        let customer = await CustomerModel.findById(customerId)
+          .select('timeZoneId firstName lastName phone whatsAppnumber -_id')
+          .lean();
+        if (customer) {
+          let timeZone = await TimeZoneModel.findOne({
+            id: customer.timeZoneId,
+          })
+            .select('timeZoneName -_id')
+            .lean();
+          return res.status(200).json({
+            message: 'Retrieved Data successfully',
+            result: { ...customer, timeZone: timeZone.timeZoneName },
+          });
+        }
+      }
+
+      return res.status(400).json({
+        error: 'No user with that Id',
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        error: 'Something went wrong!',
       });
     }
   },
@@ -789,11 +824,11 @@ module.exports = {
     try {
       let { email, scheduleId } = req.params;
       let allUsersWithThatEmail = await CustomerModel.find({ email })
-        .select("_id email firstName")
+        .select('_id email firstName')
         .lean();
       allUsersWithThatEmail = allUsersWithThatEmail.map((user) => user._id);
       let schedule = await ScheduleModel.findById(scheduleId)
-        .select("students")
+        .select('students')
         .lean();
       let selectedCustomer = schedule.students.filter((student) =>
         allUsersWithThatEmail.some((user) => user.equals(student))
@@ -804,17 +839,17 @@ module.exports = {
       );
       if (response.nModified === 1) {
         return res.json({
-          message: "last time joined Updated Successfully",
+          message: 'last time joined Updated Successfully',
         });
       } else {
         return res.status(500).json({
-          error: "Error in updating last time joined!",
+          error: 'Error in updating last time joined!',
         });
       }
     } catch (error) {
       console.log(error);
       return res.status(500).json({
-        error: "Error updating join class",
+        error: 'Error updating join class',
       });
     }
   },
@@ -826,15 +861,15 @@ module.exports = {
         isDeleted: {
           $ne: true,
         },
-        ["slots." + day + ".0"]: { $exists: true },
+        ['slots.' + day + '.0']: { $exists: true },
       })
         .select(
-          "slots students meetingLink teacher className subject lastTimeJoinedClass demo"
+          'slots students meetingLink teacher className subject lastTimeJoinedClass demo'
         )
-        .populate("subject", "subjectName")
+        .populate('subject', 'subjectName')
         .populate(
-          "students",
-          "firstName lastTimeJoined lastName numberOfClassesBought timeZoneId email whatsAppnumber"
+          'students',
+          'firstName lastTimeJoined lastName numberOfClassesBought timeZoneId email whatsAppnumber'
         )
         .lean();
       let allTeachers = await TeacherModel.find({
@@ -842,7 +877,7 @@ module.exports = {
           $in: [...new Set(allSchedules.map((schedule) => schedule.teacher))],
         },
       })
-        .select("TeacherName id Phone_number")
+        .select('TeacherName id Phone_number')
         .lean();
       allSchedules = allSchedules.map((schedule) => ({
         ...schedule,
@@ -856,20 +891,20 @@ module.exports = {
           return {
             ...schedule,
             isTeacherJoined:
-              typeof schedule.lastTimeJoinedClass === "object"
+              typeof schedule.lastTimeJoinedClass === 'object'
                 ? momentTZ(schedule.lastTimeJoinedClass)
-                    .tz("Asia/Kolkata")
-                    .format("YYYY-MM-DD") ===
-                  momentTZ().tz("Asia/Kolkata").format("YYYY-MM-DD")
+                    .tz('Asia/Kolkata')
+                    .format('YYYY-MM-DD') ===
+                  momentTZ().tz('Asia/Kolkata').format('YYYY-MM-DD')
                 : false,
             students: schedule.students.map((student) => ({
               ...student,
               isStudentJoined:
-                typeof student.lastTimeJoined === "object"
+                typeof student.lastTimeJoined === 'object'
                   ? momentTZ(student.lastTimeJoined)
-                      .tz("Asia/Kolkata")
-                      .format("YYYY-MM-DD") ===
-                    momentTZ().tz("Asia/Kolkata").format("YYYY-MM-DD")
+                      .tz('Asia/Kolkata')
+                      .format('YYYY-MM-DD') ===
+                    momentTZ().tz('Asia/Kolkata').format('YYYY-MM-DD')
                   : false,
             })),
           };
@@ -878,11 +913,11 @@ module.exports = {
     } catch (err) {
       console.log(err);
       return res.json({
-        error: "Something went wrong!!",
+        error: 'Something went wrong!!',
       });
     }
   },
-  
+
   getInclassAndDemoStudents: async (req, res) => {
     try {
       let allDemoAndInclassSchedules = await ScheduleModel.find({
@@ -890,11 +925,11 @@ module.exports = {
           $ne: true,
         },
       })
-        .select("students teacher className demo")
-        .populate("students", "firstName lastName email")
+        .select('students teacher className demo')
+        .populate('students', 'firstName lastName email')
         .lean();
       let allCustomers = [];
-      let totalStudents = 0
+      let totalStudents = 0;
       allDemoAndInclassSchedules.forEach((schedule) => {
         if (schedule.students && schedule.students.length) {
           schedule.students.forEach((student) => {
@@ -911,13 +946,13 @@ module.exports = {
       });
 
       return res.json({
-        message: "All inclass and demo students retrieved",
+        message: 'All inclass and demo students retrieved',
         result: allCustomers,
       });
     } catch (error) {
       console.log(error);
       return res.json({
-        error: "Something went wrong",
+        error: 'Something went wrong',
       });
     }
   },
@@ -927,15 +962,15 @@ module.exports = {
       const { subjects, email } = req.body;
       req.body.gender = req.body.gender
         ? req.body.gender.toLowerCase()
-        : "male";
+        : 'male';
       if (!email) {
         return res.status(400).json({
-          error: "Email is Required",
+          error: 'Email is Required',
         });
       }
       if (Array.isArray(subjects) && !subjects.length) {
         return res.status(400).json({
-          error: "Subjects are required!",
+          error: 'Subjects are required!',
         });
       }
       let allSubjects = await SubjectModel.find({
@@ -946,7 +981,7 @@ module.exports = {
       let allCustomers = allSubjects.map((subject) => ({
         ...req.body,
         subjectId: subject.id,
-        firstName: req.body.firstName + " " + subject.subjectName,
+        firstName: req.body.firstName + ' ' + subject.subjectName,
         proposedAmount: subject.amount,
       }));
       let insertedCustomers = await CustomerModel.insertMany(allCustomers);
@@ -962,16 +997,16 @@ module.exports = {
         });
         await newUser.save();
         return res.json({
-          message: "Registered Successfully!!",
+          message: 'Registered Successfully!!',
         });
       }
       return res.json({
-        message: "Registered Successfully!",
+        message: 'Registered Successfully!',
       });
     } catch (error) {
       console.log(error);
       return res.status(500).json({
-        error: "Something went wrong!!",
+        error: 'Something went wrong!!',
       });
     }
   },
@@ -986,7 +1021,7 @@ module.exports = {
     } catch (error) {
       console.log(error);
       return res.status(500).json({
-        error: "Something went wrong!!",
+        error: 'Something went wrong!!',
       });
     }
   },
@@ -1007,13 +1042,13 @@ module.exports = {
         });
       } else {
         return res.status(400).json({
-          error: "No user found!",
+          error: 'No user found!',
         });
       }
     } catch (error) {
       console.log(error);
       return res.status(500).json({
-        error: "Something went wrong!!",
+        error: 'Something went wrong!!',
       });
     }
   },
@@ -1029,17 +1064,17 @@ module.exports = {
 
         await data.save();
         return res.json({
-          result: "Updated successfully",
+          result: 'Updated successfully',
         });
       } else {
         return res.status(400).json({
-          error: "No user found!",
+          error: 'No user found!',
         });
       }
     } catch (error) {
       console.log(error);
       return res.status(500).json({
-        error: "Something went wrong!!",
+        error: 'Something went wrong!!',
       });
     }
   },
