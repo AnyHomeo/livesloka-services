@@ -33,6 +33,8 @@ const optionsRouter = require("./routes/options");
 const scriptsRouter = require("./routes/scripts");
 const subscriptionsRouter = require("./routes/subscriptions");
 const MobileCustomerApiRouter = require("./routes/customers");
+const videosRouter = require("./routes/videos");
+
 
 const chat = require("./routes/chat");
 const {
@@ -113,6 +115,7 @@ app.use("/expenses", expensesRouter);
 app.use("/scripts", scriptsRouter);
 app.use("/subscriptions", subscriptionsRouter);
 app.use("/options", optionsRouter);
+app.use("/videos",videosRouter);
 
 //mobile routes
 app.use('/api/customers',MobileCustomerApiRouter);
