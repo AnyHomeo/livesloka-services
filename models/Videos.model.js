@@ -22,7 +22,11 @@ const videoSchema = new mongoose.Schema({
     category:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"VideoCategory"
-    }
+    },
+    assignedTo:[{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"Admin"
+    }]
 },{timestamps:true});
 
 module.exports = mongoose.model('Video', videoSchema);
