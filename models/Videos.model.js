@@ -16,6 +16,9 @@ const videoSchema = new mongoose.Schema({
         type:Boolean,
         default:false
     },
+    image:{
+        type:String,
+    },
     category:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"VideoCategory"

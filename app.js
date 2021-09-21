@@ -2,41 +2,11 @@ const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const logger = require("morgan");
-const swaggerJsDoc = require("swagger-jsdoc");
-const swaggerUi = require("swagger-ui-express");
 const cors = require("cors");
 const batch = require("./config/batch");
+const Routes = require("./Routes");
+const Swagger = require("./Swagger");
 
-const indexRouter = require("./routes/admin");
-const customerRouter = require("./routes/customer");
-const attendanceRouter = require("./routes/attendance");
-const settingsRouter = require("./routes/settings");
-const teacherRouter = require("./routes/teacher");
-const scheduleRouter = require("./routes/schedule");
-const paymentRouter = require("./routes/payment");
-const zoomlink = require("./routes/zoomlink");
-const salaryRouter = require("./routes/salary");
-const uploadRouter = require("./routes/uploads");
-const cancelClassRouter = require("./routes/cancelledClasses");
-const classHistoryRouter = require("./routes/classHistory");
-const summerCampRouter = require("./routes/summerCamp");
-const CareersRouter = require("./routes/careersApplications");
-const teacherLeavesRouter = require("./routes/teacherLeaves");
-const AdMessagesRouter = require("./routes/adMessage");
-const allocateRouter = require("./routes/AgentsAssignmentsToClass");
-const extraAmountsRouter = require("./routes/extraAmounts");
-const agentsRouter = require("./routes/agents");
-const finalizedSalariesRouter = require("./routes/finalizedSalaries");
-const transactionsRouter = require("./routes/transactions");
-const expensesRouter = require("./routes/expenses");
-const optionsRouter = require("./routes/options");
-const scriptsRouter = require("./routes/scripts");
-const subscriptionsRouter = require("./routes/subscriptions");
-const MobileCustomerApiRouter = require("./routes/customers");
-const videosRouter = require("./routes/videos");
-
-
-const chat = require("./routes/chat");
 const {
   createNewRoom,
   addNewMessageToRoom,
@@ -65,63 +35,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-if(process.env.ENVIRONMENT === "DEV"){
-//swagger setup
-const swaggerOptions = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      version: "1.0.0",
-      title: "Livesloka APIS",
-      description: "Livesloka API Information",
-      contact: {
-        name: "Karthik",
-      },
-      servers: [
-        { url: "http://localhost:5000" },
-        { url: "https://livekumon-development-services.herokuapp.com" },
-      ],
-    },
-  },
-  apis: ["./routes/*.js"],
-};
-const swaggerDocs = swaggerJsDoc(swaggerOptions);
-app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-}
-
-app.use("/", indexRouter);
-app.use("/", customerRouter);
-app.use("/", attendanceRouter);
-app.use("/", chat);
-app.use("/messages", AdMessagesRouter);
-app.use("/summercamps", summerCampRouter);
-app.use("/careers", CareersRouter);
-app.use("/class-history", classHistoryRouter);
-app.use("/cancelclass", cancelClassRouter);
-app.use("/teacher-leaves", teacherLeavesRouter);
-app.use("/settings", settingsRouter);
-app.use("/teacher", teacherRouter);
-app.use("/schedule", scheduleRouter);
-app.use("/payment", paymentRouter);
-app.use("/link", zoomlink);
-app.use("/salary", salaryRouter);
-app.use("/uploads", uploadRouter);
-app.use("/allocate", allocateRouter);
-app.use("/extra", extraAmountsRouter);
-app.use("/agent", agentsRouter);
-app.use("/finalize", finalizedSalariesRouter);
-app.use("/transactions", transactionsRouter);
-app.use("/expenses", expensesRouter);
-app.use("/scripts", scriptsRouter);
-app.use("/subscriptions", subscriptionsRouter);
-app.use("/options", optionsRouter);
-app.use("/videos",videosRouter);
-
-//mobile routes
-app.use('/api/customers',MobileCustomerApiRouter);
+Routes(app);
+Swagger(app);
 
 const PORT = process.env.PORT || 5000;
-
 const users = {};
 
 io.on("connection", (socket) => {
@@ -270,11 +187,11 @@ io.on("connection", (socket) => {
   // 	callback()
   // })
   socket.on(
-    'user-typing',
+    "user-typing",
     async ({ roomID, name, typing, message }, callback) => {
       console.log(roomID, name, message, typing);
 
-      socket.to(roomID).emit('user-typing', { name, message, typing });
+      socket.to(roomID).emit("user-typing", { name, message, typing });
       try {
       } catch (error) {
         if (error) return callback(error);
@@ -282,8 +199,8 @@ io.on("connection", (socket) => {
       callback();
     }
   );
-  socket.on('agent-typing', async ({ roomID, name, typing }, callback) => {
-    socket.to(roomID).emit('agent-typing', { name, typing });
+  socket.on("agent-typing", async ({ roomID, name, typing }, callback) => {
+    socket.to(roomID).emit("agent-typing", { name, typing });
     try {
     } catch (error) {
       if (error) return callback(error);
