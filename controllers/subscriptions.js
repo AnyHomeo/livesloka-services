@@ -10,6 +10,7 @@ const ClassHistoryModel = require("../models/ClassHistory.model");
 const SchedulerModel = require("../models/Scheduler.model");
 const TeacherModel = require("../models/Teacher.model");
 const { capitalize } = require("../scripts");
+const SubscriptionModel = require("../models/Subscription");
 let accessToken = "";
 let expiresAt = new Date().getTime();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
@@ -696,12 +697,41 @@ const generateScheduleDescriptionAndSlots = (slots) => {
 exports.handleSuccessfulSubscription = async (req, res) => {
   try {
     const { customerId } = req.params;
+    const { subscription_id,sub_id } = req.query
     const option = await OptionModel.findOne({
       customer: customerId,
     }).lean();
     const customer = await CustomerModel.findById(customerId);
     const teacher = await TeacherModel.findOne({ id: option.teacher });
     const subject = await SubjectModel.findOne({ id: customer.subjectId });
+    let periodEndDate = moment().add(1,"month").format()
+
+    if(subscription_id){
+      const accessToken = getAccessToken()
+      let config = {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      };
+      let response = await fetch(
+        `${process.env.PAYPAL_API_KEY}/billing/subscriptions/${subscription_id}`,
+        config
+      );
+      let result = await response.json();
+        periodEndDate = result.billing_info.next_billing_time
+      const newSubscription = new SubscriptionModel({customerId,type:"PAYPAL",isActive:true,id:subscription_id});
+      await newSubscription.save()
+    } else {
+      const subscription = await stripe.subscriptions.retrieve(
+        sub_id
+        );
+        periodEndDate = moment(subscription.current_period_start*1000).format()
+      const newSubscription = new SubscriptionModel({customerId,type:"STRIPE",isActive:true,id:sub_id})
+      await newSubscription.save()
+
+    }
 
     if (option.selectedSlotType === "NEW") {
       //* 1 generate class name
@@ -812,7 +842,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
             meetingLink: meetingLinkResponse.join_url,
             teacherId: teacher.id,
             classStatusId: "113975223750050",
-            paidTill: moment().add(1, "month").format("DD-MM-YYYY"),
+            paidTill: periodEndDate,
           },
         }
       );
@@ -859,6 +889,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
       customer.meetingLink = schedule.meetingLink;
       customer.teacherId = schedule.teacher;
       customer.classStatusId = "113975223750050";
+      customer.paidTill = periodEndDate
       await customer.save();
 
       return res.json({
@@ -874,3 +905,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     return res.status(500).json({ error: "Something went wrong!!" });
   }
 };
+
+exports.cancelSubscription = async (req,res) => {
+  const {  }
+}
