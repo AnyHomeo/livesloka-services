@@ -26,7 +26,6 @@ var SubscriptionSchema = new mongoose.Schema(
         type:String,
         required: true
     },
-    subscriptionData: mongoose.Schema.Types.Mixed,
     reason:{
       type:String,
     }

@@ -31,10 +31,20 @@ exports.getCustomers = async (req, res) => {
     }
 
     const customers = await Customers.find(filter)
+      .populate("subject")
+      .populate("subjects")
+      .populate("class")
+      .populate("category")
+      .populate("timeZone")
+      .populate("classStatus")
+      .populate("currency")
+      .populate("agent")
+      .populate("teacher")
       .select(select)
       .sort(sort)
       .limit(limit)
-      .skip(skip);
+      .skip(skip)
+      .lean()
 
     return res.json({
       message: "Customers Retrieved successfully!",
