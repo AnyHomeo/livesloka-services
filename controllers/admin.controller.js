@@ -30,9 +30,7 @@ module.exports = {
           userId: user.userId,
           role:user.roleId
         };
-        var newToken = jwt.sign(payload, process.env.JWT_SECRET, {
-          expiresIn: process.env.JWT_EXP,
-        });
+        var newToken = jwt.sign(payload, process.env.JWT_SECRET);
         delete user.password;
         let customer = await CustomerModel.findById(user.customerId)
           .select("timeZoneId firstName lastName phone whatsAppnumber -_id")
