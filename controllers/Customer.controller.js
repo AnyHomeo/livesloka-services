@@ -17,6 +17,7 @@ const timeZoneModel = require('../models/timeZone.model');
 const CancelledClassesModel = require('../models/CancelledClasses.model');
 const generateScheduleDays = require('../scripts/generateScheduleDays');
 const TeacherModel = require('../models/Teacher.model');
+const SubscriptionModel = require('../models/Subscription');
 let filters = require('../config/filters.json');
 
 module.exports = {
@@ -293,16 +294,9 @@ module.exports = {
         customers.map(async (customer) => {
           let isJoinButtonDisabled = true;
           if (customer.paidTill) {
-            let dateArr = customer.paidTill.split('-').map((v) => parseInt(v));
-            let dateToday = moment()
-              .format('DD-MM-YYYY')
-              .split('-')
-              .map((v) => parseInt(v));
+            
             isJoinButtonDisabled =
-              (dateArr[2] > dateToday[2] &&
-                dateArr[1] > dateToday[1] &&
-                dateArr[0] > dateToday[0]) ||
-              !customer.isJoinButtonEnabledByAdmin;
+             (moment().unix()-moment(customer.paidTill).unix()) > 0 && !customer.isJoinButtonEnabledByAdmin;
           } else {
             isJoinButtonDisabled = customer.numberOfClassesBought <= 0;
           }
@@ -357,10 +351,12 @@ module.exports = {
             let subject = await SubjectModel.findOne({
               _id: actualSchedule.subject,
             });
+            let subscription = await SubscriptionModel.find({customerId:customer._id,isActive:true})
 
             return {
               ...actualSchedule,
               isJoinButtonDisabled,
+              isSubscribed:!!subscription.length,
               customerId: customer._id,
               customerName: customer.firstName,
               numberOfClassesBought: customer.numberOfClassesBought,

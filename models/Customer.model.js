@@ -126,7 +126,7 @@ const Customer = new mongoose.Schema(
       default: 0,
     },
     paidTill: {
-      type: String,
+      type: Date,
       trim: true,
     },
     isSummerCampStudent: {
@@ -210,7 +210,7 @@ Customer.virtual("timeZone", {
 });
 
 Customer.virtual("classStatus", {
-  ref: "ClassStatus",
+  ref: "ClassStatu",
   localField: "classStatusId",
   foreignField: "id",
   justOne: true,

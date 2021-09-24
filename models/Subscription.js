@@ -28,6 +28,9 @@ var SubscriptionSchema = new mongoose.Schema(
     },
     reason:{
       type:String,
+    },
+    stripeCustomer:{
+      type:String,
     }
   },
   { timestamps: true }

@@ -94,7 +94,7 @@ exports.createPlanValidations = async (req, res, next) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, subject, image } = req.body;
+    const { name, description, subject } = req.body;
     let subjectData = await SubjectModel.findOne({ id: subject });
     if (!subjectData) {
       return res.status(400).json({ error: "Subject is Invalid" });
@@ -105,7 +105,6 @@ exports.createProduct = async (req, res) => {
       description,
       type: "SERVICE",
       category: "EDUCATIONAL_AND_TEXTBOOKS",
-      image_url: image,
       home_url: "https://mylivesloka.com",
     });
     let config = {
@@ -127,7 +126,6 @@ exports.createProduct = async (req, res) => {
       const product = await stripe.products.create({
         name,
         description,
-        images: [image],
         id: response.id,
       });
       return res.json({
@@ -566,6 +564,10 @@ exports.deactivatePlan = async (req, res) => {
   }
 };
 
+const isFuture = (date) => {
+  return moment().unix() - moment(date).unix() < 0;
+};
+
 exports.subscribeCustomerToAPlan = async (req, res) => {
   try {
     const { customerId, planId } = req.params;
@@ -576,7 +578,10 @@ exports.subscribeCustomerToAPlan = async (req, res) => {
     let accessToken = await getAccessToken();
     let subscriptionBody = {
       plan_id: planId,
-      start_time: moment.utc().add(10, "seconds").format(),
+      start_time:
+        customer.paidTill && isFuture(customer.paidTill)
+          ? moment(customer.paidTill).utc().add(10, "seconds").format()
+          : moment.utc().add(10, "seconds").format(),
       quantity: "1",
       subscriber: {
         name: {
@@ -632,11 +637,13 @@ exports.subscribeCustomerToAPlan = async (req, res) => {
 exports.subscribeCustomerToAStripePlan = async (req, res) => {
   try {
     const { customerId, priceId } = req.params;
+    const address = req.body;
     const customer = await CustomerModel.findById(customerId);
     const stripeCustomer = await stripe.customers.create({
       metadata: { _id: customerId },
       email: customer.email,
       name: customer.firstName,
+      address,
     });
     const subscription = await stripe.subscriptions.create({
       customer: stripeCustomer.id,
@@ -647,9 +654,14 @@ exports.subscribeCustomerToAStripePlan = async (req, res) => {
       ],
       payment_behavior: "default_incomplete",
       expand: ["latest_invoice.payment_intent"],
+      billing_cycle_anchor:
+      customer.paidTill && isFuture(customer.paidTill)
+        ? moment(customer.paidTill).unix()
+        : moment().unix(),
     });
     customer.stripeId = stripeCustomer.id;
     await customer.save();
+    console.log(subscription)
     res.json({
       subscriptionId: subscription.id,
       clientSecret: subscription.latest_invoice.payment_intent.client_secret,
@@ -695,7 +707,7 @@ const generateScheduleDescriptionAndSlots = (slots) => {
   };
 };
 
-scheduleAndupdateCustomer = async (
+const scheduleAndupdateCustomer = async (
   periodEndDate,
   customer,
   teacher,
@@ -703,6 +715,7 @@ scheduleAndupdateCustomer = async (
   option,
   res
 ) => {
+
   if (option.selectedSlotType === "NEW") {
     //* 1 generate class name
     let className = `${customer.firstName} ${
@@ -863,6 +876,7 @@ scheduleAndupdateCustomer = async (
     customer.classStatusId = "113975223750050";
     customer.paidTill = periodEndDate;
     await customer.save();
+    await schedule.save();
 
     return res.json({
       message: "Scheduled class Successfully!",
@@ -885,6 +899,42 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     const teacher = await TeacherModel.findOne({ id: option.teacher });
     const subject = await SubjectModel.findOne({ id: customer.subjectId });
     let periodEndDate = moment().add(1, "month").format();
+
+  //     const latestSubscription = await SubscriptionModel.findOne({
+  //   customerId: customer._id,
+  //   isActive: true,
+  // });
+  // if (latestSubscription) {
+  //   let { id, type } = latestSubscription;
+  //   if (type === "PAYPAL") {
+  //     const accessToken = getAccessToken();
+  //     let config = {
+  //       method: "GET",
+  //       headers: {
+  //         Authorization: `Bearer ${accessToken}`,
+  //         "Content-Type": "application/json",
+  //       },
+  //       body: JSON.stringify({
+  //         reason,
+  //       }),
+  //     };
+  //     let response = await fetch(
+  //       `${process.env.PAYPAL_API_KEY}/billing/subscriptions/${id}/cancel`,
+  //       config
+  //     );
+  //     await response.json();
+  //     latestSubscription.isActive = false;
+  //     latestSubscription.cancelledDate = new Date();
+  //     latestSubscription.reason = "reason";
+  //     await latestSubscription.save();
+  //   } else {
+  //     await stripe.subscriptions.del(id);
+  //     latestSubscription.isActive = false;
+  //     latestSubscription.cancelledDate = new Date();
+  //     latestSubscription.reason = "reason";
+  //     await latestSubscription.save();
+  //   }
+  // }
 
     if (subscription_id) {
       const accessToken = getAccessToken();
@@ -917,10 +967,12 @@ exports.handleSuccessfulSubscription = async (req, res) => {
         res
       );
     } else {
+      console.log(sub_id) 
       const subscription = await stripe.subscriptions.retrieve(sub_id);
-      periodEndDate = moment(subscription.current_period_start * 1000).format();
+      periodEndDate = moment(subscription.current_period_end).format();
       const newSubscription = new SubscriptionModel({
         customerId,
+        stripeCustomer: customer.stripeId,
         type: "STRIPE",
         isActive: true,
         id: sub_id,
@@ -937,7 +989,10 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!!" });
+    const subscriptions = await stripe.subscriptions.list({
+      limit: 3,
+    });
+    return res.status(500).json({ error: "Something went wrong!!",subscriptions });
   }
 };
 
@@ -995,13 +1050,55 @@ exports.cancelSubscription = async (req, res) => {
 
 exports.getAllSubscriptions = async (req, res) => {
   try {
-    const allSubscriptions = await SubscriptionModel.find().populate("customerId","firstName lastName").lean()
+    const allSubscriptions = await SubscriptionModel.find()
+      .populate("customerId", "firstName lastName")
+      .lean();
     return res.json({
-      result:allSubscriptions,
-      message:"All Subscriptions Retrieved Successfully!"
-    })
+      result: allSubscriptions,
+      message: "All Subscriptions Retrieved Successfully!",
+    });
   } catch (error) {
-    console.log(error)
-    return res.status(500).json({ error: "Something went wrong!"})
+    console.log(error);
+    return res.status(500).json({ error: "Something went wrong!" });
   }
-}
+};
+
+exports.listenToStripe = async (req, res) => {
+  const event = req.body;
+  switch (event.type) {
+    case "invoice.payment_succeeded":
+      console.log(`Payment successful`);
+      // Then define and call a method to handle the successful payment intent.
+      // handlePaymentIntentSucceeded(paymentIntent);
+      console.log(JSON.stringify(event.data.object.lines.data[0], null, 2));
+      console.log(event.data.object.customer);
+      console.log(event.data.object.period_end);
+
+      const customer = await CustomerModel.findOne({
+        stripeId: event.data.object.customer,
+      });
+      if (customer) {
+        customer.paidTill = moment(
+          event.data.object.period_end * 1000
+        ).format();
+        await customer.save();
+      }
+      const newStripeTransaction = new StripeTransaction({
+        customerId: customer ? customer._id : "",
+        stripeCustomer: event.data.object.customer,
+        paymentData: event,
+      });
+      await newStripeTransaction.save();
+      break;
+    default:
+      // Unexpected event type
+      console.log(`Unhandled event type ${event.type}.`);
+  }
+  // Return a 200 response to acknowledge receipt of the event
+  res.send();
+};
+
+exports.listenToPaypal = async (req, res) => {
+  console.log(JSON.stringify(req.body, null, 2));
+  res.send();
+};

@@ -22,4 +22,4 @@ var ClassStatusSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("ClassStatus", ClassStatusSchema);
+module.exports = mongoose.model("ClassStatu", ClassStatusSchema);
