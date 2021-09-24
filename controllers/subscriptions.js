@@ -578,10 +578,7 @@ exports.subscribeCustomerToAPlan = async (req, res) => {
     let accessToken = await getAccessToken();
     let subscriptionBody = {
       plan_id: planId,
-      start_time:
-        customer.paidTill && isFuture(customer.paidTill)
-          ? moment(customer.paidTill).utc().add(10, "seconds").format()
-          : moment.utc().add(10, "seconds").format(),
+      start_time: moment.utc().add(10, "seconds").format(),
       quantity: "1",
       subscriber: {
         name: {
@@ -654,14 +651,10 @@ exports.subscribeCustomerToAStripePlan = async (req, res) => {
       ],
       payment_behavior: "default_incomplete",
       expand: ["latest_invoice.payment_intent"],
-      billing_cycle_anchor:
-      customer.paidTill && isFuture(customer.paidTill)
-        ? moment(customer.paidTill).unix()
-        : moment().unix(),
     });
     customer.stripeId = stripeCustomer.id;
     await customer.save();
-    console.log(subscription)
+    console.log(subscription);
     res.json({
       subscriptionId: subscription.id,
       clientSecret: subscription.latest_invoice.payment_intent.client_secret,
@@ -715,7 +708,6 @@ const scheduleAndupdateCustomer = async (
   option,
   res
 ) => {
-
   if (option.selectedSlotType === "NEW") {
     //* 1 generate class name
     let className = `${customer.firstName} ${
@@ -888,6 +880,44 @@ const scheduleAndupdateCustomer = async (
   }
 };
 
+const deleteExistingSubscription = async (customer, reason) => {
+  const latestSubscription = await SubscriptionModel.findOne({
+    customerId: customer._id,
+    isActive: true,
+  });
+  if (latestSubscription) {
+    let { id, type } = latestSubscription;
+    if (type === "PAYPAL") {
+      const accessToken = getAccessToken();
+      let config = {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reason,
+        }),
+      };
+      let response = await fetch(
+        `${process.env.PAYPAL_API_KEY}/billing/subscriptions/${id}/cancel`,
+        config
+      );
+      await response.json();
+      latestSubscription.isActive = false;
+      latestSubscription.cancelledDate = new Date();
+      latestSubscription.reason = reason;
+      await latestSubscription.save();
+    } else {
+      await stripe.subscriptions.del(id);
+      latestSubscription.isActive = false;
+      latestSubscription.cancelledDate = new Date();
+      latestSubscription.reason = reason;
+      await latestSubscription.save();
+    }
+  }
+};
+
 exports.handleSuccessfulSubscription = async (req, res) => {
   try {
     const { customerId } = req.params;
@@ -899,43 +929,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     const teacher = await TeacherModel.findOne({ id: option.teacher });
     const subject = await SubjectModel.findOne({ id: customer.subjectId });
     let periodEndDate = moment().add(1, "month").format();
-
-  //     const latestSubscription = await SubscriptionModel.findOne({
-  //   customerId: customer._id,
-  //   isActive: true,
-  // });
-  // if (latestSubscription) {
-  //   let { id, type } = latestSubscription;
-  //   if (type === "PAYPAL") {
-  //     const accessToken = getAccessToken();
-  //     let config = {
-  //       method: "GET",
-  //       headers: {
-  //         Authorization: `Bearer ${accessToken}`,
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({
-  //         reason,
-  //       }),
-  //     };
-  //     let response = await fetch(
-  //       `${process.env.PAYPAL_API_KEY}/billing/subscriptions/${id}/cancel`,
-  //       config
-  //     );
-  //     await response.json();
-  //     latestSubscription.isActive = false;
-  //     latestSubscription.cancelledDate = new Date();
-  //     latestSubscription.reason = "reason";
-  //     await latestSubscription.save();
-  //   } else {
-  //     await stripe.subscriptions.del(id);
-  //     latestSubscription.isActive = false;
-  //     latestSubscription.cancelledDate = new Date();
-  //     latestSubscription.reason = "reason";
-  //     await latestSubscription.save();
-  //   }
-  // }
-
+    await deleteExistingSubscription(customer, "Remove old subscriptions");
     if (subscription_id) {
       const accessToken = getAccessToken();
       let config = {
@@ -967,9 +961,10 @@ exports.handleSuccessfulSubscription = async (req, res) => {
         res
       );
     } else {
-      console.log(sub_id) 
+      console.log(sub_id);
       const subscription = await stripe.subscriptions.retrieve(sub_id);
-      periodEndDate = moment(subscription.current_period_end).format();
+      console.log(subscription.current_period_end * 1000);
+      periodEndDate = moment(subscription.current_period_end * 1000).format();
       const newSubscription = new SubscriptionModel({
         customerId,
         stripeCustomer: customer.stripeId,
@@ -992,7 +987,9 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     const subscriptions = await stripe.subscriptions.list({
       limit: 3,
     });
-    return res.status(500).json({ error: "Something went wrong!!",subscriptions });
+    return res
+      .status(500)
+      .json({ error: "Something went wrong!!", subscriptions });
   }
 };
 
