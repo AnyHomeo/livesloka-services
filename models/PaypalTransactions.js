@@ -6,9 +6,6 @@ var PaypalTransactionsSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref:"Customer"
     },
-    stripeCustomer:{
-        type:String
-    },
     paymentData:{
         type:mongoose.Schema.Types.Mixed
     }
