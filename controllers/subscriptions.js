@@ -11,6 +11,9 @@ const SchedulerModel = require("../models/Scheduler.model");
 const TeacherModel = require("../models/Teacher.model");
 const { capitalize } = require("../scripts");
 const SubscriptionModel = require("../models/Subscription");
+const StripeTransaction = require("../models/StripeTransactions");
+const PaypalTransaction = require("../models/PaypalTransactions");
+
 let accessToken = "";
 let expiresAt = new Date().getTime();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
@@ -250,6 +253,7 @@ exports.getProducts = async (req, res) => {
     return res.json({
       result: result,
       stripe: products,
+      accessToken,
       message: "Products Retrieved successfully!",
     });
   } catch (error) {
@@ -571,6 +575,7 @@ const isFuture = (date) => {
 exports.subscribeCustomerToAPlan = async (req, res) => {
   try {
     const { customerId, planId } = req.params;
+    const { noSchedule } = req.query;
     const customer = await CustomerModel.findOne({ _id: customerId }).lean();
     if (!customer) {
       return res.status(400).json({ error: "Invalid or Deleted customer Id" });
@@ -595,7 +600,7 @@ exports.subscribeCustomerToAPlan = async (req, res) => {
           payer_selected: "PAYPAL",
           payee_preferred: "IMMEDIATE_PAYMENT_REQUIRED",
         },
-        return_url: `${process.env.SERVICES_URL}/subscriptions/subscription/success/${customerId}`,
+        return_url: `${process.env.SERVICES_URL}/subscriptions/subscription/success/${noSchedule}/${customerId}`,
         cancel_url: `${process.env.USER_CLIENT_URL}/subscriptions/failure`,
       },
     };
@@ -654,7 +659,6 @@ exports.subscribeCustomerToAStripePlan = async (req, res) => {
     });
     customer.stripeId = stripeCustomer.id;
     await customer.save();
-    console.log(subscription);
     res.json({
       subscriptionId: subscription.id,
       clientSecret: subscription.latest_invoice.payment_intent.client_secret,
@@ -732,42 +736,45 @@ const scheduleAndupdateCustomer = async (
         $nin: allSlots,
       },
     });
-    const {
-      _id: zoomAccountId,
-      zoomEmail,
-      zoomJwt,
-      zoomPassword,
-    } = availableZoomAccount;
-    const formData = {
-      topic: "Livesloka Online Class",
-      type: 3,
-      password: zoomPassword,
-      settings: {
-        host_video: true,
-        participant_video: true,
-        join_before_host: true,
-        jbh_time: 0,
-        mute_upon_entry: true,
-        watermark: false,
-        use_pmi: false,
-        approval_type: 2,
-        audio: "both",
-        auto_recording: "none",
-        waiting_room: false,
-        meeting_authentication: false,
-      },
-    };
-    meetingLinkResponse = await fetch(
-      `https://api.zoom.us/v2/users/${zoomEmail}/meetings`,
-      {
-        method: "post",
-        body: JSON.stringify(formData),
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${zoomJwt}`,
-        },
+    let zoomAccountId = "";
+    try {
+      if (availableZoomAccount) {
+        const { _id, zoomEmail, zoomJwt, zoomPassword } = availableZoomAccount;
+        zoomAccountId = _id;
+        const formData = {
+          topic: "Livesloka Online Class",
+          type: 3,
+          password: zoomPassword,
+          settings: {
+            host_video: true,
+            participant_video: true,
+            join_before_host: true,
+            jbh_time: 0,
+            mute_upon_entry: true,
+            watermark: false,
+            use_pmi: false,
+            approval_type: 2,
+            audio: "both",
+            auto_recording: "none",
+            waiting_room: false,
+            meeting_authentication: false,
+          },
+        };
+        meetingLinkResponse = await fetch(
+          `https://api.zoom.us/v2/users/${zoomEmail}/meetings`,
+          {
+            method: "post",
+            body: JSON.stringify(formData),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${zoomJwt}`,
+            },
+          }
+        );
       }
-    );
+    } catch (error) {
+      console.log(error);
+    }
     //* 5 get the selected zoom account and update timeslots
     allSlots.forEach((slot) => {
       availableZoomAccount.timeSlots.push(slot);
@@ -920,7 +927,7 @@ const deleteExistingSubscription = async (customer, reason) => {
 
 exports.handleSuccessfulSubscription = async (req, res) => {
   try {
-    const { customerId } = req.params;
+    const { customerId, noScheduleParam } = req.params;
     const { subscription_id, sub_id } = req.query;
     const option = await OptionModel.findOne({
       customer: customerId,
@@ -952,18 +959,30 @@ exports.handleSuccessfulSubscription = async (req, res) => {
         id: subscription_id,
       });
       await newSubscription.save();
-      await scheduleAndupdateCustomer(
-        periodEndDate,
-        customer,
-        teacher,
-        subject,
-        option,
-        res
-      );
+      if (noScheduleParam == 1) {
+        await scheduleAndupdateCustomer(
+          periodEndDate,
+          customer,
+          teacher,
+          subject,
+          option,
+          res
+        );
+      } else {
+        await CustomerModel.updateOne(
+          { _id: customer._id },
+          {
+            $set: {
+              paidTill: periodEndDate,
+            },
+          }
+        );
+        return res.json({
+          message: "Scheduled Meeting Successfully!",
+        });
+      }
     } else {
-      console.log(sub_id);
       const subscription = await stripe.subscriptions.retrieve(sub_id);
-      console.log(subscription.current_period_end * 1000);
       periodEndDate = moment(subscription.current_period_end * 1000).format();
       const newSubscription = new SubscriptionModel({
         customerId,
@@ -973,14 +992,29 @@ exports.handleSuccessfulSubscription = async (req, res) => {
         id: sub_id,
       });
       await newSubscription.save();
-      await scheduleAndupdateCustomer(
-        periodEndDate,
-        customer,
-        teacher,
-        subject,
-        option,
-        res
-      );
+      if (noScheduleParam == 1) {
+        console.log("creating schedule");
+        await scheduleAndupdateCustomer(
+          periodEndDate,
+          customer,
+          teacher,
+          subject,
+          option,
+          res
+        );
+      } else {
+        await CustomerModel.updateOne(
+          { _id: customer._id },
+          {
+            $set: {
+              paidTill: periodEndDate,
+            },
+          }
+        );
+        return res.json({
+          message: "Scheduled Meeting Successfully!",
+        });
+      }
     }
   } catch (error) {
     console.log(error);
@@ -1005,7 +1039,7 @@ exports.cancelSubscription = async (req, res) => {
       if (type === "PAYPAL") {
         const accessToken = getAccessToken();
         let config = {
-          method: "GET",
+          method: "POST",
           headers: {
             Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
@@ -1081,7 +1115,7 @@ exports.listenToStripe = async (req, res) => {
         await customer.save();
       }
       const newStripeTransaction = new StripeTransaction({
-        customerId: customer ? customer._id : "",
+        customerId: customer ? customer._id : undefined,
         stripeCustomer: event.data.object.customer,
         paymentData: event,
       });
@@ -1096,6 +1130,26 @@ exports.listenToStripe = async (req, res) => {
 };
 
 exports.listenToPaypal = async (req, res) => {
-  console.log(JSON.stringify(req.body, null, 2));
+  const newPaypalTransaction = new PaypalTransaction({
+    paymentData: req.body,
+  });
+  const response = await newPaypalTransaction.save();
+  console.log(response);
   res.send();
+};
+
+exports.getAllTransactionsOfStripeCustomer = async (req, res) => {
+  try {
+    const { stripeCustomer } = req.params;
+    const stripeResponse = await StripeTransaction.find({
+      stripeCustomer,
+    }).lean();
+    return res.json({
+      message: "Transactions Retrieved successfully!",
+      result: stripeResponse,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "Something went wrong!" });
+  }
 };

@@ -19,13 +19,15 @@ const {
   cancelSubscription,
   getAllSubscriptions,
   listenToStripe,
-  listenToPaypal
+  listenToPaypal,
+  getAllTransactionsOfStripeCustomer
 } = require("../controllers/subscriptions");
 
 router.get("/", getAllSubscriptions);
+router.get("/transactions/:stripeCustomer", getAllTransactionsOfStripeCustomer);
 router.post("/stripe/hooks",listenToStripe);
 router.post("/paypal/hooks",listenToPaypal);
-router.get("/subscription/success/:customerId", handleSuccessfulSubscription);
+router.get("/subscription/success/:noScheduleParam/:customerId", handleSuccessfulSubscription);
 router.get("/subscribe/paypal/:customerId/:planId", subscribeCustomerToAPlan);
 router.post(
   "/subscribe/stripe/:customerId/:priceId",
