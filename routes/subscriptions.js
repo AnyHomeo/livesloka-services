@@ -23,7 +23,7 @@ const {
   getAllTransactionsOfStripeCustomer
 } = require("../controllers/subscriptions");
 
-router.get("/", getAllSubscriptions);
+router.get("/customer/:id", getAllSubscriptions);
 router.get("/transactions/:stripeCustomer", getAllTransactionsOfStripeCustomer);
 router.post("/stripe/hooks",listenToStripe);
 router.post("/paypal/hooks",listenToPaypal);

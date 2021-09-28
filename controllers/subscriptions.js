@@ -1081,7 +1081,7 @@ exports.cancelSubscription = async (req, res) => {
 
 exports.getAllSubscriptions = async (req, res) => {
   try {
-    const allSubscriptions = await SubscriptionModel.find()
+    const allSubscriptions = await SubscriptionModel.find({customerId:req.params.id})
       .populate("customerId", "firstName lastName")
       .lean();
     return res.json({
