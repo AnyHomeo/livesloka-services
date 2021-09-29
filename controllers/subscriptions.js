@@ -1081,7 +1081,22 @@ exports.cancelSubscription = async (req, res) => {
 
 exports.getAllSubscriptions = async (req, res) => {
   try {
-    const allSubscriptions = await SubscriptionModel.find({customerId:req.params.id})
+    const { id } = req.params;
+    const { isActive } = req.query;
+    let customer = await CustomerModel.findById(id).lean();
+    if (!customer) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
+    let allCustomers = await CustomerModel.find({
+      email: customer.email,
+    });
+    allCustomers = allCustomers.map((customer) => customer._id);
+    const allSubscriptions = await SubscriptionModel.find({
+      customerId: {
+        $in: allCustomers,
+      },
+      isActive: isActive === "1",
+    })
       .populate("customerId", "firstName lastName")
       .lean();
     return res.json({
