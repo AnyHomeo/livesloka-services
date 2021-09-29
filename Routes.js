@@ -26,6 +26,7 @@ module.exports = (app) => {
   const subscriptionsRouter = require("./routes/subscriptions");
   const MobileCustomerApiRouter = require("./routes/customers");
   const videosRouter = require("./routes/videos");
+  const MobileTeachersApiRouter = require("./routes/mobileTeacher")
   const chat = require("./routes/chat");
 
   app.use("/", indexRouter);
@@ -58,4 +59,5 @@ module.exports = (app) => {
 
   //mobile routes
   app.use("/api/customers", MobileCustomerApiRouter);
+  app.use("/api/teachers",MobileTeachersApiRouter);
 };

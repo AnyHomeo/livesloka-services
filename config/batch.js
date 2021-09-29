@@ -4,6 +4,7 @@ const fetch = require("node-fetch");
 const Transactions = require("../models/Transactions");
 const { URLSearchParams } = require("url");
 const momentTZ = require("moment-timezone");
+const TeacherLeavesModel = require("../models/TeacherLeaves.model");
 
 const savePaypalTransactions = async (transactions) => {
   try {
@@ -140,12 +141,30 @@ const fetchPaypalAndRazorpay = async () => {
   }
 };
 
+const addRewardsToCustomer = async  () => {
+  try {
+    let todayLeaves = await TeacherLeavesModel.find({
+      date:{
+        $gte: momentTZ().tz('Asia/Kolkata').startOf('day'),
+        $lte: momentTZ().tz('Asia/Kolkata').endOf('day')
+      }   
+    })
+    console.log(todayLeaves)
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 const batch = () => {
   if(process.env.ENVIRONMENT !== "DEV"){
     console.log("Scheduling Cron Batches....");
     cron.schedule("0 1 * * *", fetchPaypalAndRazorpay, {
       timezone: "Asia/Kolkata",
     });
+
+    cron.schedule("47 09 * * *", addRewardsToCustomer,{
+      timezone:"Asia/Kolkata"
+    })
   }
 };
 

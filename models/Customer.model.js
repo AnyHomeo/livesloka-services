@@ -153,6 +153,10 @@ const Customer = new mongoose.Schema(
       type: String,
       default: true,
     },
+    rewards:{
+      type:Number,
+      default:0
+    }
   },
 
   {

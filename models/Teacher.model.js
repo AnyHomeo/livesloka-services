@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const mongooseLeanVirtuals = require("mongoose-lean-virtuals");
 var TeacherSchema = new mongoose.Schema(
   {
     id: {
@@ -90,5 +90,17 @@ var TeacherSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+TeacherSchema.virtual("categoryOfTeacher", {
+  ref: "Category",
+  localField: "category",
+  foreignField: "id",
+  justOne: true,
+  options: {
+    select: "categoryName -_id",
+  },
+});
+
+TeacherSchema.plugin(mongooseLeanVirtuals);
 
 module.exports = mongoose.model("Teacher", TeacherSchema);
