@@ -1097,7 +1097,7 @@ exports.getAllSubscriptions = async (req, res) => {
       },
       isActive: isActive === "1",
     })
-      .populate("customerId", "firstName lastName")
+      .populate("customerId", "firstName lastName paidTill")
       .lean();
     return res.json({
       result: allSubscriptions,
