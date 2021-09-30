@@ -52,7 +52,6 @@ router.get('/rooms', async (req, res) => {
   try {
     const result = await allRooms();
     const userIds = result.map((el) => el.userID);
-    console.log('result =>', result);
 
     let userNames = await AdminModel.find({
       userId: { $in: userIds },
@@ -60,14 +59,17 @@ router.get('/rooms', async (req, res) => {
       .select('username userId -_id')
       .lean();
 
-    console.log('userNames =>', userNames);
     const finalData = result.map((el) => {
       const user = userNames.find((username) => username.userId === el.userID);
-      console.log({ ...el._doc });
-
+      if (user) {
+        return {
+          ...el._doc,
+          username: user.username,
+        };
+      }
       return {
         ...el._doc,
-        username: user.username,
+        username: el.userID.split('@')[0],
       };
     });
 
