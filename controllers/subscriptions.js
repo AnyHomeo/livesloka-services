@@ -207,7 +207,7 @@ exports.createPlan = async (req, res) => {
       );
       response = await response.json();
       const price = await stripe.prices.create({
-        unit_amount: req.body.price,
+        unit_amount: parseFloat(req.body.price)*100,
         currency: "usd",
         recurring: { interval: "month", interval_count: months },
         product: productId,
