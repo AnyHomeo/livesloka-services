@@ -152,10 +152,6 @@ const Customer = new mongoose.Schema(
     stripeId: {
       type: String,
       default: true,
-    },
-    rewards:{
-      type:Number,
-      default:0
     }
   },
 
@@ -250,6 +246,16 @@ Customer.virtual("teacher", {
   justOne: true,
   options: {
     select: "TeacherName -_id",
+  },
+});
+
+Customer.virtual("login", {
+  ref: "Admin",
+  localField: "email",
+  foreignField: "userId",
+  justOne: true,
+  options: {
+    select: "rewards userId",
   },
 });
 

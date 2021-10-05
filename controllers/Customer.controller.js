@@ -175,8 +175,11 @@ module.exports = {
   getRespectiveDetails: async (req, res) => {
     let { params } = req.query;
     params = params.split(',').join(' ');
+    if(params.includes('password')){
+      return res.status(500).json({ error:`Password Can't be retrieved` })
+    }
     AdminModel.find({})
-      .select(params)
+      .select(`${params} -password`)
       .then((users) => {
         return res.status(200).json({
           message: 'retrieved all users',
@@ -663,18 +666,19 @@ module.exports = {
             $in: filters.paidClasses.map((item) => parseInt(item)),
           };
         }
+        query.isSummerCampStudent = false
         CustomerModel.find(query)
           .select('-customerId')
+          .populate('login')
           .sort({
             createdAt: -1,
           })
+          .lean()
           .then((result) => {
             res.status(200).json({
               message: 'Customer data retrieved',
               status: 'OK',
-              result: result.filter(
-                (customer) => !customer.isSummerCampStudent
-              ),
+              result: result
             });
           })
           .catch((err) => {
@@ -685,18 +689,18 @@ module.exports = {
             });
           });
       } else {
-        CustomerModel.find({})
+        CustomerModel.find({isSummerCampStudent:false})
           .select('-customerId')
+          .populate('login')
           .sort({
             createdAt: -1,
           })
+          .lean()
           .then((result) => {
             res.status(200).json({
               message: 'Customer data retrieved',
               status: 'OK',
-              result: result.filter(
-                (customer) => !customer.isSummerCampStudent
-              ),
+              result: result
             });
           })
           .catch((err) => {
