@@ -2,7 +2,7 @@ const Customers = require("../models/Customer.model");
 
 exports.getCustomers = async (req, res) => {
   try {
-    let { select, page, size, search, sortBy, isAsc, searchFrom } = req.query;
+    let { select, page, size, search, sortBy, isAsc, searchFrom,values,field } = req.query;
     if (select) select = select.split(",").join(" ");
     let sort = { _id: -1 };
     if (sortBy) {
@@ -28,6 +28,11 @@ exports.getCustomers = async (req, res) => {
           [searchable]: { $regex: "^"+ search, $options: "i" },
         })),
       };
+    }
+    if(field){
+      filter[field] = {
+        $in:values.split(',')
+      }
     }
 
     const customers = await Customers.find(filter)
