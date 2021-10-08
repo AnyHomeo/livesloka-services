@@ -13,8 +13,22 @@ router.post('/address/:id',postAddress);
 /**
  *@swagger
  * tags:
- *   name: Users
- *   description: Apis to manage Users and Auth
+ *   name: Login
+ *   description: Apis to Login user
+ */
+
+ /**
+ *@swagger
+ * tags:
+ *   name: Customer Data
+ *   description: Apis to Manage Customer Data
+ */
+
+  /**
+ *@swagger
+ * tags:
+ *   name: Add Fields
+ *   description: Apis to Manage Add Fields
  */
 
 /**
@@ -22,7 +36,7 @@ router.post('/address/:id',postAddress);
  *  /login:
  *  post: 
  *   summary: Login a User
- *   tags: [Users]
+ *   tags: [Login]
  *   requestBody:
  *    content:
  *     application/json:
@@ -47,8 +61,40 @@ router.post('/address/:id',postAddress);
  */
 
 router.post("/login", ctrl.authentication);
+
+/**
+ * @swagger
+ *  /ChangePassword:
+ *  post: 
+ *   summary: Change Password of Loggedin User
+ *   tags: [Login]
+ *   requestBody:
+ *    content:
+ *     application/json:
+ *      schema:
+ *       properties:
+ *        userId:
+ *         type: string
+ *         example: ram
+ *        newPassword:
+ *         type: string
+ *         example: ram
+ *        confirmPassword:
+ *         type: string
+ *         example: ram
+ *       required:
+ *        - userId
+ *        - password                     
+ *   responses:
+ *    200:
+ *     description: Login Successful
+ *    400:
+ *     description: Invalid UserId or Password
+ *    500:
+ *     description: Something went wrong!
+ */
 router.post("/ChangePassword", ctrl.ChangePassword);
-router.get("/otp/:number",(req,res)=>{
+router.get("/otp/:number",(req,res) => {
     const { number } = req.params
 	let otp = Math.floor(Math.random()*10000)
     client.messages.create({
@@ -73,7 +119,7 @@ router.get("/otp/:number",(req,res)=>{
  * @swagger
  *  /customer/registerCustomer:
  *  post:
- *   tags: [Users]
+ *   tags: [Customer Data]
  *   summary: Add a New Customer
  *   requestBody:
  *    content:
@@ -130,7 +176,7 @@ router.post("/customer/registerCustomer", customerCtrl.registerCustomer);
  *  /customer/details:
  *  get: 
  *   summary: get all Customers data
- *   tags: [Users]
+ *   tags: [Customer Data]
  *   responses:
  *    200:
  *     description: Retrieved All Customers Successfully
@@ -139,7 +185,75 @@ router.post("/customer/registerCustomer", customerCtrl.registerCustomer);
  */
 
 router.get("/customer/details", customerCtrl.details);
+/**
+ * @swagger
+ *  /customer/details:
+ *  get: 
+ *   summary: get all login users data
+ *   tags: [Attendance]
+ *   responses:
+ *    200:
+ *     description: Retrieved All Logins Successfully
+ *    500:
+ *     description: Something went wrong!
+ */
+
 router.get("/customer/data", customerCtrl.getRespectiveDetails);
+
+
+/**
+ * @swagger
+ *  /customer/updateCustomer:
+ *  post:
+ *   tags: [Customer Data]
+ *   summary: update a existing Customer (send which fields are edited)
+ *   requestBody:
+ *    content:
+ *     application/json:
+ *      schema:
+ *       properties:
+ *        firstName:
+ *         type: string
+ *         example: Customer Name
+ *        lastName:
+ *         type: string
+ *         example: Parent Name
+ *        email:
+ *         type: string
+ *         example: Parent@gmail.com
+ *        whatsAppnumber:
+ *         type: string
+ *         example: +919493454298
+ *        phone:
+ *         type: string
+ *         example: +919493454298
+ *        age:
+ *         type: number
+ *         example: 5
+ *        gender:
+ *         type: string
+ *         example: male
+ *        subjectId:
+ *         type: string
+ *         example: 12212221221232
+ *        timeZoneId:
+ *         type: string
+ *         example: 44554455544554
+ *        numberOfStudents:
+ *         type: number
+ *         example: 1
+ *        countryId:
+ *         type: string
+ *         example: 55666556665
+ *        proposedAmount:
+ *         type: number
+ *         example: 50       
+ *   responses:
+ *    200:
+ *     description: Customer Updated SuccessfulLy
+ *    500:
+ *     description: Something went wrong!
+ */
 
 router.post("/customer/updateCustomer", customerCtrl.updateCustomer);
 
@@ -151,7 +265,7 @@ router.post("/customer/updateCustomer", customerCtrl.updateCustomer);
  *    - in: path
  *      name: customerId
  *   summary: delete a customer
- *   tags: [Users]
+ *   tags: [Customer Data]
  *   responses:
  *    200:
  *     description: Deleted the specified customer Successfully
@@ -166,6 +280,28 @@ router.post("/admin/addinvoice", ctrl.addinvoice);
 router.post("/admin/getinvoices", ctrl.getinvoices);
 router.post("/admin/deleteinvoice", ctrl.deleteInvoice);
 
+
+
+/**
+ * @swagger
+ *  /admin/get/{name}:
+ *  get:
+ *   parameters:
+ *    - in: path
+ *      name: name
+ *      schema:
+ *       type: string
+ *       enum: [Agent, ClassStatuses, Country, Currency, Status, Subject, ZoomAccount]
+ *   summary: get all Respective Data
+ *   tags: [Add Fields]
+ *   responses:
+ *    200:
+ *     description: Retrieved All Data Successfully
+ *    500:
+ *     description: Something went wrong!
+ */
+
+
 //Getting all Feilds
 router.get("/admin/get/:name", ctrl.getCorrespondingData);
 
@@ -176,6 +312,24 @@ router.post("/admin/add/:name", ctrl.addField);
 router.post("/admin/update/status", ctrl.updateStatus);
 router.post("/admin/update/:name", ctrl.updateCorrespondingData);
 
+/**
+ * @swagger
+ *  /admin/delete/{name}/{id}:
+ *  get:
+ *   parameters:
+ *    - in: path
+ *      name: name
+ *      schema:
+ *       type: string
+ *       enum: [Agent, ClassStatuses, Country, Currency, Status, Subject, ZoomAccount]
+ *   summary: Delete an Item
+ *   tags: [Add Fields]
+ *   responses:
+ *    200:
+ *     description: Deleted Item Successfully
+ *    500:
+ *     description: Something went wrong!
+ */
 //deleting Every Fields
 router.post("/admin/delete/:name/:id", ctrl.DeleteCorrespondingData);
 

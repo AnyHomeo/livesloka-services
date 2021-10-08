@@ -11,15 +11,27 @@ var SubscriptionSchema = new mongoose.Schema(
       enum: ["PAYPAL", "STRIPE"],
       default: "PAYPAL",
     },
+    planId:{
+      type:String,
+    },
     isActive:{
         type: Boolean,
         default: true,
+    },
+    cancelledDate:{
+      type:Date,
+      default: null
     },
     id:{
         type:String,
         required: true
     },
-    subscriptionData: mongoose.Schema.Types.Mixed,
+    reason:{
+      type:String,
+    },
+    stripeCustomer:{
+      type:String,
+    }
   },
   { timestamps: true }
 );

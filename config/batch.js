@@ -4,6 +4,11 @@ const fetch = require("node-fetch");
 const Transactions = require("../models/Transactions");
 const { URLSearchParams } = require("url");
 const momentTZ = require("moment-timezone");
+const TeacherLeavesModel = require("../models/TeacherLeaves.model");
+const SchedulerModel = require("../models/Scheduler.model");
+const times = require("../models/times.json");
+const CancelledClassesModel = require("../models/CancelledClasses.model");
+const AdminModel = require("../models/Admin.model");
 
 const savePaypalTransactions = async (transactions) => {
   try {
@@ -22,9 +27,7 @@ const savePaypalTransactions = async (transactions) => {
         };
       });
       let data = await Transactions.insertMany(transactionsToInsert);
-      console.log(
-        `${data.length} Paypal Transactions Inserted Successfully!`
-      );
+      console.log(`${data.length} Paypal Transactions Inserted Successfully!`);
     } else {
       console.log("No Paypal Transactions in this Cron job");
     }
@@ -34,30 +37,30 @@ const savePaypalTransactions = async (transactions) => {
 };
 
 const addRazorpayTransactions = async (transactions) => {
-    if(Array.isArray(transactions)){
-        transactions = transactions.reduce((transactionsArr,transaction) => {
-            let { id, amount, status, created_at } = transaction;
-            if (status === "captured") {
-              transactionsArr.push({
-                id,
-                mode: "RAZORPAY",
-                amount: amount / 100,
-                date: new Date(created_at * 1000),
-              });
-            }
-            return transactionsArr;
-          },[]);
-          if(transactions.length){
-            let data = await Transactions.insertMany(transactions);
-            console.log(
-                `${data.length} Razorpay Transactions Inserted Successfully!`
-              );
-          } else {
-              console.log("No new Razorpay Transactions in this Cron job");
-          }
+  if (Array.isArray(transactions)) {
+    transactions = transactions.reduce((transactionsArr, transaction) => {
+      let { id, amount, status, created_at } = transaction;
+      if (status === "captured") {
+        transactionsArr.push({
+          id,
+          mode: "RAZORPAY",
+          amount: amount / 100,
+          date: new Date(created_at * 1000),
+        });
+      }
+      return transactionsArr;
+    }, []);
+    if (transactions.length) {
+      let data = await Transactions.insertMany(transactions);
+      console.log(
+        `${data.length} Razorpay Transactions Inserted Successfully!`
+      );
     } else {
-        console.log("No new Razorpay Transactions in this Cron job");
+      console.log("No new Razorpay Transactions in this Cron job");
     }
+  } else {
+    console.log("No new Razorpay Transactions in this Cron job");
+  }
 };
 
 const fetchPaypalAndRazorpay = async () => {
@@ -140,10 +143,128 @@ const fetchPaypalAndRazorpay = async () => {
   }
 };
 
+const getPresentSlot = () => {
+  const nextSlot = momentTZ()
+    .tz("Asia/Kolkata")
+    .add(30, "minutes")
+    .format("hh:mm A");
+  const presentSlot = momentTZ()
+    .tz("Asia/Kolkata")
+    .format("dddd-hh:mm A")
+    .toUpperCase();
+
+  return `${presentSlot}-${nextSlot}`;
+};
+
+const getPrevSlot = (slot) => {
+  let index = slot.search("-");
+  let time = slot.slice(index + 1);
+  let slotIndex = times.findIndex((singleTime) => singleTime === time);
+  if (slotIndex !== -1) {
+    return `${slot.split("-")[0]}-${times[slotIndex - 1]}`;
+  } else {
+    return slot;
+  }
+};
+
+const addRewardsToCustomer = async () => {
+  try {
+    // let presentSlot = getPresentSlot();
+    // let schedulesRightNow = await SchedulerModel.find({
+
+    // })
+    let presentSlot = getPresentSlot();
+    let prevSlot = getPrevSlot(presentSlot);
+    console.log(presentSlot, prevSlot);
+    let day = presentSlot.split("-")[0].toLowerCase();
+    let schedules = await SchedulerModel.find({
+      ["slots." + day]: {
+        $in: [presentSlot],
+        $nin: [prevSlot],
+      },
+      isDeleted: false,
+    }).lean();
+    let scheduleIds = schedules.map((schedule) => schedule._id);
+    if (scheduleIds.length) {
+      let teacherLeaves = await TeacherLeavesModel.find({
+        $or: [
+          {
+            scheduleId: {
+              $in: scheduleIds,
+            },
+            date: {
+              $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
+              $lte: momentTZ().tz("Asia/Kolkata").endOf("day").format(),
+            },
+          },
+          {
+            entireDay: true,
+            date: {
+              $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
+              $lte: momentTZ().tz("Asia/Kolkata").endOf("day").format(),
+            },
+          },
+        ],
+      })
+        .populate("teacherId")
+        .lean();
+      let teachersOnLeaves = teacherLeaves.map(
+        (teacher) => teacher.teacherId.id
+      );
+
+      if (teachersOnLeaves.length) {
+        let customerLeaves = await CancelledClassesModel.find({
+          cancelledDate: {
+            $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
+            $lte: momentTZ().tz("Asia/Kolkata").endOf("day").format(),
+          },
+          scheduleId: {
+            $in: scheduleIds,
+          },
+        }).lean();
+
+        let studentsOnLeaves = customerLeaves.map((leave) => leave.studentId);
+        let allCustomersWithoutLeaves = schedules.reduce(
+          (accumulator, schedule) => {
+            if (teachersOnLeaves.includes(schedule.teacher)) {
+              let customers = [...schedule.students];
+              customers.forEach((customer) => {
+                if (
+                  !studentsOnLeaves.some((student) => student.equals(customer))
+                ) {
+                  accumulator.push(customer);
+                }
+              });
+            }
+          },
+          []
+        );
+
+        if (allCustomersWithoutLeaves.length) {
+          let customerEmails = await CustomerModel.find({
+            _id: { $in: allCustomersWithoutLeaves },
+          });
+          customerEmails = customerEmails.map(customer => customer.email);
+          await AdminModel.updateMany(
+            { userId: { $in: customerEmails } },
+            { $inc: { rewards: 1 } }
+          );
+        }
+      }
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 const batch = () => {
-  if(process.env.ENVIRONMENT !== "DEV"){
+  if (process.env.ENVIRONMENT === "DEV") {
     console.log("Scheduling Cron Batches....");
     cron.schedule("0 1 * * *", fetchPaypalAndRazorpay, {
+      timezone: "Asia/Kolkata",
+    });
+
+    cron.schedule("38 17 * * *", addRewardsToCustomer, {
       timezone: "Asia/Kolkata",
     });
   }

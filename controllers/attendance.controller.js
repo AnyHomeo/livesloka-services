@@ -185,7 +185,7 @@ const postAttendance = (req, res) => {
           await CustomerModel.updateMany(
             { _id: { $in: newlyRequestedStudents } },
             { $inc: { numberOfClassesBought: 1 } }
-          );
+          ); 
           alreadyGivenAttendance.customers = customers;
           alreadyGivenAttendance.absentees = absentees;
           alreadyGivenAttendance.requestedStudents = requestedStudents;

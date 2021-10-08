@@ -2,7 +2,7 @@ const Customers = require("../models/Customer.model");
 
 exports.getCustomers = async (req, res) => {
   try {
-    let { select, page, size, search, sortBy, isAsc, searchFrom } = req.query;
+    let { select, page, size, search, sortBy, isAsc, searchFrom,values,field } = req.query;
     if (select) select = select.split(",").join(" ");
     let sort = { _id: -1 };
     if (sortBy) {
@@ -29,12 +29,27 @@ exports.getCustomers = async (req, res) => {
         })),
       };
     }
+    if(field){
+      filter[field] = {
+        $in:values.split(',')
+      }
+    }
 
     const customers = await Customers.find(filter)
+      .populate("subject")
+      .populate("subjects")
+      .populate("class")
+      .populate("category")
+      .populate("timeZone")
+      .populate("classStatus")
+      .populate("currency")
+      .populate("agent")
+      .populate("teacher")
       .select(select)
       .sort(sort)
       .limit(limit)
-      .skip(skip);
+      .skip(skip)
+      .lean()
 
     return res.json({
       message: "Customers Retrieved successfully!",

@@ -17,6 +17,7 @@ const timeZoneModel = require('../models/timeZone.model');
 const CancelledClassesModel = require('../models/CancelledClasses.model');
 const generateScheduleDays = require('../scripts/generateScheduleDays');
 const TeacherModel = require('../models/Teacher.model');
+const SubscriptionModel = require('../models/Subscription');
 let filters = require('../config/filters.json');
 
 module.exports = {
@@ -174,8 +175,11 @@ module.exports = {
   getRespectiveDetails: async (req, res) => {
     let { params } = req.query;
     params = params.split(',').join(' ');
+    if(params.includes('password')){
+      return res.status(500).json({ error:`Password Can't be retrieved` })
+    }
     AdminModel.find({})
-      .select(params)
+      .select(`${params} -password`)
       .then((users) => {
         return res.status(200).json({
           message: 'retrieved all users',
@@ -293,16 +297,9 @@ module.exports = {
         customers.map(async (customer) => {
           let isJoinButtonDisabled = true;
           if (customer.paidTill) {
-            let dateArr = customer.paidTill.split('-').map((v) => parseInt(v));
-            let dateToday = moment()
-              .format('DD-MM-YYYY')
-              .split('-')
-              .map((v) => parseInt(v));
+            
             isJoinButtonDisabled =
-              (dateArr[2] > dateToday[2] &&
-                dateArr[1] > dateToday[1] &&
-                dateArr[0] > dateToday[0]) ||
-              !customer.isJoinButtonEnabledByAdmin;
+             (moment().unix()-moment(customer.paidTill).unix()) > 0 && !customer.isJoinButtonEnabledByAdmin;
           } else {
             isJoinButtonDisabled = customer.numberOfClassesBought <= 0;
           }
@@ -357,10 +354,12 @@ module.exports = {
             let subject = await SubjectModel.findOne({
               _id: actualSchedule.subject,
             });
+            let subscription = await SubscriptionModel.find({customerId:customer._id,isActive:true})
 
             return {
               ...actualSchedule,
               isJoinButtonDisabled,
+              isSubscribed:!!subscription.length,
               customerId: customer._id,
               customerName: customer.firstName,
               numberOfClassesBought: customer.numberOfClassesBought,
@@ -667,18 +666,19 @@ module.exports = {
             $in: filters.paidClasses.map((item) => parseInt(item)),
           };
         }
+        query.isSummerCampStudent = false
         CustomerModel.find(query)
           .select('-customerId')
+          .populate('login')
           .sort({
             createdAt: -1,
           })
+          .lean()
           .then((result) => {
             res.status(200).json({
               message: 'Customer data retrieved',
               status: 'OK',
-              result: result.filter(
-                (customer) => !customer.isSummerCampStudent
-              ),
+              result: result
             });
           })
           .catch((err) => {
@@ -689,18 +689,18 @@ module.exports = {
             });
           });
       } else {
-        CustomerModel.find({})
+        CustomerModel.find({isSummerCampStudent:false})
           .select('-customerId')
+          .populate('login')
           .sort({
             createdAt: -1,
           })
+          .lean()
           .then((result) => {
             res.status(200).json({
               message: 'Customer data retrieved',
               status: 'OK',
-              result: result.filter(
-                (customer) => !customer.isSummerCampStudent
-              ),
+              result: result
             });
           })
           .catch((err) => {

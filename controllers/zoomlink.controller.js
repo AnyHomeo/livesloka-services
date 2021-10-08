@@ -3,11 +3,6 @@ const ZoomAccountModel = require("../models/ZoomAccount.model");
 const ZoomAccount = require("../models/ZoomAccount.model");
 
 module.exports.zoomlink = async (req, res) => {
-  let timeSlotData = [];
-
-  req.body.map((slot) => {
-    timeSlotData.push(slot.split("!@#$%^&*($%^")[0]);
-  });
   let token = "";
   let jwtId = "";
   let zoomEmail = "";
@@ -15,7 +10,7 @@ module.exports.zoomlink = async (req, res) => {
   try {
     const getJwtTokenDetails = await ZoomAccount.findOne({
       timeSlots: {
-        $nin: timeSlotData,
+        $nin: req.body,
       },
     });
     token = getJwtTokenDetails.zoomJwt;
