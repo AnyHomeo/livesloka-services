@@ -226,6 +226,28 @@ io.on('connection', (socket) => {
 
     callback();
   });
+  socket.on(
+    'messageFromBotToGroup',
+    async ({ groupID, message, userID, username, role }, callback) => {
+      try {
+        const data = await addMessageToGroup(
+          groupID,
+          message,
+          role,
+          userID,
+          username
+        );
+        socket
+          .to(groupID)
+          .emit('messageToGroupFromBot', { role, message, userID, username });
+        socket.broadcast.emit('message-to-group-from-bot', groupID);
+      } catch (error) {
+        if (error) return callback(error);
+      }
+
+      callback();
+    }
+  );
   // socket.on("messageFromNonUser", async ({roomID, message}, callback) => {
   // 	try {
   // 		const data = await NonUser.addNewMessageToRoom(roomID, message, 1)
@@ -423,13 +445,6 @@ io.on('connection', (socket) => {
       }
     }
   });
-
-  // socket.on('disconnect', () => {
-  //   const agent = users[socket.id];
-  //   if (agent) {
-  //     console.log(agent.agent + ' left the room ' + agent.roomID);
-  //   }
-  // });
 });
 
 http.listen(PORT, () => {

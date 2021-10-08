@@ -9,6 +9,8 @@ const {
   updateGroup,
   closeGroup,
   deleteGroup,
+  findInClassCustomers,
+  findGroupsByCustomerEmail,
 } = require('../controllers/group.controller');
 // const AdminModel = require('../models/Admin.model');
 
@@ -17,6 +19,16 @@ const router = express.Router();
 router.get('/allUsers', async (req, res) => {
   try {
     const result = await findAllUsers();
+    res.send(result);
+  } catch (error) {
+    console.log(error);
+    res.status(400).send(error);
+  }
+});
+
+router.get('/findInClassCustomers', async (req, res) => {
+  try {
+    const result = await findInClassCustomers();
     res.send(result);
   } catch (error) {
     console.log(error);
@@ -73,6 +85,19 @@ router.post('/deleteGroup', async (req, res) => {
 router.get('/allgroups', async (req, res) => {
   try {
     const result = await allGroups();
+    res.send(result);
+  } catch (error) {
+    console.log(error);
+    res.status(400).send(error);
+  }
+});
+
+router.get('/customerGroups/:email', async (req, res) => {
+  const email = req.params.email;
+  console.log(email);
+  try {
+    const result = await findGroupsByCustomerEmail(email);
+    console.log(result);
     res.send(result);
   } catch (error) {
     console.log(error);

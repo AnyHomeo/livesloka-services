@@ -1,8 +1,14 @@
 const AdminModel = require('../models/Admin.model');
+const CustomerModel = require('../models/Customer.model');
 const { Group, GroupMessage } = require('../models/group.model');
 
 const findAllUsers = async () => {
   return await AdminModel.find().select('roleId username userId -_id');
+};
+const findInClassCustomers = async () => {
+  return await CustomerModel.find({ classStatusId: '113975223750050' }).select(
+    'firstName email -_id'
+  );
 };
 
 const createNewGroup = async ({
@@ -12,12 +18,16 @@ const createNewGroup = async ({
   customer,
   groupName,
 }) => {
+  const parentEmails = customer.map((cust) => cust.split('|')[1]);
+
+  let unique = [...new Set(parentEmails)];
   const group = new Group({
     groupID,
     agents: agent,
     teachers: teacher,
     customers: customer,
     groupName,
+    customerEmails: unique,
     messages: [],
   });
   return await group.save();
@@ -30,9 +40,19 @@ const updateGroup = async ({
   customer,
   groupName,
 }) => {
+  const parentEmails = customer.map((cust) => cust.split('|')[1]);
+
+  let unique = [...new Set(parentEmails)];
+
   return await Group.findOneAndUpdate(
     { groupID },
-    { agents: agent, teachers: teacher, customers: customer, groupName }
+    {
+      agents: agent,
+      teachers: teacher,
+      customers: customer,
+      groupName,
+      customerEmails: unique,
+    }
   );
 };
 const closeGroup = async ({ groupID, isClosed }) => {
@@ -105,6 +125,12 @@ const findLastMessageByRoom = async (groupID) => {
 const allGroups = async () => {
   return await Group.find().select('-_id -messages').sort('-updatedAt');
 };
+const findGroupsByCustomerEmail = async (email) => {
+  return await Group.find(
+    { customerEmails: email },
+    { messages: { $slice: -1 }, groupID: 1, groupName: 1, isClosed: 1 }
+  ).sort('-updatedAt');
+};
 
 const getGroupByRole = async (roleID, userID) => {
   return await Group.find({ agents: userID })
@@ -144,4 +170,6 @@ module.exports = {
   updateGroup,
   closeGroup,
   deleteGroup,
+  findInClassCustomers,
+  findGroupsByCustomerEmail,
 };

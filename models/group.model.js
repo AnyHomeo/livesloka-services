@@ -25,6 +25,7 @@ var GroupSchema = new mongoose.Schema(
     customers: [String],
     agents: [String],
     teachers: [String],
+    customerEmails: [String],
     messages: [GroupMessageSchema],
     groupName: {
       type: String,
