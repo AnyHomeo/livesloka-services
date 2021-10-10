@@ -166,7 +166,7 @@ Customer.virtual("subject", {
   foreignField: "id",
   justOne: true,
   options: {
-    select: "subjectName -_id",
+    select: "subjectName _id",
   },
 });
 
@@ -175,7 +175,7 @@ Customer.virtual("subjects", {
   localField: "requestedSubjects",
   foreignField: "id",
   options: {
-    select: "subjectName -_id",
+    select: "subjectName _id",
   },
 });
 
@@ -185,7 +185,7 @@ Customer.virtual("class", {
   foreignField: "id",
   justOne: true,
   options: {
-    select: "className -_id",
+    select: "className _id",
   },
 });
 
@@ -195,7 +195,7 @@ Customer.virtual("category", {
   foreignField: "id",
   justOne: true,
   options: {
-    select: "categoryName -_id",
+    select: "categoryName _id",
   },
 });
 
@@ -205,7 +205,7 @@ Customer.virtual("timeZone", {
   foreignField: "id",
   justOne: true,
   options: {
-    select: "timeZoneName -_id",
+    select: "timeZoneName _id",
   },
 });
 
@@ -215,7 +215,7 @@ Customer.virtual("classStatus", {
   foreignField: "id",
   justOne: true,
   options: {
-    select: "classStatusName -_id",
+    select: "classStatusName _id",
   },
 });
 
@@ -225,7 +225,7 @@ Customer.virtual("currency", {
   foreignField: "id",
   justOne: true,
   options: {
-    select: "currencyName -_id",
+    select: "currencyName _id",
   },
 });
 
@@ -235,7 +235,7 @@ Customer.virtual("agent", {
   foreignField: "id",
   justOne: true,
   options: {
-    select: "AgentName -_id",
+    select: "AgentName _id",
   },
 });
 
@@ -245,7 +245,7 @@ Customer.virtual("teacher", {
   foreignField: "id",
   justOne: true,
   options: {
-    select: "TeacherName -_id",
+    select: "TeacherName _id",
   },
 });
 

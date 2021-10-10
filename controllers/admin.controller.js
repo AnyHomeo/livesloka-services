@@ -8,6 +8,7 @@ const CustomerModel = require("../models/Customer.model");
 const InvoiceModel = require("../models/Invoice.model");
 const TimeZoneModel = require("../models/timeZone.model");
 var twilio = require("twilio");
+const { isValidObjectId } = require("mongoose");
 var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 
 module.exports = {
@@ -637,18 +638,22 @@ module.exports.postAddress = async (req, res) =>{
 module.exports.getAddress = async (req, res) => {
   try {
     const { id } = req.params;
-    let customer = await CustomerModel.findById(id)
-    if(customer){
-      let login = await AdminModel.findOne({userId:customer.email})
-      return res.json({
-        message:"Address retrieved successfully!",
-        result:login.address
-      })
+    if(isValidObjectId(id)){
+      let customer = await CustomerModel.findById(id)
+      if(customer){
+        let login = await AdminModel.findOne({userId:customer.email})
+        return res.json({
+          message:"Address retrieved successfully!",
+          result:login.address
+        })
+      } else {
+        return res.status(500).join({error:"Invalid customer id"})
+      }
     } else {
       return res.status(500).join({error:"Invalid customer id"})
     }
   } catch (error) {
     console.log(error)
-    return res.status(500).json({ error: "error in password reset,Try again later" });
+    return res.status(500).json({ error: "Something went wrong!,Try again later" });
   }
 }
