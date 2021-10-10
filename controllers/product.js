@@ -124,28 +124,13 @@ exports.deleteProduct = async (req, res) => {
   try {
     const { productId } = req.params;
     if (productId && ObjectId.isValid(productId)) {
-      let deletedStripeProduct = await deleteStripeProduct(productId);
-      if (deletedStripeProduct.type === "success") {
         let newUpdate = await Product.findByIdAndUpdate(productId, {
           isDeleted: true,
         });
         return res.json({
-          message: "Product updated successfully!",
+          message: "Product Deleted successfully!",
           result: newUpdate,
         });
-      } else {
-        if(deletedStripeProduct.result.raw && deletedStripeProduct.result.raw.message){
-          return res.status(500).json({
-            result: deletedStripeProduct.result,
-            error: deletedStripeProduct.result.raw.message,
-          });
-        } else {
-          return res.status(500).json({
-            result: deletedStripeProduct.result,
-            error: "Something went wrong in deleting the stripe product!",
-          });
-        }
-      }
     } else {
       return res.status(400).json({
         result: null,
