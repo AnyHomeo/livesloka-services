@@ -258,7 +258,7 @@ const addRewardsToCustomer = async () => {
 };
 
 const batch = () => {
-  if (process.env.ENVIRONMENT === "DEV") {
+  if (process.env.ENVIRONMENT !== "DEV") {
     console.log("Scheduling Cron Batches....");
     cron.schedule("0 1 * * *", fetchPaypalAndRazorpay, {
       timezone: "Asia/Kolkata",

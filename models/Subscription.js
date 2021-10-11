@@ -9,29 +9,23 @@ var SubscriptionSchema = new mongoose.Schema(
     type: {
       type: String,
       enum: ["PAYPAL", "STRIPE"],
-      default: "PAYPAL",
+      default: "STRIPE",
     },
-    planId:{
-      type:String,
+    planId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Plan",
     },
-    isActive:{
-        type: Boolean,
-        default: true,
+    id: {
+      type: String,
     },
-    cancelledDate:{
-      type:Date,
-      default: null
+    isActive: {
+      type: Boolean,
+      default: true,
     },
-    id:{
-        type:String,
-        required: true
+    cancelledDate: {
+      type: Date,
+      default: null,
     },
-    reason:{
-      type:String,
-    },
-    stripeCustomer:{
-      type:String,
-    }
   },
   { timestamps: true }
 );

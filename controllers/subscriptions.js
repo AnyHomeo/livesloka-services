@@ -6,13 +6,13 @@ const OptionModel = require("../models/SlotOptions");
 const times = require("../models/times.json");
 const moment = require("moment");
 const ZoomAccountModel = require("../models/ZoomAccount.model");
-const ClassHistoryModel = require("../models/ClassHistory.model");
 const SchedulerModel = require("../models/Scheduler.model");
 const TeacherModel = require("../models/Teacher.model");
 const { capitalize } = require("../scripts");
 const SubscriptionModel = require("../models/Subscription");
 const StripeTransaction = require("../models/StripeTransactions");
 const PaypalTransaction = require("../models/PaypalTransactions");
+const Plan = require("../models/Plan.model");
 
 let accessToken = "";
 let expiresAt = new Date().getTime();
@@ -47,6 +47,8 @@ const getAccessToken = async () => {
   }
 };
 
+exports.getAccessToken = getAccessToken;
+exports.isValidAccessToken = isValidAccessToken;
 exports.createProductValidations = async (req, res, next) => {
   try {
     const { name, description, subject, image } = req.body;
@@ -207,7 +209,7 @@ exports.createPlan = async (req, res) => {
       );
       response = await response.json();
       const price = await stripe.prices.create({
-        unit_amount: parseFloat(req.body.price)*100,
+        unit_amount: parseFloat(req.body.price) * 100,
         currency: "usd",
         recurring: { interval: "month", interval_count: months },
         product: productId,
@@ -315,7 +317,6 @@ exports.getPlansByCustomerId = async (req, res) => {
         return res.json({
           result: plans,
           stripePlans,
-          accessToken,
           message: "Plans Retrieved successfully!",
         });
       } else {
@@ -647,11 +648,12 @@ exports.subscribeCustomerToAStripePlan = async (req, res) => {
       name: customer.firstName,
       address,
     });
+    const plan = await Plan.findById(priceId).lean();
     const subscription = await stripe.subscriptions.create({
       customer: stripeCustomer.id,
       items: [
         {
-          price: priceId,
+          price: plan.stripe,
         },
       ],
       payment_behavior: "default_incomplete",
@@ -894,28 +896,7 @@ const deleteExistingSubscription = async (customer, reason) => {
   });
   if (latestSubscription) {
     let { id, type } = latestSubscription;
-    if (type === "PAYPAL") {
-      const accessToken = getAccessToken();
-      let config = {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          reason,
-        }),
-      };
-      let response = await fetch(
-        `${process.env.PAYPAL_API_KEY}/billing/subscriptions/${id}/cancel`,
-        config
-      );
-      await response.json();
-      latestSubscription.isActive = false;
-      latestSubscription.cancelledDate = new Date();
-      latestSubscription.reason = reason;
-      await latestSubscription.save();
-    } else {
+    if (type === "STRIPE") {
       await stripe.subscriptions.del(id);
       latestSubscription.isActive = false;
       latestSubscription.cancelledDate = new Date();
@@ -927,8 +908,8 @@ const deleteExistingSubscription = async (customer, reason) => {
 
 exports.handleSuccessfulSubscription = async (req, res) => {
   try {
-    const { customerId, noScheduleParam } = req.params;
-    const { subscription_id, sub_id } = req.query;
+    const { customerId } = req.params;
+    const { sub_id,resubscribe } = req.query;
     const option = await OptionModel.findOne({
       customer: customerId,
     }).lean();
@@ -937,93 +918,45 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     const subject = await SubjectModel.findOne({ id: customer.subjectId });
     let periodEndDate = moment().add(1, "month").format();
     await deleteExistingSubscription(customer, "Remove old subscriptions");
-    if (subscription_id) {
-      const accessToken = getAccessToken();
-      let config = {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      };
-      let response = await fetch(
-        `${process.env.PAYPAL_API_KEY}/billing/subscriptions/${subscription_id}`,
-        config
+    console.log(sub_id)
+    const subscription = await stripe.subscriptions.retrieve(sub_id);
+    periodEndDate = moment(subscription.current_period_end * 1000).format();
+    const newSubscription = new SubscriptionModel({
+      customerId,
+      stripeCustomer: customer.stripeId,
+      type: "STRIPE",
+      isActive: true,
+      id: sub_id,
+    });
+    await newSubscription.save();
+    if (!resubscribe) {
+      console.log("creating schedule");
+      await scheduleAndupdateCustomer(
+        periodEndDate,
+        customer,
+        teacher,
+        subject,
+        option,
+        res
       );
-      let result = await response.json();
-      periodEndDate = result.billing_info.next_billing_time;
-      const newSubscription = new SubscriptionModel({
-        customerId,
-        type: "PAYPAL",
-        isActive: true,
-        id: subscription_id,
-      });
-      await newSubscription.save();
-      if (noScheduleParam == 1) {
-        await scheduleAndupdateCustomer(
-          periodEndDate,
-          customer,
-          teacher,
-          subject,
-          option,
-          res
-        );
-      } else {
-        await CustomerModel.updateOne(
-          { _id: customer._id },
-          {
-            $set: {
-              paidTill: periodEndDate,
-            },
-          }
-        );
-        return res.json({
-          message: "Scheduled Meeting Successfully!",
-        });
-      }
     } else {
-      const subscription = await stripe.subscriptions.retrieve(sub_id);
-      periodEndDate = moment(subscription.current_period_end * 1000).format();
-      const newSubscription = new SubscriptionModel({
-        customerId,
-        stripeCustomer: customer.stripeId,
-        type: "STRIPE",
-        isActive: true,
-        id: sub_id,
+      await CustomerModel.updateOne(
+        { _id: customer._id },
+        {
+          $set: {
+            paidTill: periodEndDate,
+          },
+        }
+      );
+      return res.json({
+        message: "Scheduled Meeting Successfully!",
       });
-      await newSubscription.save();
-      if (noScheduleParam == 1) {
-        console.log("creating schedule");
-        await scheduleAndupdateCustomer(
-          periodEndDate,
-          customer,
-          teacher,
-          subject,
-          option,
-          res
-        );
-      } else {
-        await CustomerModel.updateOne(
-          { _id: customer._id },
-          {
-            $set: {
-              paidTill: periodEndDate,
-            },
-          }
-        );
-        return res.json({
-          message: "Scheduled Meeting Successfully!",
-        });
-      }
     }
   } catch (error) {
     console.log(error);
-    const subscriptions = await stripe.subscriptions.list({
-      limit: 3,
-    });
     return res
       .status(500)
-      .json({ error: "Something went wrong!!", subscriptions });
+      .json({ error: "Something went wrong!!",result:error });
   }
 };
 
