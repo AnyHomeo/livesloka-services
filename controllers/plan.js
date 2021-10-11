@@ -71,16 +71,17 @@ exports.getPlans = async (req, res) => {
           .populate("subject")
           .lean();
         if (customer) {
-          console.log(JSON.stringify(customer,null,1));
           if (customer.subjectId && customer.subject && customer.subject._id) {
             const product = await Product.findOne({
               subject: customer.subject._id,
+              isDeleted:false
             });
             if (!product) {
               return res.status(400).json({
                 error: "Subject is assigned, But product not created!",
               });
             }
+            console.log(product._id)
             const plans = await Plan.find({
               product: product._id,
               isDeleted: false,
