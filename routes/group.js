@@ -11,6 +11,7 @@ const {
   deleteGroup,
   findInClassCustomers,
   findGroupsByCustomerEmail,
+  findGroupsByTeacherEmail,
 } = require('../controllers/group.controller');
 // const AdminModel = require('../models/Admin.model');
 
@@ -97,6 +98,19 @@ router.get('/customerGroups/:email', async (req, res) => {
   console.log(email);
   try {
     const result = await findGroupsByCustomerEmail(email);
+    console.log(result);
+    res.send(result);
+  } catch (error) {
+    console.log(error);
+    res.status(400).send(error);
+  }
+});
+
+router.get('/teacherGroups/:email', async (req, res) => {
+  const email = req.params.email;
+  console.log(email);
+  try {
+    const result = await findGroupsByTeacherEmail(email);
     console.log(result);
     res.send(result);
   } catch (error) {
