@@ -269,6 +269,11 @@ exports.getAnOption = async (req, res) => {
   }
 };
 
-exports.getSingleOption = async (req,res) => {
-  
+exports.getOptionByCustomer = async (req,res) => {
+  const { customerId } = req.params
+  const option = await OptionsModel.findOne({ customer:customerId }).lean();
+  return res.json({
+    result:option,
+    message:"Option retrieved successfully!"
+  })
 }
