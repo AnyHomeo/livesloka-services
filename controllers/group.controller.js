@@ -132,11 +132,22 @@ const findGroupsByCustomerEmail = async (email) => {
   ).sort('-updatedAt');
 };
 
+const findGroupsByTeacherEmail = async (email) => {
+  const { username, userId } = await AdminModel.findOne({
+    userId: email,
+  }).select('username userId -_id');
+  return await Group.find(
+    { teachers: `${username}|${userId}` },
+    { messages: { $slice: -1 }, groupID: 1, groupName: 1, isClosed: 1 }
+  ).sort('-updatedAt');
+};
+
 const getGroupByRole = async (roleID, userID) => {
   return await Group.find({ agents: userID })
     .select('groupID groupName -_id')
     .sort('-updatedAt');
 };
+
 // const findAgents = async () => {
 //   return await AdminModel.find({ roleId: { $in: [4, 5] } }).select(
 //     'userId -_id'
@@ -172,4 +183,5 @@ module.exports = {
   deleteGroup,
   findInClassCustomers,
   findGroupsByCustomerEmail,
+  findGroupsByTeacherEmail,
 };
