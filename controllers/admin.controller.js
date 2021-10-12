@@ -627,7 +627,7 @@ module.exports.postAddress = async (req, res) =>{
         message:"Address posted successfully!"
       })
     } else {
-      return res.status(500).join({error:"Invalid customer id"})
+      return res.status(500).json({error:"Invalid customer id"})
     }
   } catch (error) {
     console.log(error)
@@ -647,10 +647,10 @@ module.exports.getAddress = async (req, res) => {
           result:login.address
         })
       } else {
-        return res.status(500).join({error:"Invalid customer id"})
+        return res.status(500).json({error:"Invalid customer id"})
       }
     } else {
-      return res.status(500).join({error:"Invalid customer id"})
+      return res.status(500).json({error:"Invalid customer id"})
     }
   } catch (error) {
     console.log(error)
