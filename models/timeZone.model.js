@@ -23,6 +23,11 @@ var TimeZoneSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    currency:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref:"Currency",
+      default:"5f98fabdd5e2630017ec9ac1"
+    } 
   },
   { timestamps: true }
 );

@@ -20,9 +20,9 @@ var PlanSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    isDeleted:{
+    isDeleted: {
       type: Boolean,
-      default:false
+      default: false,
     },
     interval: {
       type: String,
@@ -32,9 +32,14 @@ var PlanSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
-    stripe:{
-      type:String
-    }
+    stripe: {
+      type: String,
+    },
+    currency: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Currency",
+      default: "5f98fabdd5e2630017ec9ac1",
+    },
   },
   { timestamps: true }
 );

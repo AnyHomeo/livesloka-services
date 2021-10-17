@@ -120,11 +120,10 @@ exports.postAnOption = async (req, res) => {
     if (!alreadyExists) {
       let newOption = new OptionsModel(req.body);
       await newOption.save();
-      console.log(customerData);
       if (customerData.whatsAppnumber) {
         let messageResponse = await client.messages.create({
           body: `Live Sloka: book your slot on ${process.env.USER_CLIENT_URL}/options/${newOption._id}`,
-          to: customerData.whatsAppnumber, // Text this number
+          to: `${customerData.countryCode}${customerData.whatsAppnumber}`, // Text this number
           from: process.env.TWILIO_NUMBER, // From a valid Twilio number
         });
         console.log(messageResponse);

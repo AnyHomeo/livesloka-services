@@ -11,6 +11,10 @@ var StripeTransactionsSchema = new mongoose.Schema(
     },
     paymentData:{
         type:mongoose.Schema.Types.Mixed
+    },
+    status:{
+      type:String,
+      enum:["FAIL","SUCCESS"]  
     }
   },
   { timestamps: true }

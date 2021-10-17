@@ -22,7 +22,7 @@ let filters = require('../config/filters.json');
 
 module.exports = {
   async registerCustomer(req, res) {
-    let { subjectId, proposedAmount } = req.body;
+    let { subjectId, proposedAmount,proposedCurrencyId,timeZoneId } = req.body;
     if (!subjectId) {
       return res.status(500).json({
         error: 'Subject is Required!!',
@@ -34,6 +34,10 @@ module.exports = {
       let subject = await SubjectModel.findOne({ id: subjectId }).lean();
       req.body.proposedAmount = subject.amount ? subject.amount : 50;
     }
+    if(timeZoneId && !proposedCurrencyId){
+      let zone = await TimeZoneModel.findOne({ id: timeZoneId }).populate("currency").lean();
+      req.body.proposedCurrencyId = zone.currency && zone.currency.id ? zone.currency.id : undefined; 
+    }    
     let customerRegData = new CustomerModel(req.body);
     customerRegData
       .save()
@@ -666,7 +670,7 @@ module.exports = {
             $in: filters.paidClasses.map((item) => parseInt(item)),
           };
         }
-        query.isSummerCampStudent = false
+        query.isSummerCampStudent = {$ne:true}
         CustomerModel.find(query)
           .select('-customerId')
           .populate('login')
@@ -689,7 +693,7 @@ module.exports = {
             });
           });
       } else {
-        CustomerModel.find({isSummerCampStudent:false})
+        CustomerModel.find({isSummerCampStudent:{$ne:true}})
           .select('-customerId')
           .populate('login')
           .sort({

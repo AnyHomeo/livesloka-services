@@ -579,7 +579,7 @@ module.exports.addOtpToAdminCollection = async (req, res) => {
     await loginDetails.save();
     await client.messages.create({
       body: `Live Sloka: Your OTP for Password Reset is ${otp}`,
-      to: customer.whatsAppnumber, // Text this number
+      to: `${customer.countryCode}${customer.whatsAppnumber}`.trim(), // Text this number
       from: process.env.TWILIO_NUMBER, // From a valid Twilio number
     });
 

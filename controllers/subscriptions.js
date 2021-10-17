@@ -1,5 +1,10 @@
 const fetch = require("node-fetch");
-const { asyncForEach } = require("../config/helper");
+const momentTZ = require("moment-timezone");
+const {
+  asyncForEach,
+  getNameFromTimezone,
+  sendSMS,
+} = require("../config/helper");
 const CustomerModel = require("../models/Customer.model");
 const SubjectModel = require("../models/Subject.model");
 const OptionModel = require("../models/SlotOptions");
@@ -13,6 +18,11 @@ const SubscriptionModel = require("../models/Subscription");
 const StripeTransaction = require("../models/StripeTransactions");
 const PaypalTransaction = require("../models/PaypalTransactions");
 const Plan = require("../models/Plan.model");
+const TimeZoneModel = require("../models/timeZone.model");
+const {
+  SUCCESSFUL_SUBSCRIPTION,
+  ADMIN_PAYMENT_SUCCESSFUL,
+} = require("../config/messages");
 
 let accessToken = "";
 let expiresAt = new Date().getTime();
@@ -714,7 +724,7 @@ const scheduleAndupdateCustomer = async (
   option,
   res
 ) => {
-  if(option){
+  if (option) {
     if (option.selectedSlotType === "NEW") {
       //* 1 generate class name
       let className = `${customer.firstName} ${
@@ -740,7 +750,8 @@ const scheduleAndupdateCustomer = async (
       let zoomAccountId = "";
       try {
         if (availableZoomAccount) {
-          const { _id, zoomEmail, zoomJwt, zoomPassword } = availableZoomAccount;
+          const { _id, zoomEmail, zoomJwt, zoomPassword } =
+            availableZoomAccount;
           zoomAccountId = _id;
           const formData = {
             topic: "Livesloka Online Class",
@@ -800,7 +811,7 @@ const scheduleAndupdateCustomer = async (
           await schedule.save();
         }
       });
-  
+
       //* 4 create a schedule
       const schedule = new SchedulerModel({
         meetingAccount: zoomAccountId,
@@ -815,9 +826,9 @@ const scheduleAndupdateCustomer = async (
         subject: subject._id,
         scheduleDescription,
       });
-  
+
       await schedule.save();
-  
+
       //* 7 add schedule desc,meetinglink,teacherId,classStatusId as 113975223750050
       await CustomerModel.updateOne(
         { _id: customer._id },
@@ -831,7 +842,7 @@ const scheduleAndupdateCustomer = async (
           },
         }
       );
-  
+
       //* 8 update teacher avaialable and scheduled slots
       allSlots.forEach((slot) => {
         let index = teacher.availableSlots.indexOf(slot);
@@ -843,7 +854,7 @@ const scheduleAndupdateCustomer = async (
       teacher.availableSlots = [...new Set(teacher.availableSlots)];
       teacher.scheduledSlots = [...new Set(teacher.scheduledSlots)];
       await teacher.save();
-      await OptionModel.deleteOne({_id:option._id});
+      await OptionModel.deleteOne({ _id: option._id });
       return res.json({
         message: "Scheduled Meeting Successfully!",
       });
@@ -867,7 +878,7 @@ const scheduleAndupdateCustomer = async (
           await schedule.save();
         }
       });
-  
+
       let schedule = await SchedulerModel.findById(option.selectedSlotId);
       schedule.students.push(customer._id);
       //* 2 update schedule with new customer
@@ -878,7 +889,7 @@ const scheduleAndupdateCustomer = async (
       customer.paidTill = periodEndDate;
       await customer.save();
       await schedule.save();
-      await OptionModel.deleteOne({_id:option._id});
+      await OptionModel.deleteOne({ _id: option._id });
       return res.json({
         message: "Scheduled class Successfully!",
       });
@@ -888,7 +899,7 @@ const scheduleAndupdateCustomer = async (
         .json({ error: "Please select the options initially!" });
     }
   } else {
-    return res.json({ message: "No Options available"})
+    return res.json({ message: "No Options available" });
   }
 };
 
@@ -912,7 +923,7 @@ const deleteExistingSubscription = async (customer, reason) => {
 exports.handleSuccessfulSubscription = async (req, res) => {
   try {
     const { customerId } = req.params;
-    const { sub_id,resubscribe } = req.query;
+    const { sub_id, resubscribe } = req.query;
     const option = await OptionModel.findOne({
       customer: customerId,
     }).lean();
@@ -920,8 +931,10 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     const teacher = await TeacherModel.findOne({ id: option.teacher });
     const subject = await SubjectModel.findOne({ id: customer.subjectId });
     let periodEndDate = moment().add(1, "month").format();
+    let timeZone = await TimeZoneModel.findOne({
+      id: customer.timeZoneId || "141139634553016",
+    });
     await deleteExistingSubscription(customer, "Remove old subscriptions");
-    console.log(sub_id)
     const subscription = await stripe.subscriptions.retrieve(sub_id);
     periodEndDate = moment(subscription.current_period_end * 1000).format();
     const newSubscription = new SubscriptionModel({
@@ -934,7 +947,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     await newSubscription.save();
     if (!resubscribe) {
       console.log("creating schedule");
-      if(option){
+      if (option) {
         await scheduleAndupdateCustomer(
           periodEndDate,
           customer,
@@ -944,7 +957,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
           res
         );
       } else {
-        return res.json({ message: "No Options available"})
+        return res.json({ message: "No Options available" });
       }
     } else {
       await CustomerModel.updateOne(
@@ -955,6 +968,29 @@ exports.handleSuccessfulSubscription = async (req, res) => {
           },
         }
       );
+      // const zone = getNameFromTimezone(timeZone.timeZoneName) || "Asia/Kolkata";
+      // let customerMessage = SUCCESSFUL_SUBSCRIPTION(
+      //   subscription.items.data[0].plan.amount,
+      //   subscription.items.data[0].plan.currency,
+      //   subject.subjectName,
+      //   true,
+      //   null,
+      //   null,
+      //   momentTZ(periodEndDate).tz(zone).format("MMM Do YYYY")
+      // );
+      // sendSMS(
+      //   customerMessage,
+      //   `${customer.countryCode}${customer.whatsAppnumber}`.trim()
+      // );
+      // let adminMessage = ADMIN_PAYMENT_SUCCESSFUL(
+      //   subscription.items.data[0].plan.amount,
+      //   subscription.items.data[0].plan.currency,
+      //   subject.subjectName,
+      //   customer.firstName,
+      //   true,
+      //   null,
+      //   momentTZ(periodEndDate).tz("Asia/Kolkata").format("MMM Do YYYY")
+      // );
       return res.json({
         message: "Scheduled Meeting Successfully!",
       });
@@ -963,7 +999,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     console.log(error);
     return res
       .status(500)
-      .json({ error: "Something went wrong!!",result:error });
+      .json({ error: "Something went wrong!!", result: error });
   }
 };
 
@@ -1068,6 +1104,18 @@ exports.listenToStripe = async (req, res) => {
         paymentData: event,
       });
       await newStripeTransaction.save();
+      break;
+    case "invoice.payment_failed":
+      const failedCustomer = await CustomerModel.findOne({
+        stripeId: event.data.object.customer,
+      });
+      const newFailedStripeTransaction = new StripeTransaction({
+        customerId: failedCustomer ? failedCustomer._id : undefined,
+        stripeCustomer: event.data.object.customer,
+        paymentData: event,
+        status: "FAIL",
+      });
+      await newFailedStripeTransaction.save();
       break;
     default:
       // Unexpected event type

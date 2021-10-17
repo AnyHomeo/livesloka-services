@@ -118,7 +118,7 @@ Live Sloka Team
   console.log(customersToSendMessage)
   if (customersToSendMessage.length) {
     customersToSendMessage = customersToSendMessage.map(
-      (customer) => customer.whatsAppnumber
+      (customer) => `${customer.countryCode}${customer.whatsAppnumber}`
     );
     // await changeZoomLink(scheduleId);
     await asyncForEach(customersToSendMessage, async (customer) => {
