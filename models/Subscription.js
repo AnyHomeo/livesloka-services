@@ -16,7 +16,7 @@ var SubscriptionSchema = new mongoose.Schema(
       ref: "Plan",
     },
     id: {
-      type: String,
+      type: String, //subscription id from third party
     },
     isActive: {
       type: Boolean,

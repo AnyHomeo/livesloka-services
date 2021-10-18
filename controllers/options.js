@@ -110,9 +110,6 @@ exports.postAnOption = async (req, res) => {
     if (!customerData) {
       return res.status(400).json({ error: "Invalid Customer" });
     }
-    if (!customerData.whatsAppnumber.toString().startsWith("+")) {
-      return res.status(400).json({ error: "Invalid Phone number" });
-    }
 
     let alreadyExists = await OptionsModel.countDocuments({
       customer: customerData._id,

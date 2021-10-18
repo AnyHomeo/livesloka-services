@@ -4,6 +4,7 @@ const {
   asyncForEach,
   getNameFromTimezone,
   sendSMS,
+  sendAdminsMessage,
 } = require("../config/helper");
 const CustomerModel = require("../models/Customer.model");
 const SubjectModel = require("../models/Subject.model");
@@ -19,9 +20,11 @@ const StripeTransaction = require("../models/StripeTransactions");
 const PaypalTransaction = require("../models/PaypalTransactions");
 const Plan = require("../models/Plan.model");
 const TimeZoneModel = require("../models/timeZone.model");
+const CurrencyModel = require("../models/Currency.model");
 const {
   SUCCESSFUL_SUBSCRIPTION,
   ADMIN_PAYMENT_SUCCESSFUL,
+  ADMIN_UNSUBSCRIBE,
 } = require("../config/messages");
 
 let accessToken = "";
@@ -945,6 +948,28 @@ exports.handleSuccessfulSubscription = async (req, res) => {
       id: sub_id,
     });
     await newSubscription.save();
+
+    //message to admin and customer
+    const zone = getNameFromTimezone(timeZone.timeZoneName) || "Asia/Kolkata";
+    let customerMessage = SUCCESSFUL_SUBSCRIPTION(
+      parsefloat(subscription.items.data[0].plan.amount)/100,
+      subscription.items.data[0].plan.currency,
+      subject.subjectName,
+      momentTZ(periodEndDate).tz(zone).format("MMM Do YYYY")
+    );
+    sendSMS(
+      customerMessage,
+      `${customer.countryCode}${customer.whatsAppnumber}`.trim()
+    );
+    let adminMessage = ADMIN_PAYMENT_SUCCESSFUL(
+      parsefloat(subscription.items.data[0].plan.amount)/100,
+      subscription.items.data[0].plan.currency,
+      subject.subjectName,
+      customer.firstName,
+      momentTZ(periodEndDate).tz("Asia/Kolkata").format("MMM Do YYYY")
+    );
+    sendAdminsMessage(adminMessage);
+
     if (!resubscribe) {
       console.log("creating schedule");
       if (option) {
@@ -968,29 +993,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
           },
         }
       );
-      // const zone = getNameFromTimezone(timeZone.timeZoneName) || "Asia/Kolkata";
-      // let customerMessage = SUCCESSFUL_SUBSCRIPTION(
-      //   subscription.items.data[0].plan.amount,
-      //   subscription.items.data[0].plan.currency,
-      //   subject.subjectName,
-      //   true,
-      //   null,
-      //   null,
-      //   momentTZ(periodEndDate).tz(zone).format("MMM Do YYYY")
-      // );
-      // sendSMS(
-      //   customerMessage,
-      //   `${customer.countryCode}${customer.whatsAppnumber}`.trim()
-      // );
-      // let adminMessage = ADMIN_PAYMENT_SUCCESSFUL(
-      //   subscription.items.data[0].plan.amount,
-      //   subscription.items.data[0].plan.currency,
-      //   subject.subjectName,
-      //   customer.firstName,
-      //   true,
-      //   null,
-      //   momentTZ(periodEndDate).tz("Asia/Kolkata").format("MMM Do YYYY")
-      // );
+
       return res.json({
         message: "Scheduled Meeting Successfully!",
       });
@@ -1009,43 +1012,32 @@ exports.cancelSubscription = async (req, res) => {
     const latestSubscription = await SubscriptionModel.findOne({
       customerId,
       isActive: true,
-    });
+    })
+      .populate("planId")
+      .populate("customerId");
+    const currency = await CurrencyModel.findById(latestSubscription.planId ? latestSubscription.planId.currency: "5f98fabdd5e2630017ec9ac1")
     if (latestSubscription) {
-      let { id, type } = latestSubscription;
-      if (type === "PAYPAL") {
-        const accessToken = getAccessToken();
-        let config = {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            reason,
-          }),
-        };
-        let response = await fetch(
-          `${process.env.PAYPAL_API_KEY}/billing/subscriptions/${id}/cancel`,
-          config
+      let { id } = latestSubscription;
+      await stripe.subscriptions.del(id);
+      latestSubscription.isActive = false;
+      latestSubscription.cancelledDate = new Date();
+      latestSubscription.reason = reason;
+      await latestSubscription.save();
+      if(typeof latestSubscription.customerId === "object"){
+        const { firstName,paidTill,countryCode,whatsAppnumber } = latestSubscription.customerId
+        let adminMessage = ADMIN_UNSUBSCRIBE(
+          firstName,
+          momentTZ().tz("Asia/Kolkata").format("MMM Do YY, hh:mm:ss a z"),
+          latestSubscription.planId.amount,
+          currency ? currency.currencyName : "USD",
+          paidTill,
+          `${countryCode}${whatsAppnumber}`.trim()
         );
-        await response.json();
-        latestSubscription.isActive = false;
-        latestSubscription.cancelledDate = new Date();
-        latestSubscription.reason = reason;
-        await latestSubscription.save();
-        return res.json({
-          message: "Cancelled plan successfully!",
-        });
-      } else {
-        await stripe.subscriptions.del(id);
-        latestSubscription.isActive = false;
-        latestSubscription.cancelledDate = new Date();
-        latestSubscription.reason = reason;
-        await latestSubscription.save();
-        return res.json({
-          message: "Cancelled plan successfully!",
-        });
+        sendAdminsMessage(adminMessage);
       }
+      return res.json({
+        message: "Cancelled plan successfully!",
+      });
     } else {
       return res.status(500).json({ error: "No Active subscriptions" });
     }

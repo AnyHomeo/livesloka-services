@@ -11,7 +11,7 @@ exports.createPlans =async (req,res) => {
     const { name, description, amount, interval, intervalCount, products,currency } =
       req.body;
 
-    if (
+      if (
       !Array.isArray(products) ||
       !products.every((product) => ObjectId.isValid(product))
     ) {
@@ -103,11 +103,16 @@ exports.getPlans = async (req, res) => {
               currency:customer.currency._id,
               isDeleted: false,
             }).populate("currency");
-            console.log(JSON.stringify(plans,null,1))
-            return res.json({
-              result: plans,
-              message: "Plans retrieved successfully!",
-            });
+            if(plans.length){
+              return res.json({
+                result: plans,
+                message: "Plans retrieved successfully!",
+              });
+            } else {
+              return res.status(400).json({
+                error: "Please ask admin to Add plans to the subject for your currency!",
+              });
+            }
           } else {
             return res.status(400).json({
               error: "Please ask admin to assign a subject",
@@ -124,7 +129,7 @@ exports.getPlans = async (req, res) => {
         });
       }
     } else if (productId) {
-      const plans = await Plan.find({ product: productId, isDeleted: false });
+      const plans = await Plan.find({ product: productId, isDeleted: false }).populate("currency");
       return res.json({
         result: plans,
         message: "Plans retrieved successfully!",
