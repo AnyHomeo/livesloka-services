@@ -653,7 +653,7 @@ exports.subscribeCustomerToAPlan = async (req, res) => {
 exports.subscribeCustomerToAStripePlan = async (req, res) => {
   try {
     const { customerId, priceId } = req.params;
-    const address = req.body;
+    const {address,paymentMethod} = req.body;
     const customer = await CustomerModel.findById(customerId);
     const stripeCustomer = await stripe.customers.create({
       metadata: { _id: customerId },
@@ -661,14 +661,23 @@ exports.subscribeCustomerToAStripePlan = async (req, res) => {
       name: customer.firstName,
       address,
     });
+    await stripe.paymentMethods.attach(paymentMethod, {
+      customer: stripeCustomer.id,
+    });
     const plan = await Plan.findById(priceId).lean();
+
+    await stripe.customers.update(
+      stripeCustomer.id,
+      {
+        invoice_settings: {
+          default_payment_method: req.body.paymentMethod,
+        },
+      }
+    );
+
     const subscription = await stripe.subscriptions.create({
       customer: stripeCustomer.id,
-      items: [
-        {
-          price: plan.stripe,
-        },
-      ],
+      items: [{price: plan.stripe}],
       payment_behavior: "default_incomplete",
       expand: ["latest_invoice.payment_intent"],
     });
@@ -952,7 +961,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     //message to admin and customer
     const zone = getNameFromTimezone(timeZone.timeZoneName) || "Asia/Kolkata";
     let customerMessage = SUCCESSFUL_SUBSCRIPTION(
-      parsefloat(subscription.items.data[0].plan.amount)/100,
+      parseFloat(subscription.items.data[0].plan.amount)/100,
       subscription.items.data[0].plan.currency,
       subject.subjectName,
       momentTZ(periodEndDate).tz(zone).format("MMM Do YYYY")
@@ -962,7 +971,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
       `${customer.countryCode}${customer.whatsAppnumber}`.trim()
     );
     let adminMessage = ADMIN_PAYMENT_SUCCESSFUL(
-      parsefloat(subscription.items.data[0].plan.amount)/100,
+      parseFloat(subscription.items.data[0].plan.amount)/100,
       subscription.items.data[0].plan.currency,
       subject.subjectName,
       customer.firstName,
