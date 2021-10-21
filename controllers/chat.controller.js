@@ -68,6 +68,30 @@ const findRoomIDByUser = async (userID) => {
 const allRooms = async () => {
   return await Room.find().select('-_id -messages').sort('-updatedAt');
 };
+
+const last2DayRooms = async () => {
+  return await Room.find({
+    updatedAt: {
+      $gte: new Date(new Date().getTime() - 2 * 24 * 60 * 60 * 1000),
+    },
+  })
+    .select('-_id -messages')
+    .sort('-updatedAt');
+};
+
+const last24hoursChat = async () => {
+  return await Room.find({
+    updatedAt: {
+      $gte: new Date(new Date().getTime() - 1 * 24 * 60 * 60 * 1000),
+    },
+  }).count();
+};
+const unseenmessagescount = async () => {
+  return await Room.find({
+    messageSeen: false,
+  }).count();
+};
+
 const findAgents = async () => {
   return await AdminModel.find({ roleId: { $in: [4, 5] } }).select(
     'userId -_id'
@@ -104,4 +128,7 @@ module.exports = {
   isLastMessage,
   seeLastMessage,
   getAgentAssignedToRoom,
+  last2DayRooms,
+  last24hoursChat,
+  unseenmessagescount,
 };

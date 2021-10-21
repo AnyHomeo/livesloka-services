@@ -175,8 +175,8 @@ module.exports = {
   getRespectiveDetails: async (req, res) => {
     let { params } = req.query;
     params = params.split(',').join(' ');
-    if(params.includes('password')){
-      return res.status(500).json({ error:`Password Can't be retrieved` })
+    if (params.includes('password')) {
+      return res.status(500).json({ error: `Password Can't be retrieved` });
     }
     AdminModel.find({})
       .select(`${params} -password`)
@@ -297,9 +297,9 @@ module.exports = {
         customers.map(async (customer) => {
           let isJoinButtonDisabled = true;
           if (customer.paidTill) {
-            
             isJoinButtonDisabled =
-             (moment().unix()-moment(customer.paidTill).unix()) > 0 && !customer.isJoinButtonEnabledByAdmin;
+              moment().unix() - moment(customer.paidTill).unix() > 0 &&
+              !customer.isJoinButtonEnabledByAdmin;
           } else {
             isJoinButtonDisabled = customer.numberOfClassesBought <= 0;
           }
@@ -354,12 +354,15 @@ module.exports = {
             let subject = await SubjectModel.findOne({
               _id: actualSchedule.subject,
             });
-            let subscription = await SubscriptionModel.find({customerId:customer._id,isActive:true})
+            let subscription = await SubscriptionModel.find({
+              customerId: customer._id,
+              isActive: true,
+            });
 
             return {
               ...actualSchedule,
               isJoinButtonDisabled,
-              isSubscribed:!!subscription.length,
+              isSubscribed: !!subscription.length,
               customerId: customer._id,
               customerName: customer.firstName,
               numberOfClassesBought: customer.numberOfClassesBought,
@@ -666,7 +669,7 @@ module.exports = {
             $in: filters.paidClasses.map((item) => parseInt(item)),
           };
         }
-        query.isSummerCampStudent = false
+        query.isSummerCampStudent = false;
         CustomerModel.find(query)
           .select('-customerId')
           .populate('login')
@@ -678,7 +681,7 @@ module.exports = {
             res.status(200).json({
               message: 'Customer data retrieved',
               status: 'OK',
-              result: result
+              result: result,
             });
           })
           .catch((err) => {
@@ -689,7 +692,7 @@ module.exports = {
             });
           });
       } else {
-        CustomerModel.find({isSummerCampStudent:false})
+        CustomerModel.find({ isSummerCampStudent: false })
           .select('-customerId')
           .populate('login')
           .sort({
@@ -700,7 +703,7 @@ module.exports = {
             res.status(200).json({
               message: 'Customer data retrieved',
               status: 'OK',
-              result: result
+              result: result,
             });
           })
           .catch((err) => {
@@ -788,11 +791,12 @@ module.exports = {
     try {
       const { userId } = req.params;
 
-      let { customerId } = await AdminModel.findOne({ userId })
-        .select('customerId -_id')
+      let details = await AdminModel.findOne({ userId })
+        .select('customerId roleId username teacherId -_id')
         .lean();
-      if (customerId) {
-        let customer = await CustomerModel.findById(customerId)
+
+      if (details.roleId === 1 && details.customerId) {
+        let customer = await CustomerModel.findById(details.customerId)
           .select('timeZoneId firstName lastName phone whatsAppnumber -_id')
           .lean();
         if (customer) {
@@ -806,6 +810,23 @@ module.exports = {
             result: { ...customer, timeZone: timeZone.timeZoneName },
           });
         }
+      } else if (details.roleId === 2 && details.teacherId) {
+        let teacher = await TeacherModel.findOne({ id: details.teacherId })
+          .select('TeacherName -_id')
+          .lean();
+        //  if (teacher) {
+        //    let timeZone = await TimeZoneModel.findOne({
+        //      id: customer.timeZoneId,
+        //    })
+        //      .select('timeZoneName -_id')
+        //      .lean();
+
+        //  }
+
+        return res.status(200).json({
+          message: 'Retrieved Data successfully',
+          result: { ...teacher, timeZone: 'IST' },
+        });
       }
 
       return res.status(400).json({

@@ -7,6 +7,9 @@ const {
   updateAgentInChatRoom,
   isLastMessage,
   seeLastMessage,
+  last2DayRooms,
+  last24hoursChat,
+  unseenmessagescount,
 } = require('../controllers/chat.controller');
 const AdminModel = require('../models/Admin.model');
 
@@ -80,6 +83,48 @@ router.get('/rooms', async (req, res) => {
   }
 });
 
+router.get('/last2drooms', async (req, res) => {
+  try {
+    const result = await last2DayRooms();
+    const userIds = result.map((el) => el.userID);
+
+    let userNames = await AdminModel.find({
+      userId: { $in: userIds },
+    })
+      .select('username userId -_id')
+      .lean();
+
+    const finalData = result.map((el) => {
+      const user = userNames.find((username) => username.userId === el.userID);
+      if (user) {
+        return {
+          ...el._doc,
+          username: user.username,
+        };
+      }
+      return {
+        ...el._doc,
+        username: el.userID.split('@')[0],
+      };
+    });
+
+    return res.send(finalData);
+  } catch (error) {
+    console.log(error);
+    res.status(400).send(error);
+  }
+});
+router.get('/last24chats', async (req, res) => {
+  try {
+    const hourCount = await last24hoursChat();
+    const unseenCount = await unseenmessagescount();
+
+    return res.send({ hourCount, unseenCount });
+  } catch (error) {
+    console.log(error);
+    res.status(400).send(error);
+  }
+});
 router.get('/user/:userID', async (req, res) => {
   const user = req.params.userID;
   try {

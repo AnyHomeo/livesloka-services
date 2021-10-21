@@ -20,7 +20,13 @@ const router = express.Router();
 router.get('/allUsers', async (req, res) => {
   try {
     const result = await findAllUsers();
-    res.send(result);
+    const result1 = await findInClassCustomers();
+    const data = {
+      customers: result1,
+      rest: result,
+    };
+
+    res.send(data);
   } catch (error) {
     console.log(error);
     res.status(400).send(error);
@@ -39,6 +45,8 @@ router.get('/findInClassCustomers', async (req, res) => {
 
 router.post('/create-group', async (req, res) => {
   const body = req.body;
+
+  console.log(body);
 
   try {
     const result = await createNewGroup(body);
@@ -85,8 +93,11 @@ router.post('/deleteGroup', async (req, res) => {
 
 router.get('/allgroups', async (req, res) => {
   try {
-    const result = await allGroups();
+    let result = await allGroups();
+
     res.send(result);
+
+    // res.send(result);
   } catch (error) {
     console.log(error);
     res.status(400).send(error);
@@ -144,7 +155,14 @@ router.get('/groupInfo/:groupID', async (req, res) => {
   const groupID = req.params.groupID;
   try {
     const result = await findGroupDetails(groupID);
-    res.send(result);
+
+    let { customers } = result;
+    customers = customers.map((el) => ({ ...el._doc, username: el.firstName }));
+
+    res.send({
+      ...result._doc,
+      customers,
+    });
   } catch (error) {
     console.log(error);
     res.status(400).send(error);

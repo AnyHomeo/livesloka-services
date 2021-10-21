@@ -22,10 +22,12 @@ var GroupSchema = new mongoose.Schema(
     groupID: {
       type: String,
     },
-    customers: [String],
-    agents: [String],
-    teachers: [String],
-    customerEmails: [String],
+
+    customers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Customer' }],
+    agents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Admin' }],
+    teachers: [{ type: mongoose.Types.ObjectId, ref: 'Admin' }],
+    customerEmails: [{ type: mongoose.Types.ObjectId, ref: 'Admin' }],
+
     messages: [GroupMessageSchema],
     groupName: {
       type: String,
@@ -33,6 +35,10 @@ var GroupSchema = new mongoose.Schema(
     isClosed: {
       type: Boolean,
       default: false,
+    },
+    isClass: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }
