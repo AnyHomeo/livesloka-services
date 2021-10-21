@@ -13,6 +13,14 @@ const Customer = new mongoose.Schema(
       trim: true,
       type: String,
     },
+    emailId:{
+      type:String,
+      default: function() { return this.email || ""} 
+    },
+    countryCode:{
+      type:String,
+      default:""
+    },
     isJoinButtonEnabledByAdmin: {
       type: Boolean,
       default: false,
@@ -152,12 +160,9 @@ const Customer = new mongoose.Schema(
     stripeId: {
       type: String,
       default: true,
-    }
+    },
   },
-
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 Customer.virtual("subject", {
@@ -225,7 +230,7 @@ Customer.virtual("currency", {
   foreignField: "id",
   justOne: true,
   options: {
-    select: "currencyName _id",
+    select: "currencyName _id prefix",
   },
 });
 

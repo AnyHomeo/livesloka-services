@@ -2,19 +2,29 @@ const { asyncForEach } = require("../config/helper");
 const ObjectId = require("mongoose").Types.ObjectId;
 const Product = require("../models/Product.model");
 const Plan = require("../models/Plan.model");
+const CurrencyModel = require("../models/Currency.model")
 const { createStripePlan, updateStripePlan } = require("./stripe");
 const Customer = require("../models/Customer.model");
 
 exports.createPlans =async (req,res) => {
   try {
-    const { name, description, amount, interval, intervalCount, products } =
+    const { name, description, amount, interval, intervalCount, products,currency } =
       req.body;
 
-    if (
-      !Array.isArray(products) &&
+      if (
+      !Array.isArray(products) ||
       !products.every((product) => ObjectId.isValid(product))
     ) {
       return res.status(400).json({ error: "Invalid Product IdS" });
+    }
+
+    if(!currency || !ObjectId.isValid(currency)){
+      return res.status(400).json({ error: "Invalid Currency" });
+    }
+
+    const currencyData = await CurrencyModel.findById(currency)
+    if(!currencyData || !currencyData.currencyName){
+      return res.status(400).json({ error: "Currency doesn't exist" });
     }
 
     let plans = products.map((product) => ({
@@ -23,12 +33,13 @@ exports.createPlans =async (req,res) => {
       amount,
       interval,
       intervalCount,
+      currency,
       product,
     }));
 
     await asyncForEach(plans, async (plan, i) => {
       let insertedStripePlan = await createStripePlan({
-        currency: "usd",
+        currency: currencyData.currencyName.toLowerCase(),
         unit_amount: parseFloat(amount) * 100,
         product: plan.product,
         metadata: {
@@ -67,31 +78,44 @@ exports.getPlans = async (req, res) => {
     if (customerId) {
       if (ObjectId.isValid(customerId)) {
         const customer = await Customer.findById(customerId)
-          .select("subjectId subject")
+          .select("subjectId subject proposedCurrencyId")
           .populate("subject")
+          .populate("currency")
           .lean();
         if (customer) {
-          console.log(JSON.stringify(customer,null,1));
           if (customer.subjectId && customer.subject && customer.subject._id) {
             const product = await Product.findOne({
               subject: customer.subject._id,
+              isDeleted:false
             });
             if (!product) {
               return res.status(400).json({
-                error: "Subject is assigned, But product not created!",
+                error: "Please ask admin to create Product for Assigned subject!",
+              });
+            }
+            if(!customer.currency){
+              return res.status(400).json({
+                error: "Please ask admin to assign a currency!",
               });
             }
             const plans = await Plan.find({
               product: product._id,
+              currency:customer.currency._id,
               isDeleted: false,
-            });
-            return res.json({
-              result: plans,
-              message: "Plans retrieved successfully!",
-            });
+            }).populate("currency");
+            if(plans.length){
+              return res.json({
+                result: plans,
+                message: "Plans retrieved successfully!",
+              });
+            } else {
+              return res.status(400).json({
+                error: "Please ask admin to Add plans to the subject for your currency!",
+              });
+            }
           } else {
             return res.status(400).json({
-              error: "Subject is not assigned, Admin should update the subject",
+              error: "Please ask admin to assign a subject",
             });
           }
         } else {
@@ -105,7 +129,7 @@ exports.getPlans = async (req, res) => {
         });
       }
     } else if (productId) {
-      const plans = await Plan.find({ product: productId, isDeleted: false });
+      const plans = await Plan.find({ product: productId, isDeleted: false }).populate("currency");
       return res.json({
         result: plans,
         message: "Plans retrieved successfully!",
@@ -126,7 +150,7 @@ exports.getPlans = async (req, res) => {
 exports.getSinglePlan = async (req,res) => {
   try {
     const { planId } = req.params
-    const plan = await Plan.findById(planId)
+    const plan = await Plan.findById(planId).populate("currency").lean();
     return res.json({
       result:plan,
       message:'Plan retrieved successfully!'

@@ -18,6 +18,10 @@ var CurrencySchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
+    prefix:{
+      type:String,
+      default:"$"
+    }
   },
   { timestamps: true }
 );

@@ -8,6 +8,7 @@ const SchedulerModel = require("../models/Scheduler.model");
 const allZones = require("../models/timeZone.json");
 const times = require("../models/times.json");
 const momentTZ = require("moment-timezone");
+const moment = require("moment");
 const twilio = require("twilio");
 var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 
@@ -24,10 +25,13 @@ const getStartTime = (slots, zoneName) => {
       break;
     }
   }
-  let time = momentTZ(
+  let time = moment(
     `${day} ${selectedStartTime.split("-")[0]}`,
     "dddd hh:mm A"
-  )
+  ).format("YYYY-MM-DD hh:mm");
+  time = momentTZ
+    .tz(time, "Asia/Kolkata")
+    .clone()
     .tz(zoneName)
     .format("dddd-hh:mm A");
   return time.split("-");
@@ -106,22 +110,20 @@ exports.postAnOption = async (req, res) => {
     if (!customerData) {
       return res.status(400).json({ error: "Invalid Customer" });
     }
-    if(!customerData.whatsAppnumber.toString().startsWith("+")){
-      return res.status(400).json({ error: "Invalid Phone number" });
-    }
 
-    let alreadyExists = await OptionsModel.countDocuments({ customer:customerData._id });
+    let alreadyExists = await OptionsModel.countDocuments({
+      customer: customerData._id,
+    });
     if (!alreadyExists) {
       let newOption = new OptionsModel(req.body);
       await newOption.save();
-      console.log(customerData)
       if (customerData.whatsAppnumber) {
         let messageResponse = await client.messages.create({
           body: `Live Sloka: book your slot on ${process.env.USER_CLIENT_URL}/options/${newOption._id}`,
-          to: customerData.whatsAppnumber, // Text this number
+          to: `${customerData.countryCode}${customerData.whatsAppnumber}`, // Text this number
           from: process.env.TWILIO_NUMBER, // From a valid Twilio number
         });
-        console.log(messageResponse)
+        console.log(messageResponse);
         return res.json({
           message: "Options Created and Url sent successfully",
         });
@@ -262,3 +264,12 @@ exports.getAnOption = async (req, res) => {
     return res.status(500).json({ error: "Something went wrong!" });
   }
 };
+
+exports.getOptionByCustomer = async (req,res) => {
+  const { customerId } = req.params
+  const option = await OptionsModel.findOne({ customer:customerId }).lean();
+  return res.json({
+    result:option,
+    message:"Option retrieved successfully!"
+  })
+}
