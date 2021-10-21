@@ -21,6 +21,7 @@ const AdMessageSchema = new mongoose.Schema(
     title: String,
     isForAll: Boolean,
     image: String,
+    isImage: Boolean,
     broadCastTo: {
       type: String,
       default: "customer",
