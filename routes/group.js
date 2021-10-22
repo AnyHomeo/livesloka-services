@@ -12,10 +12,13 @@ const {
   findInClassCustomers,
   findGroupsByCustomerEmail,
   findGroupsByTeacherEmail,
+  createGroupFromSchedule
 } = require('../controllers/group.controller');
 // const AdminModel = require('../models/Admin.model');
 
 const router = express.Router();
+
+router.post("/group/schedule/:scheduleId",createGroupFromSchedule);
 
 router.get('/allUsers', async (req, res) => {
   try {
