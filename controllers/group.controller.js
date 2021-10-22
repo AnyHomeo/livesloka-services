@@ -46,7 +46,8 @@ const createGroupFromSchedule = async (req, res) => {
         groupID: uuidv4(),
         messages: [],
         groupName: customer.firstName,
-        customerEmails:email[0] && email[0]._id ? [email[0]._id] :[],      
+        customerEmails:email[0] && email[0]._id ? [email[0]._id] :[],
+        isClass:false    
       }})
 
       await Group.insertMany(studentGroups)
