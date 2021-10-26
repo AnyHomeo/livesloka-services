@@ -731,7 +731,8 @@ const scheduleAndupdateCustomer = async (
   teacher,
   subject,
   option,
-  res
+  res,
+  needToSendToSuccessPage
 ) => {
   if (option) {
     if (option.selectedSlotType === "NEW") {
@@ -864,9 +865,15 @@ const scheduleAndupdateCustomer = async (
       teacher.scheduledSlots = [...new Set(teacher.scheduledSlots)];
       await teacher.save();
       await OptionModel.deleteOne({ _id: option._id });
-      return res.json({
-        message: "Scheduled Meeting Successfully!",
-      });
+      if(needToSendToSuccessPage){
+        return res.redirect(
+          `${process.env.USER_CLIENT_URL}/payment-success`
+        );
+      } else {
+        return res.json({
+          message: "Scheduled Meeting Successfully!",
+        });
+      }
     } else if (option.selectedSlotType === "EXISTING") {
       //* 1 update class Name
       let otherSchedulesOfCustomer = await SchedulerModel.find({
@@ -899,9 +906,15 @@ const scheduleAndupdateCustomer = async (
       await customer.save();
       await schedule.save();
       await OptionModel.deleteOne({ _id: option._id });
-      return res.json({
-        message: "Scheduled class Successfully!",
-      });
+      if(needToSendToSuccessPage){
+        return res.redirect(
+          `${process.env.USER_CLIENT_URL}/payment-success`
+        );
+      } else {
+        return res.json({
+          message: "Scheduled Meeting Successfully!",
+        });
+      }
     } else {
       return res
         .status(500)
@@ -911,6 +924,8 @@ const scheduleAndupdateCustomer = async (
     return res.json({ message: "No Options available" });
   }
 };
+
+exports.scheduleAndupdateCustomer = scheduleAndupdateCustomer
 
 const deleteExistingSubscription = async (customer, reason) => {
   const latestSubscription = await SubscriptionModel.findOne({
@@ -987,7 +1002,8 @@ exports.handleSuccessfulSubscription = async (req, res) => {
           teacher,
           subject,
           option,
-          res
+          res,
+          false
         );
       } else {
         return res.json({ message: "No Options available" });

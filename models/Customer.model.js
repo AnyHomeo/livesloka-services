@@ -9,6 +9,10 @@ const teacherModel = require("./Teacher.model");
 const Customer = new mongoose.Schema(
   {
     id: Number,
+    isSubscription:{
+      type:Boolean,
+      default:false
+    },
     firstName: {
       trim: true,
       type: String,

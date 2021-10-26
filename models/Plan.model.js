@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 var PlanSchema = new mongoose.Schema(
   {
+    isSubscription:{
+      type:Boolean,
+      default:true
+    },
     product: {
       type: mongoose.Schema.Types.ObjectId,
       required: "Product is required!",

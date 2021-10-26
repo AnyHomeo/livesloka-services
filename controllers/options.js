@@ -88,7 +88,7 @@ exports.getOnlyDemoCustomers = async (req, res) => {
 
 exports.postAnOption = async (req, res) => {
   try {
-    const { customer, options, teacher } = req.body;
+    const { customer, options, teacher,schedules } = req.body;
 
     if (!customer) {
       return res.status(400).json({ error: "Customer Id is Required!" });
@@ -97,8 +97,9 @@ exports.postAnOption = async (req, res) => {
     if (!teacher) {
       return res.status(400).json({ error: "Teacher Id is Required!" });
     }
+    console.log(options)
 
-    if (!Array.isArray(options) || !options.length) {
+    if ((!Array.isArray(options) || !options.length) && (!Array.isArray(schedules) || !schedules.length)) {
       return res.status(400).json({ error: "Minimum 1 slot is required!" });
     }
 

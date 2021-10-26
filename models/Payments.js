@@ -6,6 +6,10 @@ var PaymentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Customer",
     },
+    plan:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Plan",    
+    },
     status: {
       type: String,
       enum: ["SUCCESS", "CANCELLED"],

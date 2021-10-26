@@ -8,7 +8,7 @@ const Customer = require("../models/Customer.model");
 
 exports.createPlans =async (req,res) => {
   try {
-    const { name, description, amount, interval, intervalCount, products,currency } =
+    const { name, description, amount, interval, intervalCount, products,currency, isSubscription } =
       req.body;
 
       if (
@@ -35,30 +35,34 @@ exports.createPlans =async (req,res) => {
       intervalCount,
       currency,
       product,
+      isSubscription
     }));
 
-    await asyncForEach(plans, async (plan, i) => {
-      let insertedStripePlan = await createStripePlan({
-        currency: currencyData.currencyName.toLowerCase(),
-        unit_amount: parseFloat(amount) * 100,
-        product: plan.product,
-        metadata: {
-          name,
-          description,
-        },
-        recurring: {
-          interval,
-          interval_count:intervalCount,
-        },
+    if(isSubscription){
+      await asyncForEach(plans, async (plan, i) => {
+        let insertedStripePlan = await createStripePlan({
+          currency: currencyData.currencyName.toLowerCase(),
+          unit_amount: parseFloat(amount) * 100,
+          product: plan.product,
+          metadata: {
+            name,
+            description,
+          },
+          recurring: {
+            interval,
+            interval_count:intervalCount,
+          },
+        });
+        if (insertedStripePlan.type === "success") {
+          plans[i].stripe = insertedStripePlan.result.id;
+        } else {
+          console.log(insertedStripePlan)
+        }
       });
-      if (insertedStripePlan.type === "success") {
-        plans[i].stripe = insertedStripePlan.result.id;
-      } else {
-        console.log(insertedStripePlan)
-      }
-    });
+  
+      plans = plans.filter((plan) => !!plan.stripe);  
+    }
 
-    plans = plans.filter((plan) => !!plan.stripe);
     let insertedPlans = await Plan.insertMany(plans);
     return res.json({
       message: "Plans inserted successfully!",
@@ -78,7 +82,7 @@ exports.getPlans = async (req, res) => {
     if (customerId) {
       if (ObjectId.isValid(customerId)) {
         const customer = await Customer.findById(customerId)
-          .select("subjectId subject proposedCurrencyId")
+          .select("subjectId subject proposedCurrencyId isSubscription")
           .populate("subject")
           .populate("currency")
           .lean();
@@ -102,6 +106,7 @@ exports.getPlans = async (req, res) => {
               product: product._id,
               currency:customer.currency._id,
               isDeleted: false,
+              isSubscription: customer.isSubscription
             }).populate("currency");
             if(plans.length){
               return res.json({
