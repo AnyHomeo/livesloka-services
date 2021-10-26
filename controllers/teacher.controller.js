@@ -302,7 +302,7 @@ exports.getOccupancyDashboardData = async (req, res) => {
     })
       .populate(
         "students",
-        "firstName lastName numberOfClassesBought email whatsAppnumber"
+        "firstName lastName numberOfClassesBought email whatsAppnumber countryCode"
       )
       .populate("group", "_id");
 
