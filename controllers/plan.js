@@ -106,8 +106,14 @@ exports.getPlans = async (req, res) => {
               product: product._id,
               currency:customer.currency._id,
               isDeleted: false,
-              isSubscription: customer.isSubscription
+              isSubscription: !!customer.isSubscription
             }).populate("currency");
+
+            console.log("CURRENCY",customer.currency)
+            console.log("PRODUCT",product)
+            console.log("IS_SUBSCRIPTION",customer.isSubscription)
+            console.log("PLANS",plans)
+            
             if(plans.length){
               return res.json({
                 result: plans,
