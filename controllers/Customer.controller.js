@@ -686,6 +686,7 @@ module.exports = {
           })
           .lean()
           .then((result) => {
+            console.log(result)
             res.status(200).json({
               message: 'Customer data retrieved',
               status: 'OK',

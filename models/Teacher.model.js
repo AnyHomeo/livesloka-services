@@ -86,6 +86,10 @@ var TeacherSchema = new mongoose.Schema(
     },
     subject:{
       type:String,
+    },
+    isNotAvailableInBooking:{
+      type: Boolean,
+      default: false,
     }
   },
   { timestamps: true }
