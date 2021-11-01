@@ -43,6 +43,7 @@ const AdMessageSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Admin",
+        default: [],
       },
     ],
     scheduleIds: [
