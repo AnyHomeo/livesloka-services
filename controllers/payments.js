@@ -39,7 +39,7 @@ exports.createAPayment = async (req, res) => {
   try {
     const { planId, customerId } = req.params;
     const customer = await Customer.findById(customerId)
-      .select("firstName")
+      .select("firstName discount")
       .lean();
     const plan = await Plans.findOne({
       _id: planId,
@@ -57,6 +57,7 @@ exports.createAPayment = async (req, res) => {
     }
 
     if (plan.currency.currencyName !== "INR") {
+      let amount = (plan.amount - customer.discount || 0 ).toString()
       const payment_json = {
         intent: "sale",
         payer: {
@@ -72,7 +73,7 @@ exports.createAPayment = async (req, res) => {
               items: [
                 {
                   name: plan.name,
-                  price: plan.amount.toString(),
+                  price: amount,
                   currency: plan.currency.currencyName || "USD",
                   quantity: 1,
                 },
@@ -80,7 +81,7 @@ exports.createAPayment = async (req, res) => {
             },
             amount: {
               currency: plan.currency.currencyName || "USD",
-              total: plan.amount.toString(),
+              total: amount,
             },
             description: plan.description,
           },
@@ -106,7 +107,7 @@ exports.createAPayment = async (req, res) => {
       });
     } else {
       const options = {
-        amount: plan.amount * 100,
+        amount: plan.amount * 100 - (customer.discount ? customer.discount*100 : 0),
         currency: "INR",
         receipt: shortid.generate(),
         payment_capture: 1,
@@ -178,7 +179,7 @@ exports.handlePaypalSuccessfulPayment = async (req, res) => {
         {
           amount: {
             currency: currency.currencyName || "USD",
-            total: plan.amount.toString(),
+            total: (plan.amount-customer.discount).toString(),
           },
         },
       ],
@@ -215,7 +216,7 @@ exports.handlePaypalSuccessfulPayment = async (req, res) => {
           const zone =
             getNameFromTimezone(timeZone.timeZoneName) || "Asia/Kolkata";
           let customerMessage = SUCCESSFUL_SUBSCRIPTION(
-            parseFloat(plan.amount),
+            parseFloat(plan.amount - customer.discount || 0),
             currency.currencyName || "USD",
             subject.subjectName,
             momentTZ(nextDate).tz(zone).format("MMM Do YYYY")
@@ -225,7 +226,7 @@ exports.handlePaypalSuccessfulPayment = async (req, res) => {
             `${customer.countryCode}${customer.whatsAppnumber}`.trim()
           );
           let adminMessage = ADMIN_PAYMENT_SUCCESSFUL(
-            parseFloat(plan.amount),
+            parseFloat(plan.amount - customer.discount || 0),
             currency.currencyName || "USD",
             subject.subjectName,
             customer.firstName,
@@ -291,7 +292,7 @@ exports.handleSuccessfulRazorpayPayment = async (req, res) => {
     //message to admin and customer
     const zone = getNameFromTimezone(timeZone.timeZoneName) || "Asia/Kolkata";
     let customerMessage = SUCCESSFUL_SUBSCRIPTION(
-      parseFloat(plan.amount),
+      parseFloat(plan.amount - customer.discount || 0),
       currency.currencyName || "USD",
       subject.subjectName,
       momentTZ(nextDate).tz(zone).format("MMM Do YYYY")
@@ -301,7 +302,7 @@ exports.handleSuccessfulRazorpayPayment = async (req, res) => {
       `${customer.countryCode}${customer.whatsAppnumber}`.trim()
     );
     let adminMessage = ADMIN_PAYMENT_SUCCESSFUL(
-      parseFloat(plan.amount),
+      parseFloat(plan.amount - customer.discount || 0),
       currency.currencyName || "USD",
       subject.subjectName,
       customer.firstName,

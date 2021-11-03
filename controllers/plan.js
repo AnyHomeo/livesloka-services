@@ -82,7 +82,7 @@ exports.getPlans = async (req, res) => {
     if (customerId) {
       if (ObjectId.isValid(customerId)) {
         const customer = await Customer.findById(customerId)
-          .select("subjectId subject proposedCurrencyId isSubscription")
+          .select("subjectId subject proposedCurrencyId isSubscription discount")
           .populate("subject")
           .populate("currency")
           .lean();
@@ -109,14 +109,10 @@ exports.getPlans = async (req, res) => {
               isSubscription: !!customer.isSubscription
             }).populate("currency");
 
-            console.log("CURRENCY",customer.currency)
-            console.log("PRODUCT",product)
-            console.log("IS_SUBSCRIPTION",customer.isSubscription)
-            console.log("PLANS",plans)
-            
             if(plans.length){
               return res.json({
                 result: plans,
+                discount:customer.discount,
                 message: "Plans retrieved successfully!",
               });
             } else {
