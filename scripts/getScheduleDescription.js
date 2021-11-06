@@ -9,10 +9,12 @@ exports.getScheduleDescription = (slots, zone) => {
       splitSlots = slots[day].map(
         (slot) => slot.split(`${day.toUpperCase()}-`)[1]
       );
+      console.log(splitSlots)
       let startSlot,endSlot;
       if (splitSlots.length == 1) {
         startSlot = splitSlots[0].split("-")[0];
         endSlot = splitSlots[0].split("-")[1];
+        console.log(startSlot)
       } else {
         for (let i = 0; i < times.length; i++) {
           const time = times[i];
@@ -23,12 +25,24 @@ exports.getScheduleDescription = (slots, zone) => {
           }
         }
       }
-      let indianStartTime = moment(`${day}-${startSlot}`,'dddd-hh:mm A').format().replace("+00:00","+05:30")
-      let indianEndTime = moment(`${day}-${endSlot}`,'dddd-hh:mm A').format().replace("+00:00","+05:30")
-      let zonedStartTime = momentTZ(indianStartTime).tz(zone).format("dddd hh:mm A")
-      let zonedEndTime = momentTZ(indianEndTime).tz(zone).format("hh:mm A")
+      console.log(startSlot,endSlot)
+      console.log(`${day}-${startSlot}`)
+      let indianStartTime = moment(`${day}-${startSlot}`,'dddd-hh:mm A').format("YYYY-MM-DDTHH:mm:ss")
+      let indianEndTime = moment(`${day}-${endSlot}`,'dddd-hh:mm A').format("YYYY-MM-DDTHH:mm:ss")
+      let zonedStartTime = momentTZ.tz(indianStartTime,"Asia/Kolkata").tz(zone).format("dddd hh:mm A")
+      let zonedEndTime = momentTZ.tz(indianEndTime,"Asia/Kolkata").tz(zone).format("hh:mm A")
       schedule.push(`${zonedStartTime}-${zonedEndTime}`)
     }
   });
-  return schedule.join(", ")
+  return (schedule.join(", "))
 };
+
+// getScheduleDescription({
+//   monday: [],
+//   tuesday: ["TUESDAY-06:00 AM-06:30 AM","TUESDAY-05:30 AM-06:00 AM"],
+//   wednesday: ["WEDNESDAY-07:30 PM-08:00 PM"],
+//   thursday: [],
+//   friday: ["FRIDAY-08:30 AM-09:00 AM","FRIDAY-09:00 AM-09:30 AM"],
+//   saturday: [],
+//   sunday: [],
+// },'Europe/London');
