@@ -19,6 +19,7 @@ const generateScheduleDays = require('../scripts/generateScheduleDays');
 const TeacherModel = require('../models/Teacher.model');
 const SubscriptionModel = require('../models/Subscription');
 let filters = require('../config/filters.json');
+const { getScheduleDescription } = require('../scripts/getScheduleDescription');
 
 module.exports = {
   async registerCustomer(req, res) {
@@ -376,18 +377,20 @@ module.exports = {
               numberOfClassesBought: customer.numberOfClassesBought,
               paidTill: customer.paidTill,
               scheduleDescription: customer.scheduleDescription,
-              scheduleDescription2: !actualSchedule.isSummerCampClass
-                ? generateScheduleDescription(
-                    actualSchedule.slots,
-                    selectedZones[0]
-                  )
-                : 'Monday to Friday - ' +
-                  generateScheduleDescription(
-                    actualSchedule.slots,
-                    selectedZones[0]
-                  )
-                    .split('and')[0]
-                    .split('-')[1],
+              scheduleDescription2: getScheduleDescription(actualSchedule.slots,selectedZones[0]),
+              // !actualSchedule.isSummerCampClass
+              //   ? generateScheduleDescription(
+              //       actualSchedule.slots,
+              //       selectedZones[0]
+              //     )
+              //   : 'Monday to Friday - ' +
+              //     generateScheduleDescription(
+              //       actualSchedule.slots,
+              //       selectedZones[0]
+              //     )
+              //       .split('and')[0]
+              //       .split('-')[1],
+
               isTeacherOnLeave: !!teacherLeave,
               scheduleDays: generateScheduleDays(
                 actualSchedule.slots,
