@@ -31,6 +31,8 @@ exports.getScheduleDescription = (slots, zone) => {
       let indianEndTime = moment(`${day}-${endSlot}`,'dddd-hh:mm A').format("YYYY-MM-DDTHH:mm:ss")
       let zonedStartTime = momentTZ.tz(indianStartTime,"Asia/Kolkata").tz(zone).format("dddd hh:mm A")
       let zonedEndTime = momentTZ.tz(indianEndTime,"Asia/Kolkata").tz(zone).format("hh:mm A")
+      console.log(momentTZ().format())
+      console.log(`${zonedStartTime}-${zonedEndTime}`)
       schedule.push(`${zonedStartTime}-${zonedEndTime}`)
     }
   });
