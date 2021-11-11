@@ -39,11 +39,11 @@ exports.createAPayment = async (req, res) => {
   try {
     const { planId, customerId } = req.params;
     const customer = await Customer.findById(customerId)
-      .select("firstName discount")
+      .select("firstName discount numberOfStudents isSubscription")
       .lean();
     const plan = await Plans.findOne({
       _id: planId,
-      isSubscription: false,
+      isSubscription: customer.isSubscription,
     })
       .populate("currency")
       .lean();
@@ -57,7 +57,7 @@ exports.createAPayment = async (req, res) => {
     }
 
     if (plan.currency.currencyName !== "INR") {
-      let amount = (plan.amount - customer.discount || 0 ).toString()
+      let amount = ((plan.amount - (customer.discount || 0))*customer.numberOfStudents).toString()
       const payment_json = {
         intent: "sale",
         payer: {
@@ -107,7 +107,7 @@ exports.createAPayment = async (req, res) => {
       });
     } else {
       const options = {
-        amount: plan.amount * 100 - (customer.discount ? customer.discount*100 : 0),
+        amount: (plan.amount * 100) - (customer.discount ? customer.discount*100 : 0),
         currency: "INR",
         receipt: shortid.generate(),
         payment_capture: 1,
