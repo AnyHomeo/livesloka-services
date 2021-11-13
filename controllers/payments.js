@@ -43,7 +43,7 @@ exports.createAPayment = async (req, res) => {
       .lean();
     const plan = await Plans.findOne({
       _id: planId,
-      isSubscription: customer.isSubscription,
+      isSubscription: !!customer.isSubscription,
     })
       .populate("currency")
       .lean();
