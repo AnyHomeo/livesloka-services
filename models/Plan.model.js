@@ -44,6 +44,9 @@ var PlanSchema = new mongoose.Schema(
       ref: "Currency",
       default: "5f98fabdd5e2630017ec9ac1",
     },
+    list:[{
+      type:String,
+    }],
   },
   { timestamps: true }
 );

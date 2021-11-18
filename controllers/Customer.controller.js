@@ -556,14 +556,23 @@ module.exports = {
         numberOfClassesBought: {
           $lte: -2,
         },
+        autoDemo: {
+          $ne: true
+        },
         classStatusId: '113975223750050',
       });
       let customersEqualToMinus1 = await CustomerModel.countDocuments({
         numberOfClassesBought: -1,
+        autoDemo: {
+          $ne: true
+        },
         classStatusId: '113975223750050',
       });
       let customersEqualTo0 = await CustomerModel.countDocuments({
         numberOfClassesBought: 0,
+        autoDemo: {
+          $ne: true
+        },
         classStatusId: '113975223750050',
       });
       let demoCustomers = await CustomerModel.countDocuments({

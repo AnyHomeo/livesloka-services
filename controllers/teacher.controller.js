@@ -8,6 +8,7 @@ const CancelledClassesModel = require("../models/CancelledClasses.model");
 const moment = require("moment");
 const momentTZ = require("moment-timezone");
 const TeacherLeavesModel = require("../models/TeacherLeaves.model");
+const SubjectModel = require("../models/Subject.model");
 
 const days = [
   "MONDAY",
@@ -293,9 +294,9 @@ exports.getAllTEachers = (req, res) => {
 
 exports.getOccupancyDashboardData = async (req, res) => {
   try {
-    let allCategories = await Category.find().select("id -_id categoryName");
+    let allCategories = await SubjectModel.find().select("id -_id subjectName");
     let allTeachers = await TeacherModel.find().select(
-      "id TeacherName availableSlots scheduledSlots category"
+      "id TeacherName availableSlots scheduledSlots category subject"
     );
     let allSchedules = await Schedule.find({
       isDeleted: { $ne: true },
@@ -308,9 +309,9 @@ exports.getOccupancyDashboardData = async (req, res) => {
 
     let finalObject = {};
     allCategories.forEach((category) => {
-      finalObject[category.categoryName] = {};
+      finalObject[category.subjectName] = {};
       allTeachers.forEach((teacher) => {
-        if (teacher.category === category.id) {
+        if (teacher.subject === category.id) {
           const { TeacherName, scheduledSlots, availableSlots, _id, id } =
             teacher;
 
@@ -339,7 +340,7 @@ exports.getOccupancyDashboardData = async (req, res) => {
               });
           }
 
-          finalObject[category.categoryName][TeacherName] = {
+          finalObject[category.subjectName][TeacherName] = {
             scheduledSlots: scheduledSlotsFinal,
             availableSlots,
             _id,

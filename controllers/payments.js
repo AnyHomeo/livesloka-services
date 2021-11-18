@@ -7,6 +7,7 @@ const Customer = require("../models/Customer.model");
 const Payment = require("../models/Payments");
 const Currency = require("../models/Currency.model");
 const TimeZoneModel = require("../models/timeZone.model");
+const OptionsModel = require("../models/SlotOptions"); 
 const shortid = require("shortid")
 const moment = require("moment");
 const {
@@ -35,29 +36,36 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+const getPayableAmount = (plan,discount,customer) => ((plan.amount - ((discount?.amount || 0)*plan.intervalCount))*(customer?.numberOfStudents || 1))
+
 exports.createAPayment = async (req, res) => {
   try {
     const { planId, customerId } = req.params;
     const customer = await Customer.findById(customerId)
       .select("firstName discount numberOfStudents isSubscription")
       .lean();
-    const plan = await Plans.findOne({
-      _id: planId,
-      isSubscription: !!customer.isSubscription,
-    })
+      let planConfig = {
+        _id: planId,
+        isSubscription: !!customer.isSubscription,
+      }
+    const plan = await Plans.findOne(planConfig)
       .populate("currency")
       .lean();
 
     if (!customer) {
       return res.status(400).json({ error: "Invalid Customer" });
     }
-
+    
     if (!plan) {
       return res.status(400).json({ error: "Invalid Plan" });
     }
 
+    const option = await OptionsModel.findOne({
+      customer,
+    })
+    const discount = option.discounts.filter(discount =>  discount.plan.equals(plan._id))[0]
+    let amount = getPayableAmount(plan,discount,customer) 
     if (plan.currency.currencyName !== "INR") {
-      let amount = ((plan.amount - (customer.discount || 0))*customer.numberOfStudents).toString()
       const payment_json = {
         intent: "sale",
         payer: {
@@ -73,7 +81,7 @@ exports.createAPayment = async (req, res) => {
               items: [
                 {
                   name: plan.name,
-                  price: amount,
+                  price: amount.toString(),
                   currency: plan.currency.currencyName || "USD",
                   quantity: 1,
                 },
@@ -81,7 +89,7 @@ exports.createAPayment = async (req, res) => {
             },
             amount: {
               currency: plan.currency.currencyName || "USD",
-              total: amount,
+              total: amount.toString(),
             },
             description: plan.description,
           },
@@ -106,8 +114,9 @@ exports.createAPayment = async (req, res) => {
         }
       });
     } else {
+      console.log(amount)
       const options = {
-        amount: (plan.amount * 100) - (customer.discount ? customer.discount*100 : 0),
+        amount: amount*100,
         currency: "INR",
         receipt: shortid.generate(),
         payment_capture: 1,
@@ -173,17 +182,22 @@ exports.handlePaypalSuccessfulPayment = async (req, res) => {
     const option = await OptionModel.findOne({
       customer: customerId,
     }).lean();
+
+    const discount = option.discounts.filter(discount =>  discount.plan.equals(plan._id))[0]
+    let amount = getPayableAmount(plan,discount,customer)
+
     const execute_payment_json = {
       payer_id: PayerID,
       transactions: [
         {
           amount: {
             currency: currency.currencyName || "USD",
-            total: (plan.amount-customer.discount).toString(),
+            total: amount.toString(),
           },
         },
       ],
     };
+    console.log(execute_payment_json)
 
     paypal.payment.execute(
       paymentId,
@@ -216,7 +230,7 @@ exports.handlePaypalSuccessfulPayment = async (req, res) => {
           const zone =
             getNameFromTimezone(timeZone.timeZoneName) || "Asia/Kolkata";
           let customerMessage = SUCCESSFUL_SUBSCRIPTION(
-            parseFloat(plan.amount - customer.discount || 0),
+            amount,
             currency.currencyName || "USD",
             subject.subjectName,
             momentTZ(nextDate).tz(zone).format("MMM Do YYYY")
@@ -226,7 +240,7 @@ exports.handlePaypalSuccessfulPayment = async (req, res) => {
             `${customer.countryCode}${customer.whatsAppnumber}`.trim()
           );
           let adminMessage = ADMIN_PAYMENT_SUCCESSFUL(
-            parseFloat(plan.amount - customer.discount || 0),
+            amount,
             currency.currencyName || "USD",
             subject.subjectName,
             customer.firstName,
@@ -288,11 +302,13 @@ exports.handleSuccessfulRazorpayPayment = async (req, res) => {
         .add(plan.interval + "s", plan.intervalCount)
         .format();
     }
+    const discount = option.discounts.filter(discount =>  discount.plan.equals(plan._id))[0]
+    let amount = getPayableAmount(plan,discount,customer)
 
     //message to admin and customer
     const zone = getNameFromTimezone(timeZone.timeZoneName) || "Asia/Kolkata";
     let customerMessage = SUCCESSFUL_SUBSCRIPTION(
-      parseFloat(plan.amount - customer.discount || 0),
+      amount,
       currency.currencyName || "USD",
       subject.subjectName,
       momentTZ(nextDate).tz(zone).format("MMM Do YYYY")
@@ -302,7 +318,7 @@ exports.handleSuccessfulRazorpayPayment = async (req, res) => {
       `${customer.countryCode}${customer.whatsAppnumber}`.trim()
     );
     let adminMessage = ADMIN_PAYMENT_SUCCESSFUL(
-      parseFloat(plan.amount - customer.discount || 0),
+      amount,
       currency.currencyName || "USD",
       subject.subjectName,
       customer.firstName,

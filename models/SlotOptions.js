@@ -30,6 +30,13 @@ const SlotOptionsSchema = new mongoose.Schema(
     teacher: {
       type: String,
     },
+    discounts:[{
+      plan: {
+       type: mongoose.Schema.Types.ObjectId,
+       ref:"Plan"
+      },
+      amount: Number
+    }]
   }, 
   { timestamps: true }
 );

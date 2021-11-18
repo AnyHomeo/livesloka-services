@@ -14,28 +14,33 @@ exports.getMessagesByEmail = async (req, res) => {
       })
         .select("_id")
         .lean();
-      let allMessages = await AdMessagesModel.find({
-        $or: [
-          {
-            adminIds: { $in: [admin._id] },
-          },
-          { isForAll: true },
-        ],
-      })
-        .sort({ _id: -1 })
-        .lean();
+      if (admin) {
+        let allMessages = await AdMessagesModel.find({
+          $or: [
+            {
+              adminIds: { $in: [admin._id] },
+            },
+            { isForAll: true },
+          ],
+        })
+          .sort({ _id: -1 })
+          .lean();
 
-      let timeRightNow = new Date().getTime();
-      let unSeenMessages = allMessages.filter(
-        (message) =>
-          !message?.acknowledgedBy?.some((id) => id.equals(admin._id)) &&
-          new Date(message.expiryDate).getTime() > timeRightNow
-      );
-
-      return res.json({
-        result: { allMessages, unSeenMessages },
-        messages: "Retrieved Messages Successfully!",
-      });
+        let timeRightNow = new Date().getTime();
+        let unSeenMessages = allMessages.filter(
+          (message) =>
+            !message?.acknowledgedBy?.some((id) => id.equals(admin._id)) &&
+            new Date(message.expiryDate).getTime() > timeRightNow
+        );
+        return res.json({
+          result: { allMessages, unSeenMessages },
+          messages: "Retrieved Messages Successfully!",
+        });
+      } else {
+        return res.status(500).json({
+          error: "Something went wrong!",
+        });
+      }
     } else {
       let allMessages = await AdMessagesModel.find({
         broadCastedToTeachers: { $in: [email] },
@@ -47,7 +52,7 @@ exports.getMessagesByEmail = async (req, res) => {
     }
   } catch (error) {
     console.log(error);
-    return res.json({
+    return res.status(500).json({
       error: "Something went wrong!",
     });
   }
