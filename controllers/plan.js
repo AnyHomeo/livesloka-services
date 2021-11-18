@@ -8,7 +8,7 @@ const Customer = require("../models/Customer.model");
 
 exports.createPlans =async (req,res) => {
   try {
-    const { name, description, amount, interval, intervalCount, products,currency } =
+    const { name, description, amount, interval, intervalCount, products,currency, isSubscription,list } =
       req.body;
 
       if (
@@ -35,30 +35,35 @@ exports.createPlans =async (req,res) => {
       intervalCount,
       currency,
       product,
+      list,
+      isSubscription
     }));
 
-    await asyncForEach(plans, async (plan, i) => {
-      let insertedStripePlan = await createStripePlan({
-        currency: currencyData.currencyName.toLowerCase(),
-        unit_amount: parseFloat(amount) * 100,
-        product: plan.product,
-        metadata: {
-          name,
-          description,
-        },
-        recurring: {
-          interval,
-          interval_count:intervalCount,
-        },
+    if(isSubscription){
+      await asyncForEach(plans, async (plan, i) => {
+        let insertedStripePlan = await createStripePlan({
+          currency: currencyData.currencyName.toLowerCase(),
+          unit_amount: parseFloat(amount) * 100,
+          product: plan.product,
+          metadata: {
+            name,
+            description,
+          },
+          recurring: {
+            interval,
+            interval_count:intervalCount,
+          },
+        });
+        if (insertedStripePlan.type === "success") {
+          plans[i].stripe = insertedStripePlan.result.id;
+        } else {
+          console.log(insertedStripePlan)
+        }
       });
-      if (insertedStripePlan.type === "success") {
-        plans[i].stripe = insertedStripePlan.result.id;
-      } else {
-        console.log(insertedStripePlan)
-      }
-    });
+  
+      plans = plans.filter((plan) => !!plan.stripe);  
+    }
 
-    plans = plans.filter((plan) => !!plan.stripe);
     let insertedPlans = await Plan.insertMany(plans);
     return res.json({
       message: "Plans inserted successfully!",
@@ -78,7 +83,7 @@ exports.getPlans = async (req, res) => {
     if (customerId) {
       if (ObjectId.isValid(customerId)) {
         const customer = await Customer.findById(customerId)
-          .select("subjectId subject proposedCurrencyId")
+          .select("subjectId subject proposedCurrencyId isSubscription discount")
           .populate("subject")
           .populate("currency")
           .lean();
@@ -90,32 +95,35 @@ exports.getPlans = async (req, res) => {
             });
             if (!product) {
               return res.status(400).json({
-                error: "Please ask admin to create Product for Assigned subject!",
+                error: "No products for Assigned subject!",
               });
             }
             if(!customer.currency){
               return res.status(400).json({
-                error: "Please ask admin to assign a currency!",
+                error: "Currency Not added to the customer!",
               });
             }
             const plans = await Plan.find({
               product: product._id,
               currency:customer.currency._id,
               isDeleted: false,
+              isSubscription: !!customer.isSubscription
             }).populate("currency");
+
             if(plans.length){
               return res.json({
                 result: plans,
+                discount:customer.discount,
                 message: "Plans retrieved successfully!",
               });
             } else {
               return res.status(400).json({
-                error: "Please ask admin to Add plans to the subject for your currency!",
+                error: "Plans not available!",
               });
             }
           } else {
             return res.status(400).json({
-              error: "Please ask admin to assign a subject",
+              error: "Subject Not assigned!",
             });
           }
         } else {
@@ -136,7 +144,7 @@ exports.getPlans = async (req, res) => {
       });
     } else {
       return res.status(400).json({
-        error: "valid Product Id or Customer Id required",
+        error: "Valid Product Id or Customer Id required",
       });
     }
   } catch (error) {
@@ -165,17 +173,22 @@ exports.getSinglePlan = async (req,res) => {
 
 exports.updatePlan = async (req, res) => {
   try {
-    const { name, description } = req.body;
     const { planId } = req.params;
-    const updatedPlan = await Plan.findByIdAndUpdate(planId, {
-      name,
-      description,
-    });
-    await updateStripePlan(updatedPlan.stripe, { name, description });
-    return res.json({
-      result: updatedPlan,
-      message: "Plan updated successfully!",
-    });
+    if(req.body.isSubscription){
+      const { name, description } = req.body;
+      const updatedPlan = await Plan.findByIdAndUpdate(planId, req.body);
+        await updateStripePlan(updatedPlan.stripe, { name, description });
+      return res.json({
+        result: updatedPlan,
+        message: "Plan updated successfully!",
+      });
+    } else {
+      const updatedPlan = await Plan.findByIdAndUpdate(planId, req.body);
+      return res.json({
+        result: updatedPlan,
+        message: "Plan updated successfully!",
+      })
+    }
   } catch (error) {
     console.log(error);
     return res.status(500).json({

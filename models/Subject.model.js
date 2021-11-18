@@ -40,6 +40,10 @@ var SubjectSchema = new mongoose.Schema(
       type:String,
       default:""
     },
+    isNotAvailableInBooking:{
+      type: Boolean,
+      default: false,
+    }
   },
   { timestamps: true }
 );

@@ -10,6 +10,7 @@ const times = require("../models/times.json");
 const momentTZ = require("moment-timezone");
 const moment = require("moment");
 const twilio = require("twilio");
+const CurrencyModel = require("../models/Currency.model");
 var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 
 const getStartTime = (slots, zoneName) => {
@@ -88,7 +89,7 @@ exports.getOnlyDemoCustomers = async (req, res) => {
 
 exports.postAnOption = async (req, res) => {
   try {
-    const { customer, options, teacher } = req.body;
+    const { customer, options, teacher,schedules } = req.body;
 
     if (!customer) {
       return res.status(400).json({ error: "Customer Id is Required!" });
@@ -97,8 +98,9 @@ exports.postAnOption = async (req, res) => {
     if (!teacher) {
       return res.status(400).json({ error: "Teacher Id is Required!" });
     }
+    console.log(options)
 
-    if (!Array.isArray(options) || !options.length) {
+    if ((!Array.isArray(options) || !options.length) && (!Array.isArray(schedules) || !schedules.length)) {
       return res.status(400).json({ error: "Minimum 1 slot is required!" });
     }
 
@@ -119,7 +121,7 @@ exports.postAnOption = async (req, res) => {
       await newOption.save();
       if (customerData.whatsAppnumber) {
         let messageResponse = await client.messages.create({
-          body: `Live Sloka: book your slot on ${process.env.USER_CLIENT_URL}/options/${newOption._id}`,
+          body: `Live Sloka: Please Book your slot for your regular classes on ${process.env.USER_CLIENT_URL}/options/${newOption._id}`,
           to: `${customerData.countryCode}${customerData.whatsAppnumber}`, // Text this number
           from: process.env.TWILIO_NUMBER, // From a valid Twilio number
         });
@@ -267,9 +269,19 @@ exports.getAnOption = async (req, res) => {
 
 exports.getOptionByCustomer = async (req,res) => {
   const { customerId } = req.params
-  const option = await OptionsModel.findOne({ customer:customerId }).lean();
-  return res.json({
-    result:option,
-    message:"Option retrieved successfully!"
-  })
+  const option = await OptionsModel.findOne({ customer:customerId }).populate("discounts.plan").populate('customer').lean();
+  
+  CurrencyModel.populate(option, 'discounts.plan.currency', function(err, results){
+    if(err){
+      return res.status(500).json({ 
+      result:null,
+      error:"Option retrieved successfully!"
+      })
+    }
+    return res.json({
+      result:results,
+      message:"Option retrieved successfully!"
+    })
+  });
+  
 }

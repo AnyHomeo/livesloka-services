@@ -19,6 +19,7 @@ const generateScheduleDays = require('../scripts/generateScheduleDays');
 const TeacherModel = require('../models/Teacher.model');
 const SubscriptionModel = require('../models/Subscription');
 let filters = require('../config/filters.json');
+const { getScheduleDescription } = require('../scripts/getScheduleDescription');
 
 module.exports = {
   async registerCustomer(req, res) {
@@ -334,8 +335,9 @@ module.exports = {
               id: customer.timeZoneId,
             });
             let selectedZoneUTCArray = allZones.filter(
-              (zone) => zone.abbr === timeZone.timeZoneName
+              (zone) => zone.abbr === (timeZone ? timeZone.timeZoneName : 'EST')
             )[0].utc;
+            console.log(selectedZoneUTCArray,timeZone.timeZoneName);
             let allTimeZones = momentTZ.tz.names();
             let selectedZones = allTimeZones.filter((name) =>
               selectedZoneUTCArray.includes(name)
@@ -376,18 +378,20 @@ module.exports = {
               numberOfClassesBought: customer.numberOfClassesBought,
               paidTill: customer.paidTill,
               scheduleDescription: customer.scheduleDescription,
-              scheduleDescription2: !actualSchedule.isSummerCampClass
-                ? generateScheduleDescription(
-                    actualSchedule.slots,
-                    selectedZones[0]
-                  )
-                : 'Monday to Friday - ' +
-                  generateScheduleDescription(
-                    actualSchedule.slots,
-                    selectedZones[0]
-                  )
-                    .split('and')[0]
-                    .split('-')[1],
+              scheduleDescription2: getScheduleDescription(actualSchedule.slots,selectedZones[0]),
+              // !actualSchedule.isSummerCampClass
+              //   ? generateScheduleDescription(
+              //       actualSchedule.slots,
+              //       selectedZones[0]
+              //     )
+              //   : 'Monday to Friday - ' +
+              //     generateScheduleDescription(
+              //       actualSchedule.slots,
+              //       selectedZones[0]
+              //     )
+              //       .split('and')[0]
+              //       .split('-')[1],
+
               isTeacherOnLeave: !!teacherLeave,
               scheduleDays: generateScheduleDays(
                 actualSchedule.slots,
@@ -552,14 +556,23 @@ module.exports = {
         numberOfClassesBought: {
           $lte: -2,
         },
+        autoDemo: {
+          $ne: true
+        },
         classStatusId: '113975223750050',
       });
       let customersEqualToMinus1 = await CustomerModel.countDocuments({
         numberOfClassesBought: -1,
+        autoDemo: {
+          $ne: true
+        },
         classStatusId: '113975223750050',
       });
       let customersEqualTo0 = await CustomerModel.countDocuments({
         numberOfClassesBought: 0,
+        autoDemo: {
+          $ne: true
+        },
         classStatusId: '113975223750050',
       });
       let demoCustomers = await CustomerModel.countDocuments({
@@ -686,6 +699,7 @@ module.exports = {
           })
           .lean()
           .then((result) => {
+            console.log(result)
             res.status(200).json({
               message: 'Customer data retrieved',
               status: 'OK',

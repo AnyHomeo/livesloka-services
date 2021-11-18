@@ -54,8 +54,8 @@ function generateScheduleDays(schedule, zone) {
       endTimes.push(bothNumbers[1]);
     });
     if (startTimes.length && endTimes.length) {
-      let minStartTime = Math.min(...startTimes) - 5.5;
-      let maxEndTime = Math.max(...endTimes) - 5.5;
+      let minStartTime = Math.min(...startTimes);
+      let maxEndTime = Math.max(...endTimes);
       let dateToday = JSON.stringify(
         nextWeekdayDate(
           moment(new Date()).subtract(1, "day"),
@@ -86,4 +86,5 @@ function generateScheduleDays(schedule, zone) {
   });
   return scheduleDays;
 }
+
 module.exports = generateScheduleDays;

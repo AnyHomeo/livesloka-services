@@ -54,4 +54,11 @@ exports.sendAdminsMessage = async (message) => {
   }
 };
 
+exports.isFutureDate = (date) => {
+  let now = new Date().getTime();
+  let dateUnix = new Date(date).getTime()
+
+  return dateUnix > now
+}
+
 exports.asyncForEach = asyncForEach;
