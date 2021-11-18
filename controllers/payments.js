@@ -197,17 +197,17 @@ exports.handlePaypalSuccessfulPayment = async (req, res) => {
         },
       ],
     };
-    console.log(execute_payment_json)
+    console.log(JSON.stringify(execute_payment_json,null,2))
 
     paypal.payment.execute(
       paymentId,
       execute_payment_json,
       async function (error, payment) {
         if (error) {
-          console.log(error);
-          return res.status(400).json({
-            error: "Something went wrong!",
-          });
+          console.log(JSON.stringify(error,null,2));
+          return res.redirect(
+            `${process.env.USER_CLIENT_URL}/payment-failed`
+          );
         } else {
           let nextDate;
           if (customer.paidTill && isFutureDate(customer.paidTill)) {
@@ -269,9 +269,9 @@ exports.handlePaypalSuccessfulPayment = async (req, res) => {
     );
   } catch (error) {
     console.log(error);
-    return res.status(500).json({
-      error: "Internal Server Error",
-    });
+    return res.redirect(
+      `${process.env.USER_CLIENT_URL}/payment-failed`
+    );
   }
 };
 
