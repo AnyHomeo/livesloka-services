@@ -318,10 +318,10 @@ const getAttendanceWithPayments = async (req, res) => {
         )[0];
         let allAttendances = await Attendance.find({
           scheduleId: schedule._id,
-        }).lean();
+        }).select("customers absentees requestedStudents createdAt").lean();
         let allPayments = await Payments.find({
           customerId,
-        }).lean();
+        }).select("status type createdAt").lean();
         allPayments = allPayments.map((payment) => ({
           isPaymentObject: true,
           ...payment,
