@@ -15,6 +15,14 @@ var TeacherSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    experience: {
+      type: String,
+      default: "",
+    },
+    rewards: {
+      type: String,
+      default: "",
+    },
     summerCampTeacherDescription: {
       trim: true,
       type: String,
