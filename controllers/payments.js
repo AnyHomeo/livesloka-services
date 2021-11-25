@@ -292,16 +292,10 @@ exports.handleSuccessfulRazorpayPayment = async (req, res) => {
       customer: customerId,
     }).lean();
 
-    let nextDate;
-    if (customer.paidTill && isFutureDate(customer.paidTill)) {
-      nextDate = moment(customer.paidTill)
-        .add(plan.interval + "s", plan.intervalCount)
-        .format();
-    } else {
-      nextDate = moment()
-        .add(plan.interval + "s", plan.intervalCount)
-        .format();
-    }
+    let nextDate = moment(option.startDate)
+    .add(plan.interval + "s", plan.intervalCount)
+    .format();
+
     const discount = option.discounts.filter(discount =>  discount.plan.equals(plan._id))[0]
     let amount = getPayableAmount(plan,discount,customer)
 
