@@ -36,7 +36,8 @@ const SlotOptionsSchema = new mongoose.Schema(
        ref:"Plan"
       },
       amount: Number
-    }]
+    }],
+    startDate:{ type: Date } 
   }, 
   { timestamps: true }
 );

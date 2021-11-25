@@ -82,7 +82,7 @@ exports.getOnlyDemoCustomers = async (req, res) => {
       result: demoCustomers,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({ error: "Something went wrong!" });
   }
 };
@@ -98,7 +98,6 @@ exports.postAnOption = async (req, res) => {
     if (!teacher) {
       return res.status(400).json({ error: "Teacher Id is Required!" });
     }
-    console.log(options)
 
     if ((!Array.isArray(options) || !options.length) && (!Array.isArray(schedules) || !schedules.length)) {
       return res.status(400).json({ error: "Minimum 1 slot is required!" });
@@ -137,7 +136,7 @@ exports.postAnOption = async (req, res) => {
       }
     } else {
       return res.status(500).json({
-        message:
+        error:
           "Options already exists for this customer!, please delete and try again",
       });
     }
@@ -284,4 +283,23 @@ exports.getOptionByCustomer = async (req,res) => {
     })
   });
   
+}
+
+exports.getOptionsByTeacherId = async (req, res) => {
+  try {
+    const {teacherId} = req.params;
+    const options = await OptionsModel.find({
+      teacher:teacherId
+    }).populate("schedules").populate("customer")
+    return res.json({
+      message:"Options retrieved successfully",
+      result:options
+    })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      error,
+      message:"Something went wrong!"
+    })
+  }
 }
