@@ -1,24 +1,7 @@
 const ReviewSchema = require("../models/Reviews.modal");
 module.exports.createReview = async (req, res) => {
-  const {
-    ratingValue,
-    ratingDesc,
-    teacherId,
-    className,
-    studentName,
-    customerId,
-    scheduleId,
-  } = req.body;
   try {
-    const reviews = new ReviewSchema({
-      ratingValue,
-      ratingDesc,
-      teacherId,
-      className,
-      studentName,
-      customerId,
-      scheduleId,
-    });
+    const reviews = new ReviewSchema(req.body);
 
     const data = await reviews.save();
 
