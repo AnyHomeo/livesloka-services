@@ -23,6 +23,7 @@ const razorpay = new Razorpay({
 exports.makePayment = async (req, res) => {
 	try {
 		const { id } = req.body;
+		const { deeplinking } = req.params;
 		const user = await Customer.findById(id).select(
 			'firstName lastName className proposedAmount proposedCurrencyId discount'
 		);
@@ -36,8 +37,8 @@ exports.makePayment = async (req, res) => {
 						payment_method: 'paypal',
 					},
 					redirect_urls: {
-						return_url: `${process.env.SERVICES_URL}/payment/success/${id}`,
-						cancel_url: `${process.env.SERVICES_URL}/payment/cancel/${id}`,
+						return_url: deeplinking ? `${process.env.SERVICES_URL}/payment/success/${id}` : `${process.env.SERVICES_URL}/payment/success/${id}/?deeplinking=${deeplinking}?status=success`,
+						cancel_url: deeplinking ? `${process.env.SERVICES_URL}/payment/cancel/${id}` : `${process.env.SERVICES_URL}/payment/cancel${id}?deeplinking=${deeplinking}?status=failure`,
 					},
 					transactions: [
 						{
@@ -107,7 +108,8 @@ exports.makePayment = async (req, res) => {
 exports.onSuccess = async (req, res) => {
 	try {
 		const { id } = req.params;
-		const { PayerID, paymentId } = req.query;
+		const { PayerID, paymentId,deeplinking } = req.query;
+		console.log(req.query)
 		let previousValue = 0;
 		let nextValue = 0;
 		const customer = await Customer.findById(id).select(
@@ -165,7 +167,7 @@ exports.onSuccess = async (req, res) => {
 				newPayment
 					.save()
 					.then(async (data) => {
-						return res.redirect(`${process.env.USER_CLIENT_URL}/payment-success`);
+						return res.redirect(deeplinking ? deeplinking : `${process.env.USER_CLIENT_URL}/payment-success`);
 					})
 					.catch((err) => {
 						return res.json({
