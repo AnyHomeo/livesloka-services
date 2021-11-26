@@ -37,8 +37,8 @@ exports.makePayment = async (req, res) => {
 						payment_method: 'paypal',
 					},
 					redirect_urls: {
-						return_url: deeplinking ? `${process.env.SERVICES_URL}/payment/success/${id}` : `${process.env.SERVICES_URL}/payment/success/${id}/?deeplinking=${deeplinking}?status=success`,
-						cancel_url: deeplinking ? `${process.env.SERVICES_URL}/payment/cancel/${id}` : `${process.env.SERVICES_URL}/payment/cancel${id}?deeplinking=${deeplinking}?status=failure`,
+						return_url: !deeplinking ? `${process.env.SERVICES_URL}/payment/success/${id}` : `${process.env.SERVICES_URL}/payment/success/${id}/?deeplinking=${deeplinking}?status=success`,
+						cancel_url: !deeplinking ? `${process.env.SERVICES_URL}/payment/cancel/${id}` : `${process.env.SERVICES_URL}/payment/cancel${id}?deeplinking=${deeplinking}?status=failure`,
 					},
 					transactions: [
 						{
