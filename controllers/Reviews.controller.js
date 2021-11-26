@@ -62,3 +62,20 @@ module.exports.updateReview = async (req, res) => {
     });
   }
 };
+
+module.exports.getTeacherReviewsById = async (req, res) => {
+  const { teacherId } = req.params;
+
+  try {
+    const data = await ReviewSchema.find({ teacherId });
+
+    return res.status(200).json({
+      message: "Retrived Successfully",
+      result: data,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      message: "Not found",
+    });
+  }
+};
