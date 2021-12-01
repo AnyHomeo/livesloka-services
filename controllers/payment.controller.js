@@ -22,8 +22,7 @@ const razorpay = new Razorpay({
 
 exports.makePayment = async (req, res) => {
 	try {
-		const { id, deeplinking } = req.body;
-
+		const { id,deeplinking } = req.body;
 		const user = await Customer.findById(id).select(
 			'firstName lastName className proposedAmount proposedCurrencyId discount'
 		);
