@@ -22,8 +22,8 @@ const razorpay = new Razorpay({
 
 exports.makePayment = async (req, res) => {
 	try {
-		const { id } = req.body;
-		const { deeplinking } = req.params;
+		const { id, deeplinking } = req.body;
+
 		const user = await Customer.findById(id).select(
 			'firstName lastName className proposedAmount proposedCurrencyId discount'
 		);
@@ -38,7 +38,7 @@ exports.makePayment = async (req, res) => {
 					},
 					redirect_urls: {
 						return_url: !deeplinking ? `${process.env.SERVICES_URL}/payment/success/${id}` : `${process.env.SERVICES_URL}/payment/success/${id}/?deeplinking=${deeplinking}?status=success`,
-						cancel_url: !deeplinking ? `${process.env.SERVICES_URL}/payment/cancel/${id}` : `${process.env.SERVICES_URL}/payment/cancel${id}?deeplinking=${deeplinking}?status=failure`,
+						cancel_url: !deeplinking ? `${process.env.SERVICES_URL}/payment/cancel/${id}` : `${process.env.SERVICES_URL}/payment/cancel/${id}?deeplinking=${deeplinking}?status=failure`,
 					},
 					transactions: [
 						{
@@ -84,7 +84,7 @@ exports.makePayment = async (req, res) => {
 			}
 		} else {
 			const options = {
-				amount: (parseInt(user.proposedAmount) - parseInt(user.discount) ) * 100,
+				amount: (parseInt(user.proposedAmount) - parseInt(user.discount)) * 100,
 				currency: 'INR',
 				receipt: shortid.generate(),
 				payment_capture: 1,
@@ -108,8 +108,10 @@ exports.makePayment = async (req, res) => {
 exports.onSuccess = async (req, res) => {
 	try {
 		const { id } = req.params;
-		const { PayerID, paymentId,deeplinking } = req.query;
+		const { PayerID, paymentId, deeplinking } = req.query;
+
 		console.log(req.query)
+
 		let previousValue = 0;
 		let nextValue = 0;
 		const customer = await Customer.findById(id).select(
@@ -229,6 +231,7 @@ exports.onRazorpaySuccess = async (req, res) => {
 exports.onFailurePayment = async (req, res) => {
 	try {
 		const { id } = req.params;
+		const { deeplinking } = req.query;
 		const newPayment = new Payment({
 			customerId: id,
 			status: 'CANCELLED',
@@ -237,7 +240,7 @@ exports.onFailurePayment = async (req, res) => {
 		newPayment
 			.save()
 			.then((data) => {
-				return res.redirect(`${process.env.USER_CLIENT_URL}/payment-failed`);
+				return res.redirect(deeplinking ? deeplinking : `${process.env.USER_CLIENT_URL}/payment-failed`);
 			})
 			.catch((err) => {
 				console.log(err);
