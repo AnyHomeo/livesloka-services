@@ -338,7 +338,6 @@ module.exports = {
             let selectedZoneUTCArray = allZones.filter(
               (zone) => zone.abbr === (timeZone ? timeZone.timeZoneName : "EST")
             )[0].utc;
-            console.log(selectedZoneUTCArray, timeZone.timeZoneName);
             let allTimeZones = momentTZ.tz.names();
             let selectedZones = allTimeZones.filter((name) =>
               selectedZoneUTCArray.includes(name)

@@ -197,7 +197,6 @@ exports.handlePaypalSuccessfulPayment = async (req, res) => {
         },
       ],
     };
-    console.log(JSON.stringify(execute_payment_json,null,2))
 
     paypal.payment.execute(
       paymentId,
@@ -210,7 +209,7 @@ exports.handlePaypalSuccessfulPayment = async (req, res) => {
           );
         } else {
           let nextDate;
-          if (customer.paidTill && isFutureDate(customer.paidTill)) {
+          if (customer.paidTill) {
             nextDate = moment(customer.paidTill)
               .add(plan.interval + "s", plan.intervalCount)
               .format();
@@ -292,7 +291,7 @@ exports.handleSuccessfulRazorpayPayment = async (req, res) => {
       customer: customerId,
     }).lean();
 
-    let nextDate = moment(option.startDate)
+    let nextDate = moment(option.isScheduled ? customer.paidTill : option.startDate)
     .add(plan.interval + "s", plan.intervalCount)
     .format();
 
