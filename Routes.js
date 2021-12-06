@@ -28,14 +28,16 @@ module.exports = (app) => {
   const videosRouter = require('./routes/videos');
   const MobileTeachersApiRouter = require('./routes/mobileTeacher');
   const chat = require('./routes/chat');
+  const nonchat = require('./routes/nonchat');
   const group = require('./routes/group');
-  const plansRouter = require('./routes/plan')
-  const productsRouter = require('./routes/product')
+  const plansRouter = require('./routes/plan');
+  const productsRouter = require('./routes/product');
 
   app.use('/', indexRouter);
   app.use('/', customerRouter);
   app.use('/', attendanceRouter);
   app.use('/', chat);
+  app.use('/', nonchat);
   app.use('/', group);
   app.use('/messages', AdMessagesRouter);
   app.use('/summercamps', summerCampRouter);
@@ -61,7 +63,7 @@ module.exports = (app) => {
   app.use('/options', optionsRouter);
   app.use('/videos', videosRouter);
   app.use('/products', productsRouter);
-  app.use('/plans',plansRouter);
+  app.use('/plans', plansRouter);
 
   //mobile routes
   app.use('/api/customers', MobileCustomerApiRouter);
