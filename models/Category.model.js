@@ -13,6 +13,10 @@ var CategorySchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
+    isNotAvailableInBooking:{
+      type: Boolean,
+      default: false,
+    }
   },
   { timestamps: true }
 );

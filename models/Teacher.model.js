@@ -11,6 +11,18 @@ var TeacherSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    teacherVideoLink: {
+      type: String,
+      default: "",
+    },
+    experience: {
+      type: String,
+      default: "",
+    },
+    rewards: {
+      type: String,
+      default: "",
+    },
     summerCampTeacherDescription: {
       trim: true,
       type: String,
@@ -84,9 +96,13 @@ var TeacherSchema = new mongoose.Schema(
       type: Number,
       default: 1,
     },
-    subject:{
-      type:String,
-    }
+    subject: {
+      type: String,
+    },
+    isNotAvailableInBooking: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

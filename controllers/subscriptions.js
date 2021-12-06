@@ -653,7 +653,7 @@ exports.subscribeCustomerToAPlan = async (req, res) => {
 exports.subscribeCustomerToAStripePlan = async (req, res) => {
   try {
     const { customerId, priceId } = req.params;
-    const {address,paymentMethod} = req.body;
+    const { address, paymentMethod } = req.body;
     const customer = await CustomerModel.findById(customerId);
     const stripeCustomer = await stripe.customers.create({
       metadata: { _id: customerId },
@@ -666,18 +666,15 @@ exports.subscribeCustomerToAStripePlan = async (req, res) => {
     });
     const plan = await Plan.findById(priceId).lean();
 
-    await stripe.customers.update(
-      stripeCustomer.id,
-      {
-        invoice_settings: {
-          default_payment_method: req.body.paymentMethod,
-        },
-      }
-    );
+    await stripe.customers.update(stripeCustomer.id, {
+      invoice_settings: {
+        default_payment_method: req.body.paymentMethod,
+      },
+    });
 
     const subscription = await stripe.subscriptions.create({
       customer: stripeCustomer.id,
-      items: [{price: plan.stripe}],
+      items: [{ price: plan.stripe }],
       payment_behavior: "default_incomplete",
       expand: ["latest_invoice.payment_intent"],
     });
@@ -734,7 +731,8 @@ const scheduleAndupdateCustomer = async (
   teacher,
   subject,
   option,
-  res
+  res,
+  needToSendToSuccessPage
 ) => {
   if (option) {
     if (option.selectedSlotType === "NEW") {
@@ -867,9 +865,15 @@ const scheduleAndupdateCustomer = async (
       teacher.scheduledSlots = [...new Set(teacher.scheduledSlots)];
       await teacher.save();
       await OptionModel.deleteOne({ _id: option._id });
-      return res.json({
-        message: "Scheduled Meeting Successfully!",
-      });
+      if(needToSendToSuccessPage){
+        return res.redirect(
+          `${process.env.USER_CLIENT_URL}/payment-success`
+        );
+      } else {
+        return res.json({
+          message: "Scheduled Meeting Successfully!",
+        });
+      }
     } else if (option.selectedSlotType === "EXISTING") {
       //* 1 update class Name
       let otherSchedulesOfCustomer = await SchedulerModel.find({
@@ -902,9 +906,15 @@ const scheduleAndupdateCustomer = async (
       await customer.save();
       await schedule.save();
       await OptionModel.deleteOne({ _id: option._id });
-      return res.json({
-        message: "Scheduled class Successfully!",
-      });
+      if(needToSendToSuccessPage){
+        return res.redirect(
+          `${process.env.USER_CLIENT_URL}/payment-success`
+        );
+      } else {
+        return res.json({
+          message: "Scheduled Meeting Successfully!",
+        });
+      }
     } else {
       return res
         .status(500)
@@ -914,6 +924,8 @@ const scheduleAndupdateCustomer = async (
     return res.json({ message: "No Options available" });
   }
 };
+
+exports.scheduleAndupdateCustomer = scheduleAndupdateCustomer
 
 const deleteExistingSubscription = async (customer, reason) => {
   const latestSubscription = await SubscriptionModel.findOne({
@@ -940,7 +952,6 @@ exports.handleSuccessfulSubscription = async (req, res) => {
       customer: customerId,
     }).lean();
     const customer = await CustomerModel.findById(customerId);
-    const teacher = await TeacherModel.findOne({ id: option.teacher });
     const subject = await SubjectModel.findOne({ id: customer.subjectId });
     let periodEndDate = moment().add(1, "month").format();
     let timeZone = await TimeZoneModel.findOne({
@@ -949,10 +960,12 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     await deleteExistingSubscription(customer, "Remove old subscriptions");
     const subscription = await stripe.subscriptions.retrieve(sub_id);
     periodEndDate = moment(subscription.current_period_end * 1000).format();
+    const planId = await Plan.findOne({stripe: subscription.items.data[0].plan.id })
     const newSubscription = new SubscriptionModel({
       customerId,
       stripeCustomer: customer.stripeId,
       type: "STRIPE",
+      planId:planId ? planId._id : "",
       isActive: true,
       id: sub_id,
     });
@@ -961,7 +974,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     //message to admin and customer
     const zone = getNameFromTimezone(timeZone.timeZoneName) || "Asia/Kolkata";
     let customerMessage = SUCCESSFUL_SUBSCRIPTION(
-      parseFloat(subscription.items.data[0].plan.amount)/100,
+      parseFloat(subscription.items.data[0].plan.amount) / 100,
       subscription.items.data[0].plan.currency,
       subject.subjectName,
       momentTZ(periodEndDate).tz(zone).format("MMM Do YYYY")
@@ -971,7 +984,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
       `${customer.countryCode}${customer.whatsAppnumber}`.trim()
     );
     let adminMessage = ADMIN_PAYMENT_SUCCESSFUL(
-      parseFloat(subscription.items.data[0].plan.amount)/100,
+      parseFloat(subscription.items.data[0].plan.amount) / 100,
       subscription.items.data[0].plan.currency,
       subject.subjectName,
       customer.firstName,
@@ -982,13 +995,15 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     if (!resubscribe) {
       console.log("creating schedule");
       if (option) {
+        const teacher = await TeacherModel.findOne({ id: option.teacher });
         await scheduleAndupdateCustomer(
           periodEndDate,
           customer,
           teacher,
           subject,
           option,
-          res
+          res,
+          false
         );
       } else {
         return res.json({ message: "No Options available" });
@@ -1024,7 +1039,11 @@ exports.cancelSubscription = async (req, res) => {
     })
       .populate("planId")
       .populate("customerId");
-    const currency = await CurrencyModel.findById(latestSubscription.planId ? latestSubscription.planId.currency: "5f98fabdd5e2630017ec9ac1")
+    const currency = await CurrencyModel.findById(
+      latestSubscription.planId
+        ? latestSubscription.planId.currency
+        : "5f98fabdd5e2630017ec9ac1"
+    );
     if (latestSubscription) {
       let { id } = latestSubscription;
       await stripe.subscriptions.del(id);
@@ -1032,8 +1051,9 @@ exports.cancelSubscription = async (req, res) => {
       latestSubscription.cancelledDate = new Date();
       latestSubscription.reason = reason;
       await latestSubscription.save();
-      if(typeof latestSubscription.customerId === "object"){
-        const { firstName,paidTill,countryCode,whatsAppnumber } = latestSubscription.customerId
+      if (typeof latestSubscription.customerId === "object") {
+        const { firstName, paidTill, countryCode, whatsAppnumber } =
+          latestSubscription.customerId;
         let adminMessage = ADMIN_UNSUBSCRIBE(
           firstName,
           momentTZ().tz("Asia/Kolkata").format("MMM Do YY, hh:mm:ss a z"),

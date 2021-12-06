@@ -1,12 +1,17 @@
 const mongoose = require('mongoose');
+const mongooseLeanVirtuals = require('mongoose-lean-virtuals');
 
 const SchedulerSchema = new mongoose.Schema(
 	{
+		group:{
+			type:mongoose.Schema.Types.ObjectId,
+			ref:"group"
+		},
 		teacher: {
-			type: String,
+			type: String, 
 			trim: true,
 			required: 'Teacher is Required',
-		}, 
+		},
 		students: [
 			{
 				type: mongoose.Schema.Types.ObjectId,
@@ -139,5 +144,15 @@ const SchedulerSchema = new mongoose.Schema(
 	},
 	{ timestamps: true }
 );
+
+SchedulerSchema.virtual("teacherData", {
+	ref: "Teacher",
+	localField: "teacher",
+	foreignField: "id",
+	justOne: true,
+  });
+
+SchedulerSchema.plugin(mongooseLeanVirtuals);
+
 
 module.exports = mongoose.model('Schedule', SchedulerSchema);

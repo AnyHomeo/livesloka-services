@@ -133,19 +133,6 @@ exports.CancelAClass = async (req, res) => {
         });
       }
       req.body.studentId = selectedUser;
-      
-      let alreadyAppliedThatMonth = await CancelledClassesModel.findOne({
-        cancelledDate: {
-          $gte: startOfCancelledDateMonth,
-          $lte: endOfCancelledDateMonth,
-        },
-        scheduleId,
-        studentId:selectedUser,
-      });
-
-      if (alreadyAppliedThatMonth) {
-        return res.status(400).json({ error: "LEAVE LIMIT EXCEEDED" });
-      }
 
       let alreadyExists = await CancelledClassesModel.findOne({
         studentId: req.body.studentId,
