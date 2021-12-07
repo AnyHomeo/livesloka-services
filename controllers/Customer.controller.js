@@ -18,7 +18,7 @@ const CancelledClassesModel = require("../models/CancelledClasses.model");
 const generateScheduleDays = require("../scripts/generateScheduleDays");
 const TeacherModel = require("../models/Teacher.model");
 const SubscriptionModel = require("../models/Subscription");
-let filters = require("../config/filters.json");
+let filters = require("../config/filters");
 const { getScheduleDescription } = require("../scripts/getScheduleDescription");
 
 module.exports = {
@@ -556,41 +556,29 @@ module.exports = {
     try {
       const { slot, date } = req.query;
       let nextSlot = nextSlotFinder(slot);
-      let customersLessThanMinus2 = await CustomerModel.countDocuments({
-        numberOfClassesBought: {
-          $lte: -2,
-        },
-        autoDemo: {
-          $ne: true,
-        },
-        classStatusId: "113975223750050",
-      });
-      let customersEqualToMinus1 = await CustomerModel.countDocuments({
-        numberOfClassesBought: -1,
-        autoDemo: {
-          $ne: true,
-        },
-        classStatusId: "113975223750050",
-      });
-      let customersEqualTo0 = await CustomerModel.countDocuments({
-        numberOfClassesBought: 0,
-        autoDemo: {
-          $ne: true,
-        },
-        classStatusId: "113975223750050",
-      });
-      let demoCustomers = await CustomerModel.countDocuments({
-        classStatusId: "38493085684944",
-      });
-      let newCustomers = await CustomerModel.countDocuments({
-        classStatusId: "108731321313146850",
-      });
-      let customersInClass = await CustomerModel.countDocuments({
-        classStatusId: "113975223750050",
-      });
-      let autoDemoCustomers = await CustomerModel.countDocuments({
-        autoDemo: true,
-      });
+      let customersLessThanMinus2 = await CustomerModel.countDocuments(
+        filters.lessThanOrEqualToMinusTwo
+      );
+      let customersEqualToMinus1 = await CustomerModel.countDocuments(
+        filters.equalToMinusOne
+      );
+      let customersEqualTo0 = await CustomerModel.countDocuments(
+        filters.equalToZero
+      );
+      let demoCustomers = await CustomerModel.countDocuments(filters.demo);
+      let newCustomers = await CustomerModel.countDocuments(filters.new);
+      let customersInClass = await CustomerModel.countDocuments(
+        filters.inClass
+      );
+      let autoDemoCustomers = await CustomerModel.countDocuments(
+        filters.autoDemo
+      );
+      let pastDueDateCustomers = await CustomerModel.countDocuments(
+        filters.pastDueDate()
+      );
+      let dueDateToday = await CustomerModel.countDocuments(
+        filters.dueDateToday()
+      );
       let day = slot.split("-")[0].toLowerCase();
       let schedulesRightNow = await SchedulerModel.find({
         ["slots." + day]: {
@@ -629,6 +617,8 @@ module.exports = {
         schedulesRightNow,
         nextSchedules,
         autoDemoCustomers,
+        pastDueDateCustomers,
+        dueDateToday,
       });
     } catch (error) {
       console.log(error);
@@ -1080,7 +1070,11 @@ module.exports = {
   getCustomerDataByFilters: async (req, res) => {
     try {
       let { filter } = req.query;
-      let customerData = await CustomerModel.find(filters[filter]);
+      let customerData = await CustomerModel.find(
+        ["pastDueDate", "dueDateToday"].includes(filter)
+          ? filters[filter]()
+          : filters[filter]
+      );
       return res.json({
         result: customerData,
       });
