@@ -129,7 +129,12 @@ module.exports = (io) => {
           socket
             .to(groupID)
             .emit('messageToGroupFromBot', { role, message, userID, username });
-          socket.broadcast.emit('message-to-group-from-bot', groupID);
+          socket.broadcast.emit('message-to-group-from-bot', {
+            groupID,
+            userID,
+            message,
+            username,
+          });
         } catch (error) {
           if (error) return callback(error);
         }
