@@ -18,6 +18,10 @@ var CountrySchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
+    subjects: [{
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"Subject"
+    }]
   },
   { timestamps: true }
 );
