@@ -735,6 +735,19 @@ const scheduleAndupdateCustomer = async (
   needToSendToSuccessPage
 ) => {
   if (option) {
+    if(option.isScheduled){
+      customer.paidTill = periodEndDate;
+      await customer.save(); 
+      if(needToSendToSuccessPage){
+        return res.redirect(
+          `${process.env.USER_CLIENT_URL}/payment-success`
+        );
+      } else {
+        return res.json({
+          message: "Scheduled Meeting Successfully!",
+        });
+      }
+    }
     if (option.selectedSlotType === "NEW") {
       //* 1 generate class name
       let className = `${customer.firstName} ${
@@ -864,7 +877,7 @@ const scheduleAndupdateCustomer = async (
       teacher.availableSlots = [...new Set(teacher.availableSlots)];
       teacher.scheduledSlots = [...new Set(teacher.scheduledSlots)];
       await teacher.save();
-      await OptionModel.deleteOne({ _id: option._id });
+      await OptionModel.updateOne({ _id: option._id },{isScheduled:true});
       if(needToSendToSuccessPage){
         return res.redirect(
           `${process.env.USER_CLIENT_URL}/payment-success`
@@ -905,7 +918,7 @@ const scheduleAndupdateCustomer = async (
       customer.paidTill = periodEndDate;
       await customer.save();
       await schedule.save();
-      await OptionModel.deleteOne({ _id: option._id });
+      await OptionModel.updateOne({ _id: option._id },{isScheduled:true});
       if(needToSendToSuccessPage){
         return res.redirect(
           `${process.env.USER_CLIENT_URL}/payment-success`

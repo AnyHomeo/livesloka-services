@@ -37,7 +37,11 @@ const SlotOptionsSchema = new mongoose.Schema(
       },
       amount: Number
     }],
-    startDate:{ type: Date } 
+    startDate:{ type: Date },
+    isScheduled:{
+      type: Boolean,
+      default: false
+    }
   }, 
   { timestamps: true }
 );
