@@ -119,12 +119,12 @@ exports.postAnOption = async (req, res) => {
       let newOption = new OptionsModel(req.body);
       await newOption.save();
       if (customerData.whatsAppnumber) {
-        // let messageResponse = await client.messages.create({
-        //   body: `Live Sloka: Please Book your slot for your regular classes on ${process.env.USER_CLIENT_URL}/options/${newOption._id}`,
-        //   to: `${customerData.countryCode}${customerData.whatsAppnumber}`, // Text this number
-        //   from: process.env.TWILIO_NUMBER, // From a valid Twilio number
-        // });
-        // console.log(messageResponse);
+        let messageResponse = await client.messages.create({
+          body: `Live Sloka: Please Book your slot for your regular classes on ${process.env.USER_CLIENT_URL}/options/${newOption._id}`,
+          to: `${customerData.countryCode}${customerData.whatsAppnumber}`, // Text this number
+          from: process.env.TWILIO_NUMBER, // From a valid Twilio number
+        });
+        console.log(messageResponse);
         return res.json({
           message: "Options Created and Url sent successfully",
         });
@@ -148,7 +148,11 @@ exports.postAnOption = async (req, res) => {
 
 exports.getOptions = async (req, res) => {
   try {
-    const result = await OptionsModel.find()
+    const result = await OptionsModel.find({
+      scheduled:{
+        $ne:true
+      }
+    })
       .populate("customer", "id firstName lastName")
       .populate("schedules", "scheduleDescription className")
       .populate("teacherData", "TeacherName id")
