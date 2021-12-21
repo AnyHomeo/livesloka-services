@@ -149,7 +149,7 @@ exports.postAnOption = async (req, res) => {
 exports.getOptions = async (req, res) => {
   try {
     const result = await OptionsModel.find({
-      scheduled:{
+      isScheduled:{
         $ne:true
       }
     })
