@@ -1,8 +1,19 @@
 const Customers = require("../models/Customer.model");
+const Admins = require("../models/Admin.model");
 
 exports.getCustomers = async (req, res) => {
   try {
-    let { select, page, size, search, sortBy, isAsc, searchFrom,values,field } = req.query;
+    let {
+      select,
+      page,
+      size,
+      search,
+      sortBy,
+      isAsc,
+      searchFrom,
+      values,
+      field,
+    } = req.query;
     if (select) select = select.split(",").join(" ");
     let sort = { _id: -1 };
     if (sortBy) {
@@ -25,17 +36,15 @@ exports.getCustomers = async (req, res) => {
     if (search && searchFrom) {
       filter = {
         $or: searchables.map((searchable) => ({
-          [searchable]: { $regex: "^"+ search, $options: "i" },
+          [searchable]: { $regex: "^" + search, $options: "i" },
         })),
       };
     }
-    if(field){
+    if (field) {
       filter[field] = {
-        $in:values.split(',')
-      }
+        $in: values.split(","),
+      };
     }
-
-
 
     const customers = await Customers.find(filter)
       .populate("subject")
@@ -51,7 +60,7 @@ exports.getCustomers = async (req, res) => {
       .sort(sort)
       .limit(limit)
       .skip(skip)
-      .lean()
+      .lean();
 
     return res.json({
       message: "Customers Retrieved successfully!",
@@ -66,3 +75,26 @@ exports.getCustomers = async (req, res) => {
 };
 
 exports.getCustomerById = (req, res) => {};
+
+exports.postNotificationToken = async(req, res) => {
+  try {
+    const { token } = req.body;
+    const login = await Admins.findOne({ userId: req.params.userId });
+    if (login) {
+      if (login.notificationToken && login.notificationToken.length) {
+        login.notificationToken.push(token);
+      } else {
+        login.notificationToken = [token];
+      }
+      await login.save();
+      return res.json({ message: "Token added successfully" });
+    } else {
+      return res.status(400).json({ error: "Invalid userId!", result: null });
+    }
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ error: "Something went wrong!", result: null });
+  }
+};

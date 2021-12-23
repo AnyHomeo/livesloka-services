@@ -66,7 +66,10 @@ var adminSchema = new mongoose.Schema(
       country:String,
       zipcode:String,
       name:String,
-    }
+    },
+    notificationToken:[{
+      type:String
+    }]
   },
   { timestamps: true }
 );
