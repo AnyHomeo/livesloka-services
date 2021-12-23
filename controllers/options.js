@@ -29,7 +29,8 @@ const getStartTime = (slots, zoneName) => {
   let time = moment(
     `${day} ${selectedStartTime.split("-")[0]}`,
     "dddd hh:mm A"
-  ).format("YYYY-MM-DD hh:mm a");
+  ).format("YYYY-MM-DD HH:mm");
+  console.log(time)
   time = momentTZ
     .tz(time, "Asia/Kolkata")
     .clone()
