@@ -10,6 +10,13 @@ const {
   deleteNonChat,
   unseenmessagescountnn,
 } = require('../controllers/nonchat.controller');
+const {
+  updateTimeNonChat,
+  createNonChatConfig,
+  updateShowNonChat,
+  updateResponseMessagesNonChat,
+  getNonChatConfig,
+} = require('../controllers/nonchatconfig.controller');
 const AdminModel = require('../models/Admin.model');
 
 const router = express.Router();
@@ -116,6 +123,75 @@ router.get('/last24nonchats', async (req, res) => {
     res.status(400).send(error);
   }
 });
+
+router.get('/createNonChatConfig', async (req, res) => {
+  try {
+    const result = await createNonChatConfig();
+    if (result) {
+      return res.send(result);
+    } else {
+      res.status(400).send('Error');
+    }
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+
+router.post('/updateTimeNonChat', async (req, res) => {
+  const { time } = req.body;
+  try {
+    const result = await updateTimeNonChat(time);
+    if (result) {
+      return res.send(true);
+    } else {
+      res.status(400).send('Error');
+    }
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+
+router.post('/updateShowNonChat', async (req, res) => {
+  const { show } = req.body;
+  try {
+    const result = await updateShowNonChat(show);
+    if (result) {
+      return res.send(true);
+    } else {
+      res.status(400).send('Error');
+    }
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+
+router.post('/updateResponseMessagesNonChat', async (req, res) => {
+  const { responseMessages } = req.body;
+  try {
+    const result = await updateResponseMessagesNonChat(responseMessages);
+    if (result) {
+      return res.send(true);
+    } else {
+      res.status(400).send('Error');
+    }
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+
+router.get('/getNonChatConfig', async (req, res) => {
+  try {
+    const result = await getNonChatConfig();
+    if (result) {
+      return res.send(result);
+    } else {
+      res.status(400).send('Error');
+    }
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+
 // router.get('/last2drooms', async (req, res) => {
 //   try {
 //     const result = await last2DayRooms();

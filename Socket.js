@@ -341,6 +341,35 @@ module.exports = (io) => {
         callback();
       }
     );
+
+    socket.on(
+      'agent-to-agent-assign',
+      ({ agentID, roomID, assigneID, user }, callback) => {
+        try {
+          socket.broadcast.emit('agent-to-agent-assign', {
+            agentID,
+            roomID,
+            assigneID,
+            user,
+          });
+        } catch (error) {
+          if (error) return callback(error);
+        }
+        callback();
+      }
+    );
+
+    socket.on('toggleNonChatBot', ({ show }, callback) => {
+      try {
+        socket.broadcast.emit('toggleNonChatBot', {
+          show,
+        });
+      } catch (error) {
+        if (error) return callback(error);
+      }
+      callback();
+    });
+
     socket.on('disconnect', async (reason) => {
       const agent = users[socket.id];
       if (agent) {
