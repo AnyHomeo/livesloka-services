@@ -30,7 +30,7 @@ exports.sendSMS = async (message, phone) => {
       to: phone,
       from: process.env.TWILIO_NUMBER,
     });
-    return { type: "error", result: sent };
+    return { type: "success", result: sent };
   } catch (error) {
     console.log(error);
     return { type: "error", result: error };
@@ -62,3 +62,28 @@ exports.isFutureDate = (date) => {
 }
 
 exports.asyncForEach = asyncForEach;
+
+exports.getDemoMessage = (subject, date, time, userId) => {
+  return `
+    Namaskaram,
+  
+  We are delighted to see your interest in ${subject} Classes. Thank you for reserving your slot for a ${subject} demo class. We request you to attend the demo class on ${date} at ${time} from mylivesloka.com as our teacher would be more than eager to share her expertise with you.
+  
+  Your first-time login credentials for mylivesloka.com are as follows
+  
+  User Id: ${userId}
+  Password:  livesloka
+  
+  You can currently log in to mylivesloka.com with the above credentials to find your slot booking.
+  
+  In case of any queries contact:
+  Ram       +91 83093 41208
+  Bhargav   +91 80744 74524
+  Lahari    +91 83285 30889
+  
+  We wish you happy learning.
+  
+  Regards.
+  Live Sloka Team
+    `;
+};

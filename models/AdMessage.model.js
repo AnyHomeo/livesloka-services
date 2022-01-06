@@ -46,6 +46,12 @@ const AdMessageSchema = new mongoose.Schema(
         default: [],
       },
     ],
+    acknowledgedByTeachers: [
+      {
+        type: String,
+        default: [],
+      },
+    ],
     scheduleIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
