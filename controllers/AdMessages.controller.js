@@ -45,8 +45,12 @@ exports.getMessagesByEmail = async (req, res) => {
       let allMessages = await AdMessagesModel.find({
         broadCastedToTeachers: { $in: [email] },
       }).lean();
+      let unSeenMessages = await AdMessagesModel.find({
+        broadCastedToTeachers: { $in: [email] },
+        acknowledgedByTeachers: { $nin: [email] }
+      }).lean();
       return res.json({
-        result: { allMessages, unSeenMessages: [] },
+        result: { allMessages, unSeenMessages },
         messages: 'Retrieved Messages Successfully!',
       });
     }
@@ -188,11 +192,7 @@ exports.getAdmins = (req, res) => {
 
 exports.getMessages = async (req, res) => {
   try {
-    let allMessages = await AdMessagesModel.find({
-      expiryDate: {
-        $gte: new Date(),
-      },
-    })
+    let allMessages = await AdMessagesModel.find({})
       .populate('users', 'username')
       .populate('schedules', 'className')
       .populate('admin', 'AgentName')
@@ -228,7 +228,6 @@ exports.addAcknowledgedCustomer = async (req, res) => {
         .includes(adminId._id)
     ) {
       notification.acknowledgedBy.push(adminId._id);
-      console.log(notification);
       await notification.save();
       return res.status(200).json({
         message: 'You will not see the notification again',
@@ -245,3 +244,24 @@ exports.addAcknowledgedCustomer = async (req, res) => {
     });
   }
 };
+
+exports.markAllAsReadByTeacher = async (req, res) => {
+  try {
+    const { email } = req.body
+    await AdMessagesModel.updateMany({
+      broadCastedToTeachers: { $in: [email] },
+      acknowledgedByTeachers: { $nin: [email] }
+    },{
+      $push: {acknowledgedByTeachers:email}
+    }).lean();
+    return res.json({
+      message:"Marked all as read!"
+    })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({
+      error:"Something went wrong",
+      result:null
+    })
+  }
+}
