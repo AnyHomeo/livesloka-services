@@ -127,13 +127,15 @@ router.get('/last24nonchats', async (req, res) => {
 router.get('/createNonChatConfig', async (req, res) => {
   try {
     const result = await createNonChatConfig();
-    if (result) {
-      return res.send(result);
+    if (result === 'exists') {
+      return res.send('Config already exists');
+    } else if (result) {
+      return res.send('Config Created Successfully');
     } else {
-      res.status(400).send('Error');
+      return res.status(400).send('Error');
     }
   } catch (error) {
-    res.status(400).send(error);
+    return res.status(400).send(error);
   }
 });
 
@@ -166,9 +168,10 @@ router.post('/updateShowNonChat', async (req, res) => {
 });
 
 router.post('/updateResponseMessagesNonChat', async (req, res) => {
-  const { responseMessages } = req.body;
+  const { responses } = req.body;
+  console.log(responses);
   try {
-    const result = await updateResponseMessagesNonChat(responseMessages);
+    const result = await updateResponseMessagesNonChat(responses);
     if (result) {
       return res.send(true);
     } else {

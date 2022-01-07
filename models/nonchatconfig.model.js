@@ -19,3 +19,11 @@ module.exports.NonRoomConfig = mongoose.model(
   'nonroomconfig',
   NonRoomConfigSchema
 );
+// responseMessages: {
+//     id: {
+//       type: Number,
+//     },
+//     text: {
+//       type: String,
+//     },
+//   },

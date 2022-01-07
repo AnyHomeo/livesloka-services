@@ -1,12 +1,18 @@
 const { NonRoomConfig } = require('../models/nonchatconfig.model');
 
 const createNonChatConfig = async () => {
-  const chatConfig = new NonRoomConfig({
-    show: false,
-    time: 5,
-    responseMessages: ['hi', 'hello'],
-  });
-  return await chatConfig.save();
+  const count = await NonRoomConfig.count();
+  console.log(count);
+  if (!!count) {
+    return 'exists';
+  } else {
+    const chatConfig = new NonRoomConfig({
+      show: false,
+      time: 5,
+      responseMessages: ['hi', 'hello'],
+    });
+    return await chatConfig.save();
+  }
 };
 
 const updateTimeNonChat = async (time) => {
