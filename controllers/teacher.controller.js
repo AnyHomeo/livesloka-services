@@ -9,6 +9,7 @@ const moment = require("moment");
 const momentTZ = require("moment-timezone");
 const TeacherLeavesModel = require("../models/TeacherLeaves.model");
 const SubjectModel = require("../models/Subject.model");
+const TimeZoneModel = require("../models/timeZone.model");
 
 const days = [
   "MONDAY",
@@ -303,9 +304,10 @@ exports.getOccupancyDashboardData = async (req, res) => {
     })
       .populate(
         "students",
-        "firstName lastName numberOfClassesBought email whatsAppnumber countryCode age"
+        "firstName lastName numberOfClassesBought email whatsAppnumber countryCode age timeZoneId"
       )
-      .populate("group", "_id");
+      .populate("group", "_id")
+      .lean();
 
     let finalObject = {};
     allCategories.forEach((category) => {
