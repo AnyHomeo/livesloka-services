@@ -15,8 +15,7 @@ var adminSchema = new mongoose.Schema(
       required: "email or userid is required",
     },
     rewards:{
-      type:Number,
-      default:0
+      type:Number
     },
     roleId: {
       trim: true,

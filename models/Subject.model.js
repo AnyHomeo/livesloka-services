@@ -43,6 +43,10 @@ var SubjectSchema = new mongoose.Schema(
     isNotAvailableInBooking:{
       type: Boolean,
       default: false,
+    },
+    rewards:{
+      type:Number,
+      default: 100
     }
   },
   { timestamps: true }
