@@ -84,3 +84,30 @@ exports.redeemRewards = async (req, res) => {
     });
   }
 };
+
+exports.addRewards = async (req, res) => {
+  try {
+    const { email, rewards, message } = req.body;
+    const admin = await AdminModel.findOne({ userId: email });
+    const newRewardRedeem = new RewardsModel({
+      prev: admin.rewards,
+      present: admin.rewards ? admin.rewards + rewards : rewards,
+      message,
+      login: admin._id,
+    });
+    await newRewardRedeem.save();
+
+    admin.rewards = admin.rewards ? admin.rewards + rewards : rewards;
+    await admin.save();
+
+    return res.status(200).json({
+      message: "Rewards added successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Something went wrong!",
+      result: error,
+    });
+  }
+};
