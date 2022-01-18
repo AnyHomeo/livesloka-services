@@ -87,3 +87,7 @@ exports.getDemoMessage = (subject, date, time, userId) => {
   Live Sloka Team
     `;
 };
+
+exports.mongooseError = (error) => {
+  return error.errors[Object.keys(error.errors)[0]].message
+}

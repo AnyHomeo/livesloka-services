@@ -68,7 +68,11 @@ var adminSchema = new mongoose.Schema(
     },
     notificationToken:[{
       type:String
-    }]
+    }],
+    role:{
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"Roles"
+    }
   },
   { timestamps: true }
 );
