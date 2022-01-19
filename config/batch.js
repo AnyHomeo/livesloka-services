@@ -103,7 +103,7 @@ const fetchPaypalAndRazorpay = async () => {
         fetch(
           `https://api-m.paypal.com/v1/reporting/transactions?start_date=${paypalLatestDate}&end_date=${timeRightNow}&transaction_type=T0400`,
           {
-            method: "get",
+            method: "GET",
             headers: {
               Authorization: `Bearer ${accessToken}`,
             },

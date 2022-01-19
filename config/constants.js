@@ -1,1 +1,25 @@
-exports.rolePermissions = ["Customer Data","Summer Camp Data","Add Fields","Attendance","Timetable","Scheduler","Leaves","Reset Password","Zoom Dashboard","Teachers Data","Teachers Salary","Statistics","Financial Dashboard","Rooms","Non Rooms","Payments","Update Classes Paid","Demo/Inclass Students","Careers Applications","Broadcast Notification","Financial","Options","Paypal & Stripe","Video Manager"]
+exports.rolePermissions = [
+  "Customer Data",
+  "Summer Camp Data",
+  "Add Fields",
+  "Attendance",
+  "Timetable",
+  "Scheduler",
+  "Leaves",
+  "Reset Password",
+  "Zoom Dashboard",
+  "Teachers Data",
+  "Teachers Salary",
+  "Statistics",
+  "Financial Dashboard",
+  "Messages",
+  "Payments",
+  "Update Classes Paid",
+  "Demo/Inclass Students",
+  "Careers Applications",
+  "Broadcast Notifications",
+  "Options",
+  "Paypal & Stripe",
+  "Video Manager",
+  "Accounts"
+];

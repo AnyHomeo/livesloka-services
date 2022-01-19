@@ -10,6 +10,7 @@ const TimeZoneModel = require("../models/timeZone.model");
 var twilio = require("twilio");
 const { isValidObjectId } = require("mongoose");
 const { mongooseError } = require("../config/helper");
+const AgentModel = require("../models/Agent.model");
 var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 
 module.exports = {
@@ -63,11 +64,25 @@ module.exports = {
               },
             });
           }
+        } else {
+          if(user.agentId){
+            const agent = await AgentModel.findOne({id:user.agentId}).populate("role").lean();
+            return res.status(200).json({
+              message: "LoggedIn successfully",
+              result: {
+                ...agent,
+                ...user,
+                token: newToken,
+              },
+            });  
+          } else {
+
+            return res.status(200).json({
+              message: "LoggedIn successfully",
+              result: { ...user, token: newToken },
+            });
+          }
         }
-        return res.status(200).json({
-          message: "LoggedIn successfully",
-          result: { ...user, token: newToken },
-        });
       }
       return res.status(400).json({ error: "Wrong Password !!" });
     } catch (error) {
@@ -281,7 +296,6 @@ module.exports.updateCorrespondingData = (req, res) => {
           let loginData = await AdminModel.findOne({
             userId: req.body.AgentLoginId,
           });
-          console.log(loginData);
           if (loginData) {
             loginData.roleId = req.body.AgentRole;
             loginData.agentId = req.body.id;
@@ -322,9 +336,10 @@ module.exports.updateCorrespondingData = (req, res) => {
 };
 
 module.exports.DeleteCorrespondingData = (req, res) => {
-  const vell = require(`../models/${req.params.name}.model`);
-  vell
-    .deleteOne({ $or: [{ id: req.params.id }, { _id: req.params.id }] })
+  const model = require(`../models/${req.params.name}.model`);
+  const { id } = req.params;
+  model
+    .deleteOne(isValidObjectId(id) ? { _id: id } : { id })
     .then((result) => {
       res
         .status("200")

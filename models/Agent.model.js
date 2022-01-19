@@ -41,6 +41,11 @@ var AgentSchema = new mongoose.Schema(
     needToFinalizeSalaries:{
       type:Boolean,
       default:false
+    },
+    role:{
+      type:mongoose.Schema.Types.ObjectId,
+      ref:"Roles",
+      default:' '
     }
   },
   { timestamps: true }
