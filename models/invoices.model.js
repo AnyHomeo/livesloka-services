@@ -35,7 +35,7 @@ entitySchema.pre("save", function (next) {
       { new: true, upsert: true }
     )
     .then(function (count) {
-      doc.id = count.number;
+      doc.id = `LS-${count.number}`;
       next();
     })
     .catch(function (error) {
