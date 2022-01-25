@@ -9,6 +9,8 @@ const InvoiceModel = require("../models/Invoice.model");
 const TimeZoneModel = require("../models/timeZone.model");
 var twilio = require("twilio");
 const { isValidObjectId } = require("mongoose");
+const { mongooseError } = require("../config/helper");
+const AgentModel = require("../models/Agent.model");
 var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 
 module.exports = {
@@ -29,7 +31,7 @@ module.exports = {
         var payload = {
           _id: user._id,
           userId: user.userId,
-          role:user.roleId
+          role: user.roleId,
         };
         var newToken = jwt.sign(payload, process.env.JWT_SECRET);
         delete user.password;
@@ -62,11 +64,25 @@ module.exports = {
               },
             });
           }
+        } else {
+          if(user.agentId){
+            const agent = await AgentModel.findOne({id:user.agentId}).populate("role").lean();
+            return res.status(200).json({
+              message: "LoggedIn successfully",
+              result: {
+                ...agent,
+                ...user,
+                token: newToken,
+              },
+            });  
+          } else {
+
+            return res.status(200).json({
+              message: "LoggedIn successfully",
+              result: { ...user, token: newToken },
+            });
+          }
         }
-        return res.status(200).json({
-          message: "LoggedIn successfully",
-          result: { ...user, token: newToken },
-        });
       }
       return res.status(400).json({ error: "Wrong Password !!" });
     } catch (error) {
@@ -221,11 +237,11 @@ module.exports.updateStatus = (req, res) => {
 module.exports.updateCorrespondingData = (req, res) => {
   try {
     const vell = require(`../models/${req.params.name}.model`);
-    if (!req.body.id) {
+    if (!req.body._id) {
       return res.status(500).json({ error: "id is required" });
     }
     vell
-      .updateOne({ id: req.body.id }, req.body)
+      .updateOne({ _id: req.body._id }, req.body)
       .then(async (result) => {
         if (req.params.name === "Teacher") {
           AdminModel.findOne({ teacherId: req.body.id })
@@ -280,7 +296,6 @@ module.exports.updateCorrespondingData = (req, res) => {
           let loginData = await AdminModel.findOne({
             userId: req.body.AgentLoginId,
           });
-          console.log(loginData);
           if (loginData) {
             loginData.roleId = req.body.AgentRole;
             loginData.agentId = req.body.id;
@@ -321,9 +336,10 @@ module.exports.updateCorrespondingData = (req, res) => {
 };
 
 module.exports.DeleteCorrespondingData = (req, res) => {
-  const vell = require(`../models/${req.params.name}.model`);
-  vell
-    .deleteOne({ id: req.params.id })
+  const model = require(`../models/${req.params.name}.model`);
+  const { id } = req.params;
+  model
+    .deleteOne(isValidObjectId(id) ? { _id: id } : { id })
     .then((result) => {
       res
         .status("200")
@@ -341,8 +357,15 @@ module.exports.addField = (req, res) => {
     req.body.statusId = Math.floor(Math.random() * 100000) * Number(Date.now());
     const { name } = req.params;
     const Model = require(`../models/${name}.model`);
-    const model = new Model(req.body);
-    model
+    const doc = new Model(req.body);
+    const errors = doc.validateSync();
+    if (errors) {
+      return res.status(400).json({
+        error: mongooseError(errors),
+        result: errors,
+      });
+    }
+    doc
       .save()
       .then(async (result) => {
         if (name == "Teacher") {
@@ -615,45 +638,49 @@ module.exports.validateOtpAndResetPassword = async (req, res) => {
   }
 };
 
-module.exports.postAddress = async (req, res) =>{
+module.exports.postAddress = async (req, res) => {
   try {
     const { id } = req.params;
-    let customer = await CustomerModel.findById(id)
-    if(customer){
-      let login = await AdminModel.findOne({userId:customer.email})
-      login.address = req.body
-      await login.save()
+    let customer = await CustomerModel.findById(id);
+    if (customer) {
+      let login = await AdminModel.findOne({ userId: customer.email });
+      login.address = req.body;
+      await login.save();
       return res.json({
-        message:"Address posted successfully!"
-      })
+        message: "Address posted successfully!",
+      });
     } else {
-      return res.status(500).json({error:"Invalid customer id"})
+      return res.status(500).json({ error: "Invalid customer id" });
     }
   } catch (error) {
-    console.log(error)
-    return res.status(500).json({ error: "error in password reset,Try again later" });
+    console.log(error);
+    return res
+      .status(500)
+      .json({ error: "error in password reset,Try again later" });
   }
-}
+};
 
 module.exports.getAddress = async (req, res) => {
   try {
     const { id } = req.params;
-    if(isValidObjectId(id)){
-      let customer = await CustomerModel.findById(id)
-      if(customer){
-        let login = await AdminModel.findOne({userId:customer.email})
+    if (isValidObjectId(id)) {
+      let customer = await CustomerModel.findById(id);
+      if (customer) {
+        let login = await AdminModel.findOne({ userId: customer.email });
         return res.json({
-          message:"Address retrieved successfully!",
-          result:login.address
-        })
+          message: "Address retrieved successfully!",
+          result: login.address,
+        });
       } else {
-        return res.status(500).json({error:"Invalid customer id"})
+        return res.status(500).json({ error: "Invalid customer id" });
       }
     } else {
-      return res.status(500).json({error:"Invalid customer id"})
+      return res.status(500).json({ error: "Invalid customer id" });
     }
   } catch (error) {
-    console.log(error)
-    return res.status(500).json({ error: "Something went wrong!,Try again later" });
+    console.log(error);
+    return res
+      .status(500)
+      .json({ error: "Something went wrong!,Try again later" });
   }
-}
+};

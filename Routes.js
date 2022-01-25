@@ -34,6 +34,9 @@ module.exports = (app) => {
   const productsRouter = require('./routes/product');
   const paymentsRouter = require('./routes/payments');
   const Reviews = require('./routes/Reviews');
+  const RewardsRouter = require('./routes/rewards')
+  const RolesRouter = require('./routes/roles')
+
 
   app.use('/', indexRouter);
   app.use('/', customerRouter);
@@ -68,6 +71,8 @@ module.exports = (app) => {
   app.use('/plans', plansRouter);
   app.use('/payments', paymentsRouter);
   app.use('/reviews', Reviews);
+  app.use('/rewards',RewardsRouter);
+  app.use('/roles',RolesRouter);
 
   //mobile routes
   app.use('/api/customers', MobileCustomerApiRouter);

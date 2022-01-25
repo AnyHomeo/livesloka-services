@@ -165,6 +165,10 @@ const Customer = new mongoose.Schema(
       type: String,
       default: true,
     },
+    isRedeemedCustomer:{
+      type:Boolean,
+      default: false,
+    }
   },
   { timestamps: true }
 );

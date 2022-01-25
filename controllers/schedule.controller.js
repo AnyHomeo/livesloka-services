@@ -561,29 +561,6 @@ exports.addSchedule = async (req, res) => {
           });
       }
 
-      if (demo) {
-        const customersToSendMessage = await CustomerModel.find({
-          _id: { $in: students },
-        })
-          .populate("subject")
-          .populate("timeZone")
-          .lean();
-        for (let i = 0; i < customersToSendMessage.length; i++) {
-          let customer = customersToSendMessage[i];
-          if (customer.whatsAppnumber) {
-            await sendSMS(
-              getDemoMessage(
-                customer?.subject?.subjectName,
-                momentTZ(startDate).tz(zoneName).format("MMM Do, YYYY"),
-                `${time} ${selectedTimezone.timeZoneName}`,
-                customer.email
-              ),
-              customer.whatsAppnumber
-            );
-          }
-        }
-      }
-
       Teacher.findOne({ id: teacher }).then((data) => {
         if (data) {
           let { availableSlots } = data;
