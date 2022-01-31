@@ -2,23 +2,35 @@ const mongoose = require("mongoose");
 
 var ExpensesSchema = new mongoose.Schema(
   {
-    id:{
-      type:String
+    id: {
+      type: String,
     },
-    name:{
-        type:String,
+    name: {
+      type: String,
     },
-    amount:{
-        type: Number,
-        default:0
+    description: {
+      type: String,
     },
-    description:{
-        type: String,
+    amount: {
+      type: Number,
+      default: 0,
     },
-    date:{
-        type: Date,
-        default:Date.now
-    }
+    dollarAmount: {
+      type: String,
+      default: 0,
+    },
+    indianAmount: {
+      type: String,
+      default: 0,
+    },
+    attachment: {
+      type: String,
+    },
+
+    date: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { timestamps: true }
 );
