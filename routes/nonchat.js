@@ -16,6 +16,7 @@ const {
   updateShowNonChat,
   updateResponseMessagesNonChat,
   getNonChatConfig,
+  updateShowBot,
 } = require('../controllers/nonchatconfig.controller');
 const AdminModel = require('../models/Admin.model');
 
@@ -157,6 +158,19 @@ router.post('/updateShowNonChat', async (req, res) => {
   const { show } = req.body;
   try {
     const result = await updateShowNonChat(show);
+    if (result) {
+      return res.send(true);
+    } else {
+      res.status(400).send('Error');
+    }
+  } catch (error) {
+    res.status(400).send(error);
+  }
+});
+router.post('/updateShowBot', async (req, res) => {
+  const { bot } = req.body;
+  try {
+    const result = await updateShowBot(bot);
     if (result) {
       return res.send(true);
     } else {

@@ -5,6 +5,10 @@ var NonRoomConfigSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  bot: {
+    type: Boolean,
+    default: false,
+  },
   time: {
     type: Number,
     default: 5,
