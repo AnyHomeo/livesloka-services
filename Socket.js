@@ -13,11 +13,19 @@ const {
 } = require('./controllers/nonchat.controller');
 
 const { addMessageToGroup } = require('./controllers/group.controller');
+const { detectIntent } = require('./dialogflow');
+const { v4: uuidv4 } = require('uuid');
 
 module.exports = (io) => {
   const users = {};
+  const chatAgents = {};
 
   io.on('connection', (socket) => {
+    socket.on('login', function (data) {
+      console.log('a user ' + data.userId + ' connected');
+      // saving userId to object with socket ID
+      chatAgents[socket.id] = data.userId;
+    });
     socket.on('teacher-joined-class', (msg) => {
       io.emit('teacher-joined', msg);
     });
@@ -97,7 +105,7 @@ module.exports = (io) => {
     );
     socket.on(
       'messageFromNonBot',
-      async ({ roomID, message, username }, callback) => {
+      async ({ roomID, message, username, isBot }, callback) => {
         console.log(roomID, message);
         try {
           await addNewMessageToNonRoom(roomID, message, 0, username);
@@ -107,12 +115,23 @@ module.exports = (io) => {
           socket.broadcast.emit('non-user-pinged', {
             roomID,
           });
+          if (isBot) {
+            const data = await detectIntent('en', message, uuidv4());
+            data['online'] = Object.keys(chatAgents).length === 0;
+            callback({ error: false, data });
+            await addNewMessageToNonRoom(roomID, data.response, 3, 'Kuhu');
+            socket.to(roomID).emit('messageToNonRoomFromBot', {
+              role: 3,
+              message: data.response,
+              username: 'Kuhu',
+            });
+          } else {
+            callback({ error: false, data: null });
+          }
         } catch (error) {
           console.log(error);
-          if (error) return callback(error);
+          if (error) return callback({ error: true, data: error });
         }
-
-        callback();
       }
     );
     socket.on(
@@ -375,7 +394,15 @@ module.exports = (io) => {
       callback();
     });
 
+    socket.on('agent-needed-nonchat', ({ username, roomID }) => {
+      socket.broadcast.emit('new-non-user-pinged', {
+        username,
+        roomID,
+      });
+    });
+
     socket.on('disconnect', async (reason) => {
+      delete chatAgents[socket.id];
       const agent = users[socket.id];
       if (agent) {
         delete users[socket.id];

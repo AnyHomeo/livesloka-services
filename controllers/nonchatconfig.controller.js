@@ -22,6 +22,9 @@ const updateTimeNonChat = async (time) => {
 const updateShowNonChat = async (show) => {
   return await NonRoomConfig.update({}, { show });
 };
+const updateShowBot = async (bot) => {
+  return await NonRoomConfig.update({}, { bot });
+};
 
 const updateResponseMessagesNonChat = async (responseMessages) => {
   return await NonRoomConfig.update({}, { responseMessages });
@@ -37,4 +40,5 @@ module.exports = {
   updateShowNonChat,
   updateResponseMessagesNonChat,
   getNonChatConfig,
+  updateShowBot,
 };
