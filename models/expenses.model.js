@@ -11,7 +11,7 @@ var ExpensesSchema = new mongoose.Schema(
     description: {
       type: String,
     },
-    amount: {
+    gst: {
       type: Number,
       default: 0,
     },
