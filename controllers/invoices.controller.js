@@ -3,6 +3,7 @@ const momentTZ = require("moment-timezone");
 const company = require("../config/company.json");
 const InvoicesModel = require("../models/invoices.model");
 const Transactions = require("../models/Transactions");
+const exchangeRates = require("./exchange-rates.json");
 
 exports.getInvoicesByTransactionId = async (req, res) => {
   try {
@@ -18,12 +19,13 @@ exports.getInvoicesByTransactionId = async (req, res) => {
           $gte: momentTZ(transactionDate).utc().startOf("day").format(),
           $lte: momentTZ(transactionDate).utc().endOf("day").format(),
         },
-        paymentMethod: transaction?.mode === "PAYPAL" ? 'Paypal' : { $ne:'Paypal' }
+        paymentMethod:
+          transaction?.mode === "PAYPAL" ? "Paypal" : { $ne: "Paypal" },
       });
       return res.json({
         result: invoices,
       });
-    } else{
+    } else {
       res.json({ result: true });
     }
   } catch (err) {
@@ -35,10 +37,10 @@ exports.getInvoicesByTransactionId = async (req, res) => {
 exports.createAllInvoices = async (req, res) => {
   try {
     const allJanuaryPayments = await PaymentsModel.find({
-        createdAt: {
-          $gte: momentTZ().startOf("month").format(),
-          $lte: momentTZ().endOf("month").format(),
-        },
+      createdAt: {
+        $gte: momentTZ().subtract(1, "month").startOf("month").format(),
+        $lte: momentTZ().subtract(1, "month").endOf("month").format(),
+      },
       status: "SUCCESS",
     })
       .populate("customerId", "numberOfStudents whatsAppnumber lastName")
@@ -90,7 +92,7 @@ exports.createAllInvoices = async (req, res) => {
             cgst: 0,
             sgst: 0,
             paymentMethod: "Paypal",
-            paymentDate: payment.createdAt
+            paymentDate: payment.createdAt,
           });
         } else {
           const {
@@ -124,7 +126,7 @@ exports.createAllInvoices = async (req, res) => {
             cgst: 0,
             sgst: 0,
             paymentMethod: method,
-            paymentDate: payment.createdAt
+            paymentDate: payment.createdAt,
           });
         }
       }
@@ -133,7 +135,7 @@ exports.createAllInvoices = async (req, res) => {
 
     for (let i = 0; i < data.length; i++) {
       const invoice = data[i];
-      let newInvoice = new InvoicesModel(invoice)
+      let newInvoice = new InvoicesModel(invoice);
       await newInvoice.save();
     }
 
@@ -141,5 +143,58 @@ exports.createAllInvoices = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({ success: false });
+  }
+};
+
+exports.getInvoices = async (req, res) => {
+  try {
+    let { month, year } = req.query;
+    console.log(month, year);
+    if (!month) return res.status(400).json({ message: "Month is required" });
+
+    month = parseInt(month - 1);
+    const startDate = momentTZ()
+      .tz("Asia/Kolkata")
+      .set("month", month)
+      .set("year", year);
+    const endDate = startDate.clone().endOf("month");
+    console.log(startDate, endDate);
+    let invoices = await InvoicesModel.find({
+      paymentDate: {
+        $gte: startDate.format(),
+        $lte: endDate.format(),
+      },
+    }).lean();
+
+    invoices = invoices.map((invoice) => {
+      let exchangeRateIndex = exchangeRates.findIndex((rate) => {
+        return (
+          momentTZ(invoice.paymentDate)
+            .tz("Asia/Kolkata")
+            .format("DD/MM/YYYY") === rate.date
+        );
+      });
+      let exchangeRate = 71.452;
+      if (exchangeRateIndex !== -1) {
+        exchangeRate = exchangeRates[exchangeRateIndex].amount;
+      }
+      let transactionFee = (invoice.transactionFee ?? 0)
+      let net = invoice.taxableValue - transactionFee;
+      let turnover = net * exchangeRate;
+      let feeInInr = transactionFee * exchangeRate * -1
+      let recieved = net * transactionFee
+      return {
+        ...invoice,
+        exchangeRate: exchangeRate.amount,
+        net,
+        turnover,
+        feeInInr,
+        recieved
+      };
+    });
+
+    return res.json({ result: invoices });
+  } catch (error) {
+    console.log(error);
   }
 };
