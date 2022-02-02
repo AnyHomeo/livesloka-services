@@ -167,30 +167,41 @@ exports.getInvoices = async (req, res) => {
     }).lean();
 
     invoices = invoices.map((invoice) => {
-      let exchangeRateIndex = exchangeRates.findIndex((rate) => {
-        return (
-          momentTZ(invoice.paymentDate)
-            .tz("Asia/Kolkata")
-            .format("DD/MM/YYYY") === rate.date
-        );
-      });
-      let exchangeRate = 71.452;
-      if (exchangeRateIndex !== -1) {
-        exchangeRate = exchangeRates[exchangeRateIndex].amount;
+      if (invoice.paymentMethod === "Paypal") {
+        let exchangeRateIndex = exchangeRates.findIndex((rate) => {
+          return (
+            momentTZ(invoice.paymentDate)
+              .tz("Asia/Kolkata")
+              .format("DD/MM/YYYY") === rate.date
+          );
+        });
+        let exchangeRate = 71.452;
+        if (exchangeRateIndex !== -1) {
+          exchangeRate = exchangeRates[exchangeRateIndex].amount;
+        }
+        let transactionFee = invoice.transactionFee ?? 0;
+        let net = invoice.taxableValue - transactionFee;
+        let turnover = net * exchangeRate;
+        let feeInInr = transactionFee * exchangeRate * -1;
+        let recieved = net * transactionFee;
+        return {
+          ...invoice,
+          exchangeRate,
+          net,
+          turnover,
+          feeInInr,
+          recieved,
+        };
+      } else {
+        return {
+          ...invoice,
+          exchangeRate: "NA",
+          net: invoice.taxableValue,
+          turnover: invoice.taxableValue,
+          feeInInr: invoice.transactionFee,
+          recieved: invoice.taxableValue - (invoice.transactionFee ?? 0),
+        };
       }
-      let transactionFee = (invoice.transactionFee ?? 0)
-      let net = invoice.taxableValue - transactionFee;
-      let turnover = net * exchangeRate;
-      let feeInInr = transactionFee * exchangeRate * -1
-      let recieved = net * transactionFee
-      return {
-        ...invoice,
-        exchangeRate: exchangeRate.amount,
-        net,
-        turnover,
-        feeInInr,
-        recieved
-      };
     });
 
     return res.json({ result: invoices });
