@@ -91,3 +91,5 @@ exports.getDemoMessage = (subject, date, time, userId) => {
 exports.mongooseError = (error) => {
   return error.errors[Object.keys(error.errors)[0]].message
 }
+
+exports.toFixed = (value) => typeof value === 'number' ? value.toFixed(2) : value

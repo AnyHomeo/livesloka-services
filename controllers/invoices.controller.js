@@ -4,6 +4,7 @@ const company = require("../config/company.json");
 const InvoicesModel = require("../models/invoices.model");
 const Transactions = require("../models/Transactions");
 const exchangeRates = require("./exchange-rates.json");
+const { toFixed } = require("../config/helper");
 
 exports.getInvoicesByTransactionId = async (req, res) => {
   try {
@@ -135,8 +136,7 @@ exports.createAllInvoices = async (req, res) => {
 
     for (let i = 0; i < data.length; i++) {
       const invoice = data[i];
-      let newInvoice = new InvoicesModel(invoice);
-      await newInvoice.save();
+      await createNewInvoice(invoice);
     }
 
     return res.json({ success: true });
@@ -144,6 +144,24 @@ exports.createAllInvoices = async (req, res) => {
     console.log(error);
     return res.status(500).json({ success: false });
   }
+};
+
+const createNewInvoice = async (invoice) => {
+  //  Livesloka international 2021-2022 December Invoice number
+  // id --> "LSI/21-22/12/1";
+  let paymentDate = momentTZ(invoice.paymentDate);
+  let paymentsCount = await InvoicesModel.countDocuments({
+    paymentDate: {
+      $gte: paymentDate.startOf("month").format(),
+      $lte: paymentDate.endOf("month").format(),
+    },
+  });
+  paymentsCount = paymentsCount + 1;
+  let presentYear = paymentDate.year().toString().slice(2);
+  let previousYear = (paymentDate.year() - 1).toString().slice(2);
+  invoice.id = `LSI/${previousYear}-${presentYear}/${paymentDate.month() + 1}/${paymentsCount}`;
+  let newInvoice = new InvoicesModel(invoice);
+  await newInvoice.save();
 };
 
 exports.getInvoices = async (req, res) => {
@@ -179,11 +197,11 @@ exports.getInvoices = async (req, res) => {
         if (exchangeRateIndex !== -1) {
           exchangeRate = exchangeRates[exchangeRateIndex].amount;
         }
-        let transactionFee = invoice.transactionFee ?? 0;
-        let net = invoice.taxableValue - transactionFee;
-        let turnover = net * exchangeRate;
-        let feeInInr = transactionFee * exchangeRate * -1;
-        let recieved = net * transactionFee;
+        let transactionFee = toFixed(invoice.transactionFee ?? 0);
+        let net = toFixed(invoice.taxableValue - transactionFee);
+        let turnover = toFixed(net * exchangeRate);
+        let feeInInr = toFixed(transactionFee * exchangeRate * -1);
+        let recieved = toFixed(net * transactionFee);
         return {
           ...invoice,
           exchangeRate,
@@ -196,10 +214,10 @@ exports.getInvoices = async (req, res) => {
         return {
           ...invoice,
           exchangeRate: "NA",
-          net: invoice.taxableValue,
-          turnover: invoice.taxableValue,
-          feeInInr: invoice.transactionFee,
-          recieved: invoice.taxableValue - (invoice.transactionFee ?? 0),
+          net: toFixed(invoice.taxableValue),
+          turnover: toFixed(invoice.taxableValue),
+          feeInInr: toFixed(invoice.transactionFee),
+          recieved: toFixed(invoice.taxableValue - (invoice.transactionFee ?? 0)),
         };
       }
     });

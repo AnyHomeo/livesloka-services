@@ -1199,7 +1199,7 @@ exports.getAllScheduleswithZoomAccountSorted = async (req, res) => {
       .lean();
 
     const allZoomAccounts = await ZoomAccountModel.find()
-      .select("color ZoomAccountName")
+      .select("color ZoomAccountName isDisabled")
       .lean();
 
     let finalSortedData = {};
@@ -1218,7 +1218,7 @@ exports.getAllScheduleswithZoomAccountSorted = async (req, res) => {
     });
 
     return res.json({
-      message: "Everything is cool",
+      message: "Zoom accounts retrieved successfully",
       result: finalSortedData,
     });
   } catch (error) {

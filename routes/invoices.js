@@ -1,7 +1,8 @@
 const express = require("express");
 const {
     getInvoicesByTransactionId, 
-    getInvoices
+    getInvoices,
+    createAllInvoices
 } = require("../controllers/invoices.controller");
 const router = express.Router();
 
