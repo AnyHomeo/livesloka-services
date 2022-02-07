@@ -92,4 +92,4 @@ exports.mongooseError = (error) => {
   return error.errors[Object.keys(error.errors)[0]].message
 }
 
-exports.toFixed = (value) => typeof value === 'number' ? value.toFixed(2) : value
+exports.toFixed = (value,decimals = 2) => typeof value === 'number' ? value.toFixed(decimals) : value

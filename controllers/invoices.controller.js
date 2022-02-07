@@ -199,7 +199,7 @@ exports.getInvoices = async (req, res) => {
         let exchangeRate = 0;
         let depositExchangeRate = 0;
         if (exchangeRateIndex !== -1) {
-          depositExchangeRate = exchangeRates[exchangeRateIndex].amount;
+          depositExchangeRate = exchangeRates[exchangeRateIndex-1]?.amount || 0;
           exchangeRate = exchangeRates[exchangeRateIndex].amount;
         }
         let transactionFee = toFixed(invoice.transactionFee ?? 0);
@@ -207,7 +207,7 @@ exports.getInvoices = async (req, res) => {
         let turnover = toFixed(net * exchangeRate);
         let feeInInr = toFixed(transactionFee * exchangeRate * -1);
         let recieved = toFixed(net * depositExchangeRate);
-        let exchangeRateDifference = exchangeRate - depositExchangeRate;
+        let exchangeRateDifference = toFixed(exchangeRate - depositExchangeRate,5);
         return {
           ...invoice,
           exchangeRate,
