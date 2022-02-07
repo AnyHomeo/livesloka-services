@@ -174,7 +174,8 @@ exports.getInvoices = async (req, res) => {
     const startDate = momentTZ()
       .tz("Asia/Kolkata")
       .set("month", month)
-      .set("year", year);
+      .set("year", year)
+      .startOf('month');
     const endDate = startDate.clone().endOf("month");
     console.log(startDate, endDate);
     let invoices = await InvoicesModel.find({
