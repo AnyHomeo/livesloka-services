@@ -159,7 +159,9 @@ const createNewInvoice = async (invoice) => {
   paymentsCount = paymentsCount + 1;
   let presentYear = paymentDate.year().toString().slice(2);
   let previousYear = (paymentDate.year() - 1).toString().slice(2);
-  invoice.id = `LSI/${previousYear}-${presentYear}/${paymentDate.month() + 1}/${paymentsCount}`;
+  invoice.id = `LSI/${previousYear}-${presentYear}/${
+    paymentDate.month() + 1
+  }/${paymentsCount}`;
   let newInvoice = new InvoicesModel(invoice);
   await newInvoice.save();
 };
@@ -175,7 +177,7 @@ exports.getInvoices = async (req, res) => {
       .tz("Asia/Kolkata")
       .set("month", month)
       .set("year", year)
-      .startOf('month');
+      .startOf("month");
     const endDate = startDate.clone().endOf("month");
     console.log(startDate, endDate);
     let invoices = await InvoicesModel.find({
@@ -194,18 +196,23 @@ exports.getInvoices = async (req, res) => {
               .format("DD/MM/YYYY") === rate.date
           );
         });
-        let exchangeRate = 71.452;
+        let exchangeRate = 0;
+        let depositExchangeRate = 0;
         if (exchangeRateIndex !== -1) {
+          depositExchangeRate = exchangeRates[exchangeRateIndex].amount;
           exchangeRate = exchangeRates[exchangeRateIndex].amount;
         }
         let transactionFee = toFixed(invoice.transactionFee ?? 0);
         let net = toFixed(invoice.taxableValue - transactionFee);
         let turnover = toFixed(net * exchangeRate);
         let feeInInr = toFixed(transactionFee * exchangeRate * -1);
-        let recieved = toFixed(net * transactionFee);
+        let recieved = toFixed(net * depositExchangeRate);
+        let exchangeRateDifference = exchangeRate - depositExchangeRate;
         return {
           ...invoice,
           exchangeRate,
+          depositExchangeRate,
+          exchangeRateDifference,
           net,
           turnover,
           feeInInr,
@@ -215,10 +222,14 @@ exports.getInvoices = async (req, res) => {
         return {
           ...invoice,
           exchangeRate: "NA",
+          depositExchangeRate: "NA",
+          exchangeRateDifference: "NA",
           net: toFixed(invoice.taxableValue),
           turnover: toFixed(invoice.taxableValue),
           feeInInr: toFixed(invoice.transactionFee),
-          recieved: toFixed(invoice.taxableValue - (invoice.transactionFee ?? 0)),
+          recieved: toFixed(
+            invoice.taxableValue - (invoice.transactionFee ?? 0)
+          ),
         };
       }
     });
