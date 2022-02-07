@@ -19,7 +19,7 @@ var ExpensesSchema = new mongoose.Schema(
       type: String,
       default: 0,
     },
-    indianAmount: {
+    amount: {
       type: String,
       default: 0,
     },
