@@ -1563,7 +1563,6 @@ exports.changeZoomLink = async (req, res) => {
       ...sunday,
     ];
 
-    console.log(allSlots);
 
     let availableZoomAccount = await ZoomAccountModel.findOne({
       timeSlots: {
@@ -1576,14 +1575,12 @@ exports.changeZoomLink = async (req, res) => {
       return res.status(404).json({ message: "No zoom account available" });
     }
 
-    console.log(availableZoomAccount);
 
     // Remove from old zoom link
     let oldZoomAccount = await ZoomAccountModel.findOne({
       _id: meetingAccount,
       isDisabled: { $ne: true },
     });
-    console.log(JSON.stringify(oldZoomAccount, null, 2));
     if (oldZoomAccount) {
       allSlots.forEach((slot) => {
         let slotIndex = oldZoomAccount.timeSlots.indexOf(slot);
@@ -1643,7 +1640,6 @@ exports.changeZoomLink = async (req, res) => {
       }
     );
     let response = await data.json();
-    console.log(response.join_url);
     schedule.meetingAccount = availableZoomAccount._id
     schedule.meetingLink = response.join_url;
     await schedule.save();
