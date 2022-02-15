@@ -50,22 +50,25 @@ module.exports = (io) => {
       callback();
     });
 
-    socket.on('create-nonroom', async ({ roomID, username }, callback) => {
-      try {
-        const data = await createNewNonRoom(username, roomID);
-        console.log(data);
-      } catch (error) {
-        console.log(error);
-        if (error) return callback(error);
-      }
-      socket.join(roomID);
+    socket.on(
+      'create-nonroom',
+      async ({ roomID, username, country }, callback) => {
+        try {
+          const data = await createNewNonRoom(username, roomID, country);
+          console.log(data);
+        } catch (error) {
+          console.log(error);
+          if (error) return callback(error);
+        }
+        socket.join(roomID);
 
-      socket.broadcast.emit('new-non-user-pinged', {
-        username,
-        roomID,
-      });
-      callback();
-    });
+        socket.broadcast.emit('new-non-user-pinged', {
+          username,
+          roomID,
+        });
+        callback();
+      }
+    );
     socket.on(
       'notifyToRoomFromUser',
       async ({ roomID, userID, typeMessage }, callback) => {

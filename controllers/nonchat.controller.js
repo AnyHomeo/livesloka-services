@@ -1,11 +1,12 @@
 const AdminModel = require('../models/Admin.model');
-const { NonRoom, NonMessage } = require('../models/nonchat.model');
+const { NonRoom, NonMessage, UserCountry } = require('../models/nonchat.model');
 
-const createNewNonRoom = async (username, roomID) => {
+const createNewNonRoom = async (username, roomID, country) => {
   const nonroom = new NonRoom({
     roomID,
     username,
     messages: [],
+    country: new UserCountry(country),
   });
   return await nonroom.save();
 };
@@ -78,7 +79,7 @@ const unseenmessagescountnn = async () => {
 
 const findAllMessagesByNonRoom = async (roomID) => {
   return await NonRoom.findOne({ roomID }).select(
-    'messages username admin -_id'
+    'messages username admin country -_id'
   );
 };
 
@@ -94,8 +95,13 @@ const findAllMessagesByNonRoom = async (roomID) => {
 // };
 
 const allNonRooms = async () => {
+  // const last = day !== undefined ? day : 3;
   return await NonRoom.find(
-    {},
+    {
+      updatedAt: {
+        $gte: new Date(new Date().getTime() - 3 * 24 * 60 * 60 * 1000),
+      },
+    },
     {
       messages: { $slice: -1 },
     }
