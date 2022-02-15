@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const counter = require("./AutoIncrement.model");
 
 const InvoicesSchema = new mongoose.Schema({
   id: {
@@ -99,23 +98,5 @@ const InvoicesSchema = new mongoose.Schema({
     type:Date,
   }
 },{ timestamps: true});
-
-InvoicesSchema.pre("save", function (next) {
-  var doc = this;
-  counter
-    .findByIdAndUpdate(
-      { _id: "InvoiceId" },
-      { $inc: { number: 1 } },
-      { new: true, upsert: true }
-    )
-    .then(function (count) {
-      doc.id = `LS-${count.number}`;
-      next();
-    })
-    .catch(function (error) {
-      console.error("counter error-> : " + error);
-      throw error;
-    });
-});
 
 module.exports = mongoose.model("Invoices", InvoicesSchema);

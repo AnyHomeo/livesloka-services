@@ -692,229 +692,243 @@ exports.editSchedule = async (req, res) => {
 
     await oldTeacher.save();
     if (isNewMeetingLinkNeeded) {
-      ZoomAccountModel.findById(meetingAccount, async (err, data) => {
-        if (err) {
-          console.log(err);
-        }
-        if (data) {
-          allSlots.forEach((slot) => {
-            let slotIndex = data.timeSlots.indexOf(slot);
-            if (slotIndex != -1) {
-              data.timeSlots.splice(slotIndex, 1);
-            }
+      ZoomAccountModel.findOne(
+        { _id: meetingAccount, isDisabled: { $ne: true } },
+        async (err, data) => {
+          if (err) {
+            console.log(err);
+          }
+          if (data) {
+            allSlots.forEach((slot) => {
+              let slotIndex = data.timeSlots.indexOf(slot);
+              if (slotIndex != -1) {
+                data.timeSlots.splice(slotIndex, 1);
+              }
+            });
+            await data.save();
+          }
+
+          let {
+            monday,
+            tuesday,
+            wednesday,
+            thursday,
+            friday,
+            saturday,
+            sunday,
+          } = slots;
+          let availableZoomAccount = await ZoomAccountModel.findOne({
+            timeSlots: {
+              $nin: [
+                ...monday,
+                ...tuesday,
+                ...wednesday,
+                ...thursday,
+                ...friday,
+                ...saturday,
+                ...sunday,
+              ],
+            },
           });
-          await data.save();
-        }
+          if (!availableZoomAccount) {
+            throw Error("no Zoom Account!");
+          }
+          const { _id, zoomEmail, zoomJwt, zoomPassword } =
+            availableZoomAccount;
+          const { meetingLink } = oldSchedule;
+          if (meetingLink && meetingLink.includes("zoom")) {
+            await fetch(
+              `https://api.zoom.us/v2/meetings/${
+                meetingLink.split("/")[4].split("?")[0]
+              }`,
+              {
+                method: "DELETE",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${zoomJwt}`,
+                },
+              }
+            );
+          }
+          const formData = {
+            topic: "Livesloka Online Class",
+            type: 3,
+            password: zoomPassword,
+            settings: {
+              host_video: true,
+              participant_video: true,
+              join_before_host: true,
+              jbh_time: 0,
+              mute_upon_entry: true,
+              watermark: false,
+              use_pmi: false,
+              approval_type: 2,
+              audio: "both",
+              auto_recording: "none",
+              waiting_room: false,
+              meeting_authentication: false,
+            },
+          };
+          fetch(`https://api.zoom.us/v2/users/${zoomEmail}/meetings`, {
+            method: "post",
+            body: JSON.stringify(formData),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${zoomJwt}`,
+            },
+          })
+            .then((res) => res.json())
+            .then((json) => {
+              if (json.code === 1001) {
+                return res.status(400).json({
+                  message: "Error while creating meeting link",
+                });
+              }
+              req.body.meetingLink = json.join_url;
+              req.body.meetingAccount = _id;
+              Schedule.updateOne(
+                { _id: id },
+                { ...req.body, scheduleDescription },
+                (err, response) => {
+                  if (err) {
+                    return res.status(500).json({
+                      error: "Error in updating schedule",
+                    });
+                  }
+                  ZoomAccountModel.findById(req.body.meetingAccount)
+                    .then(async (data) => {
+                      data.timeSlots = [
+                        ...data.timeSlots,
+                        ...monday,
+                        ...tuesday,
+                        ...wednesday,
+                        ...thursday,
+                        ...friday,
+                        ...saturday,
+                        ...sunday,
+                      ];
 
-        let { monday, tuesday, wednesday, thursday, friday, saturday, sunday } =
-          slots;
-        let availableZoomAccount = await ZoomAccountModel.findOne({
-          timeSlots: {
-            $nin: [
-              ...monday,
-              ...tuesday,
-              ...wednesday,
-              ...thursday,
-              ...friday,
-              ...saturday,
-              ...sunday,
-            ],
-          },
-        });
-        if (!availableZoomAccount) {
-          throw Error("no Zoom Account!");
-        }
-        const { _id, zoomEmail, zoomJwt, zoomPassword } = availableZoomAccount;
-        const { meetingLink } = oldSchedule;
-        if (meetingLink && meetingLink.includes("zoom")) {
-          await fetch(
-            `https://api.zoom.us/v2/meetings/${
-              meetingLink.split("/")[4].split("?")[0]
-            }`,
-            {
-              method: "DELETE",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${zoomJwt}`,
-              },
-            }
-          );
-        }
-        const formData = {
-          topic: "Livesloka Online Class",
-          type: 3,
-          password: zoomPassword,
-          settings: {
-            host_video: true,
-            participant_video: true,
-            join_before_host: true,
-            jbh_time: 0,
-            mute_upon_entry: true,
-            watermark: false,
-            use_pmi: false,
-            approval_type: 2,
-            audio: "both",
-            auto_recording: "none",
-            waiting_room: false,
-            meeting_authentication: false,
-          },
-        };
-        fetch(`https://api.zoom.us/v2/users/${zoomEmail}/meetings`, {
-          method: "post",
-          body: JSON.stringify(formData),
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${zoomJwt}`,
-          },
-        })
-          .then((res) => res.json())
-          .then((json) => {
-            if (json.code === 1001) {
-              return res.status(400).json({
-                message: "Error while creating meeting link",
-              });
-            }
-            req.body.meetingLink = json.join_url;
-            req.body.meetingAccount = _id;
-            Schedule.updateOne(
-              { _id: id },
-              { ...req.body, scheduleDescription },
-              (err, response) => {
-                if (err) {
-                  return res.status(500).json({
-                    error: "Error in updating schedule",
-                  });
-                }
-                ZoomAccountModel.findById(req.body.meetingAccount)
-                  .then(async (data) => {
-                    data.timeSlots = [
-                      ...data.timeSlots,
-                      ...monday,
-                      ...tuesday,
-                      ...wednesday,
-                      ...thursday,
-                      ...friday,
-                      ...saturday,
-                      ...sunday,
-                    ];
-
-                    await ZoomAccountModel.updateOne(
-                      { _id: req.body.meetingAccount },
-                      { timeSlots: data.timeSlots }
-                    );
-                  })
-                  .catch((err) => {
-                    console.log(err);
-                  });
-                let Subjectname = "";
-                Subject.findOne({ _id: subject })
-                  .then((subject) => {
-                    Subjectname = Subjectname + subject.subjectName;
-                  })
-                  .catch((error) => {
-                    console.log(error);
-                  });
-                for (x = 0; x < students.length; x++) {
-                  Customer.findOne({ _id: students[x] })
-                    .then((data) => {
-                      let stud_id = data._id;
-                      let { timeZoneId } = data;
-                      timzone
-                        .findOne({ id: timeZoneId })
-                        .then(async (dat) => {
-                          let rec = SlotConverter(slots, dat.timeZoneName);
-                          let schdDescription = postProcess(rec, Subjectname);
-                          let anyPayments = await Payments.countDocuments({
-                            customerId: data._id,
-                          });
-                          let previousValue = data.numberOfClassesBought;
-                          let nextValue =
-                            (demo &&
-                              newStudents.includes(stud_id.toString())) ||
-                            (demo && !oldSchedule.demo)
-                              ? data.numberOfClassesBought + 1
-                              : data.numberOfClassesBought;
-                          if (previousValue !== nextValue) {
-                            let newUpdate = new ClassHistoryModel({
-                              previousValue,
-                              nextValue,
-                              comment: "Scheduled a Demo class",
-                              customerId: stud_id,
-                            });
-                            await newUpdate.save();
-                          }
-                          await Customer.updateOne(
-                            { _id: stud_id },
-                            {
-                              $set: {
-                                scheduleDescription: schdDescription,
-                                meetingLink: req.body.meetingLink,
-                                teacherId: selectedTeacher.id,
-                                numberOfClassesBought:
-                                  (demo &&
-                                    newStudents.includes(stud_id.toString())) ||
-                                  (demo && !oldSchedule.demo)
-                                    ? data.numberOfClassesBought + 1
-                                    : data.numberOfClassesBought,
-                                classStatusId: demo
-                                  ? "38493085684944"
-                                  : anyPayments
-                                  ? "113975223750050"
-                                  : "121975682530440",
-                              },
-                            }
-                          );
-                        })
-                        .catch((err) => {
-                          console.log(err);
-                        });
+                      await ZoomAccountModel.updateOne(
+                        { _id: req.body.meetingAccount },
+                        { timeSlots: data.timeSlots }
+                      );
+                    })
+                    .catch((err) => {
+                      console.log(err);
+                    });
+                  let Subjectname = "";
+                  Subject.findOne({ _id: subject })
+                    .then((subject) => {
+                      Subjectname = Subjectname + subject.subjectName;
                     })
                     .catch((error) => {
                       console.log(error);
                     });
-                }
-                Teacher.findOne({ id: teacher })
-                  .then((data) => {
-                    if (data) {
-                      let { availableSlots } = data;
-                      if (availableSlots) {
-                        Object.keys(slots).forEach((day) => {
-                          let arr = slots[day];
-                          arr.forEach((slot) => {
-                            let index = availableSlots.indexOf(slot);
-                            if (index != -1) {
-                              data.availableSlots.splice(index, 1);
+                  for (x = 0; x < students.length; x++) {
+                    Customer.findOne({ _id: students[x] })
+                      .then((data) => {
+                        let stud_id = data._id;
+                        let { timeZoneId } = data;
+                        timzone
+                          .findOne({ id: timeZoneId })
+                          .then(async (dat) => {
+                            let rec = SlotConverter(slots, dat.timeZoneName);
+                            let schdDescription = postProcess(rec, Subjectname);
+                            let anyPayments = await Payments.countDocuments({
+                              customerId: data._id,
+                            });
+                            let previousValue = data.numberOfClassesBought;
+                            let nextValue =
+                              (demo &&
+                                newStudents.includes(stud_id.toString())) ||
+                              (demo && !oldSchedule.demo)
+                                ? data.numberOfClassesBought + 1
+                                : data.numberOfClassesBought;
+                            if (previousValue !== nextValue) {
+                              let newUpdate = new ClassHistoryModel({
+                                previousValue,
+                                nextValue,
+                                comment: "Scheduled a Demo class",
+                                customerId: stud_id,
+                              });
+                              await newUpdate.save();
                             }
-                            data.scheduledSlots.push(slot);
+                            await Customer.updateOne(
+                              { _id: stud_id },
+                              {
+                                $set: {
+                                  scheduleDescription: schdDescription,
+                                  meetingLink: req.body.meetingLink,
+                                  teacherId: selectedTeacher.id,
+                                  numberOfClassesBought:
+                                    (demo &&
+                                      newStudents.includes(
+                                        stud_id.toString()
+                                      )) ||
+                                    (demo && !oldSchedule.demo)
+                                      ? data.numberOfClassesBought + 1
+                                      : data.numberOfClassesBought,
+                                  classStatusId: demo
+                                    ? "38493085684944"
+                                    : anyPayments
+                                    ? "113975223750050"
+                                    : "121975682530440",
+                                },
+                              }
+                            );
+                          })
+                          .catch((err) => {
+                            console.log(err);
                           });
-                        });
-                      }
-                      data.availableSlots = [...new Set(data.availableSlots)];
-                      data.scheduledSlots = [...new Set(data.scheduledSlots)];
-                      data.save((err, docs) => {
-                        if (err) {
-                          console.log(err);
-                          return res.status(500).json({
-                            error: "error in updating teacher slots",
-                          });
-                        } else {
-                          return res.json({
-                            message: "schedule updated successfully",
+                      })
+                      .catch((error) => {
+                        console.log(error);
+                      });
+                  }
+                  Teacher.findOne({ id: teacher })
+                    .then((data) => {
+                      if (data) {
+                        let { availableSlots } = data;
+                        if (availableSlots) {
+                          Object.keys(slots).forEach((day) => {
+                            let arr = slots[day];
+                            arr.forEach((slot) => {
+                              let index = availableSlots.indexOf(slot);
+                              if (index != -1) {
+                                data.availableSlots.splice(index, 1);
+                              }
+                              data.scheduledSlots.push(slot);
+                            });
                           });
                         }
+                        data.availableSlots = [...new Set(data.availableSlots)];
+                        data.scheduledSlots = [...new Set(data.scheduledSlots)];
+                        data.save((err, docs) => {
+                          if (err) {
+                            console.log(err);
+                            return res.status(500).json({
+                              error: "error in updating teacher slots",
+                            });
+                          } else {
+                            return res.json({
+                              message: "schedule updated successfully",
+                            });
+                          }
+                        });
+                      }
+                    })
+                    .catch((err) => {
+                      console.log(err);
+                      return res.status(400).json({
+                        error:
+                          "error in updating students Links and Description",
                       });
-                    }
-                  })
-                  .catch((err) => {
-                    console.log(err);
-                    return res.status(400).json({
-                      error: "error in updating students Links and Description",
                     });
-                  });
-              }
-            );
-          });
-      });
+                }
+              );
+            });
+        }
+      );
     } else {
       Schedule.updateOne(
         { _id: id },
@@ -1199,7 +1213,7 @@ exports.getAllScheduleswithZoomAccountSorted = async (req, res) => {
       .lean();
 
     const allZoomAccounts = await ZoomAccountModel.find()
-      .select("color ZoomAccountName")
+      .select("color ZoomAccountName isDisabled")
       .lean();
 
     let finalSortedData = {};
@@ -1218,7 +1232,7 @@ exports.getAllScheduleswithZoomAccountSorted = async (req, res) => {
     });
 
     return res.json({
-      message: "Everything is cool",
+      message: "Zoom accounts retrieved successfully",
       result: finalSortedData,
     });
   } catch (error) {
@@ -1534,28 +1548,67 @@ exports.editIfWhereby = async (req, res, next) => {
 exports.changeZoomLink = async (req, res) => {
   try {
     const { scheduleId } = req.params;
-    let schedule = await SchedulerModel.findById(scheduleId).populate(
-      "meetingAccount"
-    );
-    const {
-      meetingLink,
-      meetingAccount: { zoomJwt, zoomEmail, zoomPassword },
-    } = schedule;
+    let schedule = await SchedulerModel.findById(scheduleId);
+    const { meetingLink, meetingAccount } = schedule;
 
-    if (meetingLink && meetingLink.includes("zoom")) {
-      await fetch(
-        `https://api.zoom.us/v2/meetings/${
-          meetingLink.split("/")[4].split("?")[0]
-        }`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${zoomJwt}`,
-          },
-        }
-      );
+    let { monday, tuesday, wednesday, thursday, friday, saturday, sunday } =
+      schedule.slots;
+    let allSlots = [
+      ...monday,
+      ...tuesday,
+      ...wednesday,
+      ...thursday,
+      ...friday,
+      ...saturday,
+      ...sunday,
+    ];
+
+
+    let availableZoomAccount = await ZoomAccountModel.findOne({
+      timeSlots: {
+        $nin: allSlots,
+      },
+    });
+
+    // check if any other zoom account was available
+    if (!availableZoomAccount) {
+      return res.status(404).json({ message: "No zoom account available" });
     }
+
+
+    // Remove from old zoom link
+    let oldZoomAccount = await ZoomAccountModel.findOne({
+      _id: meetingAccount,
+      isDisabled: { $ne: true },
+    });
+    if (oldZoomAccount) {
+      allSlots.forEach((slot) => {
+        let slotIndex = oldZoomAccount.timeSlots.indexOf(slot);
+        if (slotIndex != -1) {
+          oldZoomAccount.timeSlots.splice(slotIndex, 1);
+        }
+      });
+      await oldZoomAccount.save();
+      // delete existing zoom link
+      if (meetingLink && meetingLink.toLowerCase().includes("zoom")) {
+        await fetch(
+          `https://api.zoom.us/v2/meetings/${
+            meetingLink.split("/")[4].split("?")[0]
+          }`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${oldZoomAccount.zoomJwt}`,
+            },
+          }
+        );
+      }
+    }
+
+    const { zoomJwt, zoomEmail, zoomPassword } = availableZoomAccount;
+
+    // create new zoomlink
     const formData = {
       topic: "Livesloka Online Class",
       type: 3,
@@ -1587,8 +1640,13 @@ exports.changeZoomLink = async (req, res) => {
       }
     );
     let response = await data.json();
+    schedule.meetingAccount = availableZoomAccount._id
     schedule.meetingLink = response.join_url;
     await schedule.save();
+    await ZoomAccountModel.updateOne(
+      { _id: availableZoomAccount._id },
+      { timeSlots: [...availableZoomAccount.timeSlots, ...allSlots] }
+    );
     return res.status(200).json({
       message: "Meeting Link Updated successfully!",
     });
