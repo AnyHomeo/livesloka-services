@@ -204,7 +204,9 @@ const findGroupsByCustomerEmail = async (email) => {
       isClosed: 1,
       isClass: 1,
     }
-  ).sort('-updatedAt');
+  )
+    .populate('teachers', 'username userId -_id')
+    .sort('-updatedAt');
 };
 
 const findGroupsByTeacherEmail = async (email) => {
@@ -220,7 +222,11 @@ const findGroupsByTeacherEmail = async (email) => {
       isClosed: 1,
       isClass: 1,
     }
-  ).sort('-updatedAt');
+  )
+    .populate('customers', 'firstName lastName')
+    .populate('customerEmails', 'username')
+
+    .sort('-updatedAt');
 };
 
 const getGroupByRole = async (roleID, userID) => {
