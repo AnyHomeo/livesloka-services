@@ -227,7 +227,6 @@ exports.createPlan = async (req, res) => {
         recurring: { interval: "month", interval_count: months },
         product: productId,
       });
-      console.log(response, price);
       responses.push({ paypal: response, stripe: price });
     });
     return res.json({
@@ -283,7 +282,6 @@ exports.getPlansByCustomerId = async (req, res) => {
     const customer = await CustomerModel.findById(customerId)
       .populate("subject", "productId")
       .lean();
-    console.log(customerId);
     if (customer) {
       const { productId } = customer.subject;
       if (productId) {
@@ -300,7 +298,6 @@ exports.getPlansByCustomerId = async (req, res) => {
           config
         );
         let result = await response.json();
-        console.log(JSON.stringify(result, null, 1));
         if (response.statusText !== "OK") {
           return res.status(400).json({
             result,
@@ -451,7 +448,6 @@ exports.updateProductById = async (req, res) => {
         `${process.env.PAYPAL_API_KEY}/catalogs/products/${id}`,
         config
       );
-      console.log(response);
       return res.json({ message: "Updated product successfully!" });
     } else {
       return res.json({ message: "No updated Field!" });
@@ -485,7 +481,6 @@ exports.updatePlanById = async (req, res) => {
         `${process.env.PAYPAL_API_KEY}/catalogs/products/${id}`,
         config
       );
-      console.log(response);
       return res.json({ message: "Updated product successfully!" });
     }
     if (price) {
@@ -520,7 +515,6 @@ exports.updatePlanById = async (req, res) => {
         `${process.env.PAYPAL_API_KEY}/billing/plans/${id}/update-pricing-schemes`,
         config
       );
-      console.log(response);
       return res.json({ message: "Updated product successfully!" });
     }
     return res.json({ message: "No field updated!" });
@@ -632,8 +626,6 @@ exports.subscribeCustomerToAPlan = async (req, res) => {
       config
     );
     let result = await response.json();
-    console.log(JSON.stringify(result, null, 1));
-    console.log(response);
     if (response.statusText !== "Created") {
       return res.redirect(
         `${process.env.USER_CLIENT_URL}/subscriptions/failure`
@@ -700,23 +692,19 @@ const getNextSlot = (slot) => {
 
 const generateScheduleDescriptionAndSlots = (slots) => {
   let scheduleDescription = [];
-  console.log(slots);
   let slotsObject = Object.keys(slots).reduce((accumulator, key) => {
     if (key === "_id") {
       return accumulator;
     } else {
       let slot = slots[key];
-      console.log(slot);
       let splittedSlot = slot.split("-");
       scheduleDescription.push(
         `${capitalize(splittedSlot[0].toLowerCase())}-${splittedSlot[1]}`
       );
       accumulator[key] = [slot, getNextSlot(slot)];
-      console.log(accumulator);
       return accumulator;
     }
   }, {});
-  console.log(slotsObject);
 
   return {
     scheduleDescription:
@@ -1006,7 +994,6 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     sendAdminsMessage(adminMessage);
 
     if (!resubscribe) {
-      console.log("creating schedule");
       if (option) {
         const teacher = await TeacherModel.findOne({ id: option.teacher });
         await scheduleAndupdateCustomer(

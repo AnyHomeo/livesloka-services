@@ -42,6 +42,10 @@ var ZoomAccountSchema = new mongoose.Schema(
       type: "String",
       default: "blue",
     },
+    isDisabled: {
+      type: Boolean,
+      default:false
+    }
   },
   { timestamps: true }
 );

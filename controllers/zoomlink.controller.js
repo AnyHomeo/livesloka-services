@@ -12,6 +12,7 @@ module.exports.zoomlink = async (req, res) => {
       timeSlots: {
         $nin: req.body,
       },
+      isDisabled:{ $ne: true }
     });
     token = getJwtTokenDetails.zoomJwt;
     jwtId = getJwtTokenDetails._id;
