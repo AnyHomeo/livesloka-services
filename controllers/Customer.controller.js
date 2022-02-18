@@ -920,7 +920,7 @@ module.exports = {
         ["slots." + day + ".0"]: { $exists: true },
       })
         .select(
-          "slots students meetingLink teacher className subject lastTimeJoinedClass demo isClassTemperarilyCancelled"
+          "slots students meetingLink teacher className subject lastTimeJoinedClass demo isClassTemperarilyCancelled meetingLinks"
         )
         .populate("subject", "subjectName")
         .populate(
