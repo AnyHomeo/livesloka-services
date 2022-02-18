@@ -276,11 +276,9 @@ exports.getAllScheduleswithZoomAccountSorted = async (req, res) => {
     const { day } = req.query;
     const schedules = await SchedulerModel.find({
       isDeleted: { $ne: true },
-      ["slots." + day + ".0"]: { $exists: true },
       meetingLinks: { $exists: true },
     })
       .sort({ meetingAccount: -1 })
-      .select("meetingAccount meetingLinks className slots")
       .lean();
 
       console.log(schedules.length)
@@ -301,11 +299,14 @@ exports.getAllScheduleswithZoomAccountSorted = async (req, res) => {
         if (
           schedule?.meetingLinks &&
           Object.values(schedule?.meetingLinks).length &&
-          Object.values(schedule?.meetingLinks).some(
-            (link) =>
-              link.meetingAccount.toString() === zoomAccount?._id?.toString()
-          )
+          schedule?.meetingLinks[day] &&
+          schedule?.meetingLinks[day]?.meetingAccount?.toString() === zoomAccount?._id?.toString()
+          // .some(
+          //   (link) =>
+          //     link.meetingAccount.toString() === zoomAccount?._id?.toString()
+          // ) && schedule.
         ) {
+          console.log("SLOTS",schedule)
           schedule.slots = schedule.slots[day];
           finalSortedData[zoomAccount?.ZoomAccountName]?.schedules?.push(
             schedule
