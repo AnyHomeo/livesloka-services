@@ -189,6 +189,7 @@ exports.deleteScheduleById = async (req, res) => {
       }
       schedule.isDeleted = true;
       schedule.lastTimeJoinedClass = undefined;
+      delete schedule.startDate;
       schedule.save((err, deletedSchedule) => {
         if (err) {
           console.log(err);
@@ -205,6 +206,34 @@ exports.deleteScheduleById = async (req, res) => {
     console.log(error);
     return res.status(500).json({
       error: "Error in Deleting Schedule",
+    });
+  }
+};
+
+exports.deleteSchedule = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const schedule = await SchedulerModel.findById(id);
+    const teacher = await Teacher.findOne({ id: schedule.teacher })
+    const [_,allSlots] = generateSlots(schedule.slots)
+    teacher.availableSlots = [...new Set([...teacher.availableSlots,...allSlots])]
+    teacher.scheduledSlots = teacher.scheduledSlots.filter(
+      slot => !allSlots.includes(slot)
+    )
+    await deleteExistingZoomLinkOfTheSchedule(schedule,false)
+    await teacher.save()
+    schedule.isDeleted = true;
+    schedule.lastTimeJoinedClass = undefined;
+    schedule.startDate = undefined;
+    await schedule.save()
+    return res.status(200).json({
+      message: "Schedule Deleted Successfully",
+    });
+
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: error.message,
     });
   }
 };
@@ -278,14 +307,15 @@ exports.getAllScheduleswithZoomAccountSorted = async (req, res) => {
       isDeleted: { $ne: true },
       meetingLinks: { $exists: true },
     })
+      .select("slots meetingLinks className")
       .sort({ meetingAccount: -1 })
       .lean();
 
-      console.log(schedules.length)
+    console.log(schedules.length);
 
     const allZoomAccounts = await ZoomAccountModel.find()
-      .select("color ZoomAccountName isDisabled")
-      .sort({ createdAt: -1})
+      .select("color ZoomAccountName isDisabled timeSlots")
+      .sort({ createdAt: -1 })
       .lean();
 
     let finalSortedData = {};
@@ -295,18 +325,16 @@ exports.getAllScheduleswithZoomAccountSorted = async (req, res) => {
         ...zoomAccount,
         schedules: [],
       };
+
       schedules.forEach((schedule) => {
         if (
           schedule?.meetingLinks &&
           Object.values(schedule?.meetingLinks).length &&
           schedule?.meetingLinks[day] &&
-          schedule?.meetingLinks[day]?.meetingAccount?.toString() === zoomAccount?._id?.toString()
-          // .some(
-          //   (link) =>
-          //     link.meetingAccount.toString() === zoomAccount?._id?.toString()
-          // ) && schedule.
+          schedule?.meetingLinks[day]?.meetingAccount?.toString() ===
+            zoomAccount?._id?.toString()
         ) {
-          console.log("SLOTS",schedule)
+          console.log("SLOTS", schedule);
           schedule.slots = schedule.slots[day];
           finalSortedData[zoomAccount?.ZoomAccountName]?.schedules?.push(
             schedule
@@ -314,8 +342,6 @@ exports.getAllScheduleswithZoomAccountSorted = async (req, res) => {
         }
       });
     });
-
-    // console.log(JSON.stringify(finalSortedData, null, 2));
 
     return res.json({
       message: "Zoom accounts retrieved successfully",
@@ -325,6 +351,59 @@ exports.getAllScheduleswithZoomAccountSorted = async (req, res) => {
     console.log(error);
     return res.status(500).json({
       error: "Something went wrong",
+    });
+  }
+};
+
+exports.getZoomAccountDashboardOfDay = async (req, res) => {
+  try {
+    const { day } = req.query;
+    if (!day)
+      return res.status(404).json({
+        message: "Day needs to be provided",
+      });
+    const schedules = await SchedulerModel.find({
+      ["meetingLinks." + day]: {
+        $exists: true,
+      },
+      isDeleted: false,
+    })
+      .select("slots meetingLinks className")
+      .sort({ meetingAccount: -1 })
+      .lean();
+
+    const allZoomAccounts = await ZoomAccountModel.find()
+      .select("color ZoomAccountName isDisabled timeSlots")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    let result = allZoomAccounts.map((zoomAccount) => {
+      return {
+        ...zoomAccount,
+        timeSlots: zoomAccount.timeSlots.reduce((slotsAcc, slot) => {
+          let filteredSchedules = schedules.filter((schedule) => {
+            return (
+              schedule.slots[day].includes(slot) &&
+              schedule?.meetingLinks?.[day]?.meetingAccount.toString() ===
+                zoomAccount._id.toString()
+            );
+          });
+          if (slot.startsWith(day.toUpperCase())) {
+            slotsAcc[slot] = filteredSchedules;
+          }
+          return slotsAcc;
+        }, {}),
+      };
+    });
+
+    return res.json({
+      message: "Zoom accounts retrieved successfully",
+      result,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: error.message || "Something went wrong",
     });
   }
 };
@@ -644,8 +723,6 @@ exports.changeZoomLink = async (req, res) => {
       await deleteExistingZoomLinkOfTheSchedule(schedule);
     }
 
-    console.log(meetingLinks);
-
     let newSchedule = await Schedule.findByIdAndUpdate(
       scheduleId,
       { $set: { meetingLinks } },
@@ -817,17 +894,17 @@ exports.deleteAllZoomMeetings = async (req, res) => {
   try {
     const allMeetings = await SchedulerModel.find({
       isDeleted: { $ne: true },
-    })
+    });
 
     const allAccounts = await ZoomAccountModel.find({}).lean();
 
     // update all Accounts with [] timeSlots
-    await ZoomAccountModel.update({},{timeSlots:[]})
+    await ZoomAccountModel.update({}, { timeSlots: [] });
 
     allMeetings.forEach((schedule) => {
       const { meetingLink, meetingAccount } = schedule;
       if (meetingAccount && meetingLink) {
-        deleteExistingZoomLinkOfTheSchedule(schedule,true);
+        deleteExistingZoomLinkOfTheSchedule(schedule, true);
       }
     });
 

@@ -68,7 +68,6 @@ const SchedulerSchema = new mongoose.Schema(
     startDate: {
       type: Date,
       default: Date.now,
-      required: "Start Date is Required",
     },
     subject: {
       type: mongoose.Schema.Types.ObjectId,

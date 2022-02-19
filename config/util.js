@@ -256,13 +256,6 @@ const findIfNewMeetingLinkNeeded = async (
   );
 
   let newSlots = Object.keys(slots).map((day) => slots[day].sort());
-  console.log(
-    "Is link needed",
-    oldScheduleSlots,
-    newSlots,
-    !equal(oldScheduleSlots, newSlots),
-    isMeetingLinkChangeNeeded
-  );
   return !equal(oldScheduleSlots, newSlots) || isMeetingLinkChangeNeeded;
 };
 
@@ -270,7 +263,6 @@ const deleteMeetingFromZoom = async (meetingLink, meetingAccount,slots,stopSlots
   try {
     const account = await ZoomAccountModel.findById(meetingAccount);
     if (account && meetingLink) {
-      console.log(account._id,meetingLink);
       const { zoomJwt } = account;
       try {
        let res = await fetch(
@@ -311,7 +303,6 @@ const deleteExistingZoomLinkOfTheSchedule = async (schedule,stopSlots) => {
       await deleteMeetingFromZoom(meetingLink, meetingAccount,allSlots,stopSlots);
     }
     let days = Object.keys(meetingLinks);
-    console.log(days)
     for (let o = 0; o < days.length; o++) {
       const day = days[o];
       if (meetingLinks[day]) {
@@ -416,7 +407,6 @@ const retrieveMeetingLink = (schedule) => {
       }
     }
   } else {
-    console.log("yes")
     return meetingLink || "";
   }
 };
