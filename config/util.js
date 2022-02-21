@@ -6,16 +6,16 @@ const fetch = require("node-fetch");
 const equal = require("fast-deep-equal");
 const SchedulerModel = require("../models/Scheduler.model");
 const Payments = require("../models/Payments");
-const momentTZ = require("moment-timezone")
-const days =[
+const momentTZ = require("moment-timezone");
+const days = [
   "monday",
   "tuesday",
   "wednesday",
   "thursday",
   "friday",
   "saturday",
-  "sunday"
-]
+  "sunday",
+];
 
 const createZoomLink = async (slots) => {
   try {
@@ -259,13 +259,18 @@ const findIfNewMeetingLinkNeeded = async (
   return !equal(oldScheduleSlots, newSlots) || isMeetingLinkChangeNeeded;
 };
 
-const deleteMeetingFromZoom = async (meetingLink, meetingAccount,slots,stopSlots) => {
+const deleteMeetingFromZoom = async (
+  meetingLink,
+  meetingAccount,
+  slots,
+  stopSlots
+) => {
   try {
     const account = await ZoomAccountModel.findById(meetingAccount);
     if (account && meetingLink) {
       const { zoomJwt } = account;
       try {
-       let res = await fetch(
+        let res = await fetch(
           `https://api.zoom.us/v2/meetings/${
             meetingLink.split("/")[4].split("?")[0]
           }`,
@@ -278,15 +283,15 @@ const deleteMeetingFromZoom = async (meetingLink, meetingAccount,slots,stopSlots
           }
         );
       } catch (error) {
-        console.log(error)
+        console.log(error);
       }
-      if(!stopSlots){
-        slots.forEach(slot => {
-          let slotIndex = account.timeSlots.indexOf(slot)
-          if(slotIndex !== -1) {
-            account.timeSlots.splice(slotIndex, 1)
+      if (!stopSlots) {
+        slots.forEach((slot) => {
+          let slotIndex = account.timeSlots.indexOf(slot);
+          if (slotIndex !== -1) {
+            account.timeSlots.splice(slotIndex, 1);
           }
-        })
+        });
         await account.save();
       }
     }
@@ -295,19 +300,29 @@ const deleteMeetingFromZoom = async (meetingLink, meetingAccount,slots,stopSlots
   }
 };
 
-const deleteExistingZoomLinkOfTheSchedule = async (schedule,stopSlots) => {
+const deleteExistingZoomLinkOfTheSchedule = async (schedule, stopSlots) => {
   try {
     const { meetingLink, meetingAccount, meetingLinks } = schedule;
     if (meetingLink && meetingAccount) {
-      const [_,allSlots] = generateSlots(schedule.slots)
-      await deleteMeetingFromZoom(meetingLink, meetingAccount,allSlots,stopSlots);
+      const [_, allSlots] = generateSlots(schedule.slots);
+      await deleteMeetingFromZoom(
+        meetingLink,
+        meetingAccount,
+        allSlots,
+        stopSlots
+      );
     }
     let days = Object.keys(meetingLinks);
     for (let o = 0; o < days.length; o++) {
       const day = days[o];
       if (meetingLinks[day]) {
         const { meetingAccount, link } = meetingLinks[day];
-        await deleteMeetingFromZoom(link, meetingAccount,schedule.slots[day],stopSlots);
+        await deleteMeetingFromZoom(
+          link,
+          meetingAccount,
+          schedule.slots[day],
+          stopSlots
+        );
       }
     }
   } catch (error) {
