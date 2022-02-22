@@ -53,48 +53,47 @@ exports.validateSlot = (req, res, next) => {
   }
 };
 
-exports.addSlot = (req, res) => {
-  const { id } = req.params;
-  TeacherModel.findOne({
-    id,
-  }).then((data) => {
-    if (data.availableSlots && data.scheduledSlots) {
-      if (
-        !data.availableSlots.includes(req.body.slot) &&
-        !data.scheduledSlots.includes(req.body.slot)
-      ) {
-        data.availableSlots.push(req.body.slot);
-      } else {
-        return res.status(400).json({
-          error: "Selected Slot already Added",
+exports.addAvailableSlot = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { slot } = req.body;
+    const teacher = await TeacherModel.findOne({ id });
+    if (teacher) {
+      if (teacher.scheduledSlots.includes(slot)) {
+        let day = slot.split("-")[0].toLowerCase;
+        const schedule = await SchedulerModel.find({
+          teacher: id,
+          ["slots." + day]: { $in: [slot] },
+          isDeleted: { $ne: true },
         });
+        if (schedule) {
+          return res.status(400).json({
+            message: "Cannot make available as it is already scheduled slot",
+          });
+        } else {
+          teacher.scheduledSlots =  teacher.scheduledSlots.filter((scheduledSlot) => scheduledSlot !== slot)
+          teacher.availableSlots.push(slot);
+        }
+      } else {
+        if (teacher.availableSlots && Array.isArray(teacher.availableSlots)) {
+          teacher.availableSlots.push(slot);
+        } else {
+          teacher.availableSlots = [slot];
+        }
       }
-      data.save((err, docs) => {
-        if (err) {
-          return res.status(400).json({
-            error: "internal server error",
-          });
-        } else {
-          return res.json({
-            message: "Slot added successfully",
-          });
-        }
-      });
+      await teacher.save();
+      return res.status(200).json({message: "Slot added successfully"})
     } else {
-      data.availableSlots = [req.body.slot];
-      data.save((err, docs) => {
-        if (err) {
-          return res.status(400).json({
-            error: "internal server error",
-          });
-        } else {
-          return res.json({
-            message: "Slot added successfully",
-          });
-        }
+      return res.status(404).json({
+        message: "Teacher not found",
       });
     }
-  });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: error?.message || "internal server error",
+    });
+  }
 };
 
 exports.getAvailableSlots = (req, res) => {

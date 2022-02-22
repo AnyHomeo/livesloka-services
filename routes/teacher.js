@@ -3,7 +3,6 @@ const router = express.Router();
 
 const {
   validateSlot,
-  addSlot,
   getAvailableSlots,
   getTeachers,
   deleteSlot,
@@ -11,15 +10,15 @@ const {
   getOccupancyDashboardData,
   getAllDaysSlots,
   GetTeacherMeetings,
-  GetTeacherAttendance,
   joinClass,
   GetSalaries,
   getTeacherDetailsById,
   getTeacherLeavesAndSchedules,
+  addAvailableSlot,
 } = require("../controllers/teacher.controller");
 
 router.get("/join/:scheduleId/:teacherId", joinClass);
-router.post("/add/available/:id", validateSlot, addSlot);
+router.post("/add/available/:id", validateSlot, addAvailableSlot);
 router.get("/available/:id", getAvailableSlots);
 router.get("/", getTeachers);
 router.post("/delete/slot/:id", validateSlot, deleteSlot);
