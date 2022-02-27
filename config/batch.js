@@ -9,6 +9,7 @@ const SchedulerModel = require("../models/Scheduler.model");
 const times = require("../models/times.json");
 const CancelledClassesModel = require("../models/CancelledClasses.model");
 const AdminModel = require("../models/Admin.model");
+const CustomerModel = require("../models/Customer.model");
 
 const savePaypalTransactions = async (transactions) => {
   try {
@@ -167,91 +168,127 @@ const getPrevSlot = (slot) => {
   }
 };
 
-const addRewardsToCustomer = async () => {
+// const addRewardsToCustomer = async () => {
+//   try {
+//     // let presentSlot = getPresentSlot();
+//     // let schedulesRightNow = await SchedulerModel.find({
+
+//     // })
+//     let presentSlot = getPresentSlot();
+//     let prevSlot = getPrevSlot(presentSlot);
+//     console.log(presentSlot, prevSlot);
+//     let day = presentSlot.split("-")[0].toLowerCase();
+//     let schedules = await SchedulerModel.find({
+//       ["slots." + day]: {
+//         $in: [presentSlot],
+//         $nin: [prevSlot],
+//       },
+//       isDeleted: false,
+//     }).lean();
+//     let scheduleIds = schedules.map((schedule) => schedule._id);
+//     if (scheduleIds.length) {
+//       let teacherLeaves = await TeacherLeavesModel.find({
+//         $or: [
+//           {
+//             scheduleId: {
+//               $in: scheduleIds,
+//             },
+//             date: {
+//               $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
+//               $lte: momentTZ().tz("Asia/Kolkata").endOf("day").format(),
+//             },
+//           },
+//           {
+//             entireDay: true,
+//             date: {
+//               $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
+//               $lte: momentTZ().tz("Asia/Kolkata").endOf("day").format(),
+//             },
+//           },
+//         ],
+//       })
+//         .populate("teacherId")
+//         .lean();
+//       let teachersOnLeaves = teacherLeaves.map(
+//         (teacher) => teacher.teacherId.id
+//       );
+
+//       if (teachersOnLeaves.length) {
+//         let customerLeaves = await CancelledClassesModel.find({
+//           cancelledDate: {
+//             $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
+//             $lte: momentTZ().tz("Asia/Kolkata").endOf("day").format(),
+//           },
+//           scheduleId: {
+//             $in: scheduleIds,
+//           },
+//         }).lean();
+
+//         let studentsOnLeaves = customerLeaves.map((leave) => leave.studentId);
+//         let allCustomersWithoutLeaves = schedules.reduce(
+//           (accumulator, schedule) => {
+//             if (teachersOnLeaves.includes(schedule.teacher)) {
+//               let customers = [...schedule.students];
+//               customers.forEach((customer) => {
+//                 if (
+//                   !studentsOnLeaves.some((student) => student.equals(customer))
+//                 ) {
+//                   accumulator.push(customer);
+//                 }
+//               });
+//             }
+//           },
+//           []
+//         );
+
+//         if (allCustomersWithoutLeaves.length) {
+//           let customerEmails = await CustomerModel.find({
+//             _id: { $in: allCustomersWithoutLeaves },
+//           });
+//           customerEmails = customerEmails.map(customer => customer.email);
+//           await AdminModel.updateMany(
+//             { userId: { $in: customerEmails } },
+//             { $inc: { rewards: 1 } }
+//           );
+//         }
+//       }
+//     }
+//   } catch (error) {
+//     console.log(error);
+//   }
+// };
+
+const sendPaymentDueMessages = async () => {
   try {
-    // let presentSlot = getPresentSlot();
-    // let schedulesRightNow = await SchedulerModel.find({
-
-    // })
-    let presentSlot = getPresentSlot();
-    let prevSlot = getPrevSlot(presentSlot);
-    console.log(presentSlot, prevSlot);
-    let day = presentSlot.split("-")[0].toLowerCase();
-    let schedules = await SchedulerModel.find({
-      ["slots." + day]: {
-        $in: [presentSlot],
-        $nin: [prevSlot],
+    const customersWithDueDateTomorrow = await CustomerModel.find({
+      paidTill: {
+        $gte: moment().format(),
+        $lte: moment().add(1, "days").format(),
       },
-      isDeleted: false,
-    }).lean();
-    let scheduleIds = schedules.map((schedule) => schedule._id);
-    if (scheduleIds.length) {
-      let teacherLeaves = await TeacherLeavesModel.find({
-        $or: [
-          {
-            scheduleId: {
-              $in: scheduleIds,
-            },
-            date: {
-              $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
-              $lte: momentTZ().tz("Asia/Kolkata").endOf("day").format(),
-            },
-          },
-          {
-            entireDay: true,
-            date: {
-              $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
-              $lte: momentTZ().tz("Asia/Kolkata").endOf("day").format(),
-            },
-          },
-        ],
-      })
-        .populate("teacherId")
-        .lean();
-      let teachersOnLeaves = teacherLeaves.map(
-        (teacher) => teacher.teacherId.id
-      );
+    });
 
-      if (teachersOnLeaves.length) {
-        let customerLeaves = await CancelledClassesModel.find({
-          cancelledDate: {
-            $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
-            $lte: momentTZ().tz("Asia/Kolkata").endOf("day").format(),
-          },
-          scheduleId: {
-            $in: scheduleIds,
-          },
-        }).lean();
+    const customersWithClassesLeftLessThanZero = await CustomerModel.find({
+      numberOfClassesBought: {
+        $lte: 0,
+      },
+    });
 
-        let studentsOnLeaves = customerLeaves.map((leave) => leave.studentId);
-        let allCustomersWithoutLeaves = schedules.reduce(
-          (accumulator, schedule) => {
-            if (teachersOnLeaves.includes(schedule.teacher)) {
-              let customers = [...schedule.students];
-              customers.forEach((customer) => {
-                if (
-                  !studentsOnLeaves.some((student) => student.equals(customer))
-                ) {
-                  accumulator.push(customer);
-                }
-              });
-            }
-          },
-          []
-        );
+    const customersWithClassesLeftLessThanZeroIds =
+      customersWithClassesLeftLessThanZero.map((customer) => customer._id);
 
-        if (allCustomersWithoutLeaves.length) {
-          let customerEmails = await CustomerModel.find({
-            _id: { $in: allCustomersWithoutLeaves },
-          });
-          customerEmails = customerEmails.map(customer => customer.email);
-          await AdminModel.updateMany(
-            { userId: { $in: customerEmails } },
-            { $inc: { rewards: 1 } }
-          );
-        }
-      }
-    }
+    const nextDay = moment()
+      .tz("Asia/Kolkata")
+      .add(1, "days")
+      .format("dddd")
+      .toLowerCase();
+    schedules = await SchedulerModel.find({
+      students: {
+        $in: customersWithClassesLeftLessThanZeroIds,
+      },
+      ["slots." + nextDay]: { $exists: true },
+      isDeleted: { $ne: true }
+    });
+    
   } catch (error) {
     console.log(error);
   }
@@ -264,7 +301,11 @@ const batch = () => {
       timezone: "Asia/Kolkata",
     });
 
-    cron.schedule("38 17 * * *", addRewardsToCustomer, {
+    // cron.schedule("38 17 * * *", addRewardsToCustomer, {
+    //   timezone: "Asia/Kolkata",
+    // });
+
+    cron.schedule("0 21 * * *", sendPaymentDueMessages, {
       timezone: "Asia/Kolkata",
     });
   }

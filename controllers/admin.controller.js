@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const AdminModel = require("../models/Admin.model");
 const { model } = require("../models/Admin.model");
 const admin = require("../models/Admin.model");
-const Comment = require("../models/comments.model");
+const Comment = require("../models/Comments.model");
 const CustomerModel = require("../models/Customer.model");
 const InvoiceModel = require("../models/Invoice.model");
 const TimeZoneModel = require("../models/timeZone.model");
@@ -13,88 +13,87 @@ const { mongooseError } = require("../config/helper");
 const AgentModel = require("../models/Agent.model");
 var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 
-module.exports = {
-  async authentication(req, res) {
-    try {
-      let user = await admin
-        .findOne({
-          $or: [
-            { userId: req.body.userId.toLowerCase() },
-            { userId: req.body.userId },
-          ],
-        })
+exports.authentication = async (req, res) => {
+  try {
+    let user = await admin
+      .findOne({
+        $or: [
+          { userId: req.body.userId.toLowerCase() },
+          { userId: req.body.userId },
+        ],
+      })
+      .lean();
+    if (!user) {
+      return res.status(400).json({ error: "Invalid UserId or Password" });
+    }
+    if (user.password === req.body.password) {
+      var payload = {
+        _id: user._id,
+        userId: user.userId,
+        role: user.roleId,
+      };
+      var newToken = jwt.sign(payload, process.env.JWT_SECRET);
+      delete user.password;
+      let customer = await CustomerModel.findById(user.customerId)
+        .select("timeZoneId firstName lastName phone whatsAppnumber -_id")
         .lean();
-      if (!user) {
-        return res.status(400).json({ error: "Invalid UserId or Password" });
-      }
-      if (user.password === req.body.password) {
-        var payload = {
-          _id: user._id,
-          userId: user.userId,
-          role: user.roleId,
-        };
-        var newToken = jwt.sign(payload, process.env.JWT_SECRET);
-        delete user.password;
-        let customer = await CustomerModel.findById(user.customerId)
-          .select("timeZoneId firstName lastName phone whatsAppnumber -_id")
+      if (customer) {
+        let timeZone = await TimeZoneModel.findOne({
+          id: customer.timeZoneId,
+        })
+          .select("timeZoneName -_id")
           .lean();
-        if (customer) {
-          let timeZone = await TimeZoneModel.findOne({
-            id: customer.timeZoneId,
-          })
-            .select("timeZoneName -_id")
-            .lean();
-          if (timeZone) {
-            return res.status(200).json({
-              message: "LoggedIn successfully",
-              result: {
-                ...user,
-                ...customer,
-                timeZone: timeZone.timeZoneName,
-                token: newToken,
-              },
-            });
-          } else {
-            return res.status(200).json({
-              message: "LoggedIn successfully",
-              result: {
-                ...user,
-                ...customer,
-                token: newToken,
-              },
-            });
-          }
+        if (timeZone) {
+          return res.status(200).json({
+            message: "LoggedIn successfully",
+            result: {
+              ...user,
+              ...customer,
+              timeZone: timeZone.timeZoneName,
+              token: newToken,
+            },
+          });
         } else {
-          if(user.agentId){
-            const agent = await AgentModel.findOne({id:user.agentId}).populate("role").lean();
-            return res.status(200).json({
-              message: "LoggedIn successfully",
-              result: {
-                ...agent,
-                ...user,
-                token: newToken,
-              },
-            });  
-          } else {
-
-            return res.status(200).json({
-              message: "LoggedIn successfully",
-              result: { ...user, token: newToken },
-            });
-          }
+          return res.status(200).json({
+            message: "LoggedIn successfully",
+            result: {
+              ...user,
+              ...customer,
+              token: newToken,
+            },
+          });
+        }
+      } else {
+        if (user.agentId) {
+          const agent = await AgentModel.findOne({ id: user.agentId })
+            .populate("role")
+            .lean();
+          return res.status(200).json({
+            message: "LoggedIn successfully",
+            result: {
+              ...agent,
+              ...user,
+              token: newToken,
+            },
+          });
+        } else {
+          return res.status(200).json({
+            message: "LoggedIn successfully",
+            result: { ...user, token: newToken },
+          });
         }
       }
-      return res.status(400).json({ error: "Wrong Password !!" });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        error: "Error In login!",
-      });
     }
-  },
+    return res.status(400).json({ error: "Wrong Password !!" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: "Error In login!",
+    });
+  }
 };
 
-module.exports.ChangePassword = (req, res) => {
+exports.changePassword = (req, res) => {
   // call for passport authentication
   if (req.body.newPassword === req.body.confirmPassword) {
     admin
@@ -115,7 +114,7 @@ module.exports.ChangePassword = (req, res) => {
   }
 };
 
-module.exports.register = (req, res, next) => {
+exports.register = (req, res, next) => {
   var adm = new admin();
   adm.userId = req.body.userId;
   adm.username = req.body.username;
@@ -132,64 +131,70 @@ module.exports.register = (req, res, next) => {
   });
 };
 
-module.exports.addcomment = (req, res) => {
-  let comm = new Comment(req.body);
-  comm
-    .save()
+exports.addcomment = async (req, res) => {
+  try {
+    let comment = new Comment(req.body);
+    await comment.save();
+    return res.json({ message: "comment added successfully", result: comment });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .send({ message: error.message || "Something went wrong!" });
+  }
+};
+
+exports.getComments = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    let comments = await Comment.find({ customer: customerId })
+      .populate("message")
+      .populate("createdBy");
+    return res.send({
+      message: "Comments retrieved successfully",
+      result: comments,
+    });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: error.message || "Something went wrong!" });
+  }
+};
+
+exports.editComment = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const result = await Comment.updateOne(
+      { _id: commentId },
+      { $set: req.body }
+    );
+    return res.json({ message: "Comment updated successfully", result });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ message: error.message || "Something went wrong!", error });
+  }
+};
+
+exports.deleteComment = (req, res) => {
+  const { commentId } = req.params;
+  Comment.deleteOne({ _id: commentId })
     .then((result) => {
-      res.status(200).send({
-        message: "Comment Added Successfully",
-        status: "OK",
-        result: result,
+      res.json({
+        message: "Comment deleted successfully",
+        result,
       });
     })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).send({
-        message: "Internal Error",
-        status: "OK",
-        result: err,
-      });
-    });
-};
-
-module.exports.getComments = (req, res) => {
-  Comment.find({ customerId: req.params.id })
-    .then((result) => {
+    .catch((error) => {
       res
-        .status("200")
-        .send({ message: "comment got successfully", status: "ok", result });
-    })
-    .catch((err) => {
-      res.status("400").send({ message: "something went wrong !!", err });
+        .status(500)
+        .json({ message: error.message || "Something went wrong!", error });
     });
 };
 
-module.exports.updatecomment = (req, res) => {
-  Comment.updateOne({ _id: req.body._id }, req.body)
-    .then((result) => {
-      res
-        .status("200")
-        .send({ message: "Updated  successfully", status: "ok", result });
-    })
-    .catch((err) => {
-      res.status(500).send({ error: "something went wrong !!", err });
-    });
-};
-
-module.exports.deletecomment = (req, res) => {
-  Comment.deleteOne({ _id: req.body._id })
-    .then((result) => {
-      res
-        .status("200")
-        .send({ message: " Deleted  successfully", status: "ok", result });
-    })
-    .catch((err) => {
-      res.status("400").send({ message: "something went wrong !!", err });
-    });
-};
-
-module.exports.getCorrespondingData = (req, res) => {
+exports.getCorrespondingData = (req, res) => {
   try {
     let { select, populate, populateFields } = req.query;
     if (typeof select === "string") {
@@ -217,7 +222,7 @@ module.exports.getCorrespondingData = (req, res) => {
   }
 };
 
-module.exports.updateStatus = (req, res) => {
+exports.updateStatus = (req, res) => {
   const statusModel = require("../models/Status.model");
   statusModel
     .updateOne({ statusId: req.body.statusId }, req.body)
@@ -234,7 +239,7 @@ module.exports.updateStatus = (req, res) => {
     });
 };
 
-module.exports.updateCorrespondingData = (req, res) => {
+exports.updateCorrespondingData = (req, res) => {
   try {
     const vell = require(`../models/${req.params.name}.model`);
     if (!req.body._id) {
@@ -335,7 +340,7 @@ module.exports.updateCorrespondingData = (req, res) => {
   }
 };
 
-module.exports.DeleteCorrespondingData = (req, res) => {
+exports.deleteCorrespondingData = (req, res) => {
   const model = require(`../models/${req.params.name}.model`);
   const { id } = req.params;
   model
@@ -351,7 +356,7 @@ module.exports.DeleteCorrespondingData = (req, res) => {
     });
 };
 
-module.exports.addField = (req, res) => {
+exports.addField = (req, res) => {
   try {
     req.body.id = Math.floor(Math.random() * 100000) * Number(Date.now());
     req.body.statusId = Math.floor(Math.random() * 100000) * Number(Date.now());
@@ -405,7 +410,7 @@ module.exports.addField = (req, res) => {
   }
 };
 
-module.exports.addinvoice = (req, res) => {
+exports.addinvoice = (req, res) => {
   req.body.invoiceDate = new Date(req.body.invoiceDate);
   req.body.dueDate = new Date(req.body.dueDate);
 
@@ -429,7 +434,7 @@ module.exports.addinvoice = (req, res) => {
     });
 };
 
-module.exports.getinvoices = (req, res) => {
+exports.getinvoices = (req, res) => {
   if (req.body.start == "") {
     let d = new Date();
     req.body.start =
@@ -477,7 +482,7 @@ module.exports.getinvoices = (req, res) => {
     });
 };
 
-module.exports.deleteInvoice = (req, res) => {
+exports.deleteInvoice = (req, res) => {
   InvoiceModel.deleteOne({ _id: req.body._id })
     .then((result) => {
       res.status(200).send({
@@ -495,7 +500,7 @@ module.exports.deleteInvoice = (req, res) => {
     });
 };
 
-module.exports.resetPassword = (req, res) => {
+exports.resetPassword = (req, res) => {
   const { id } = req.params;
   const { isEmail } = req.query;
   if (!isEmail) {
@@ -549,7 +554,7 @@ module.exports.resetPassword = (req, res) => {
   }
 };
 
-module.exports.getAllAdmins = (req, res) => {
+exports.getAllAdmins = (req, res) => {
   AdminModel.find()
     .select("customerId username userId")
     .populate("customerId", "firstName email")
@@ -566,7 +571,7 @@ module.exports.getAllAdmins = (req, res) => {
     });
 };
 
-module.exports.getSingleTeacher = (req, res) => {
+exports.getSingleTeacher = (req, res) => {
   AdminModel.find({ userId: req.params.id })
     .then((result) => {
       return res.status(200).json({ message: "Fetched successfully", result });
@@ -576,7 +581,7 @@ module.exports.getSingleTeacher = (req, res) => {
     });
 };
 
-module.exports.addOtpToAdminCollection = async (req, res) => {
+exports.addOtpToAdminCollection = async (req, res) => {
   try {
     const { userId } = req.body;
     if (!userId) {
@@ -615,7 +620,7 @@ module.exports.addOtpToAdminCollection = async (req, res) => {
   }
 };
 
-module.exports.validateOtpAndResetPassword = async (req, res) => {
+exports.validateOtpAndResetPassword = async (req, res) => {
   try {
     const { userId, otp } = req.body;
     console.log(userId, otp);
@@ -638,7 +643,7 @@ module.exports.validateOtpAndResetPassword = async (req, res) => {
   }
 };
 
-module.exports.postAddress = async (req, res) => {
+exports.postAddress = async (req, res) => {
   try {
     const { id } = req.params;
     let customer = await CustomerModel.findById(id);
@@ -660,7 +665,7 @@ module.exports.postAddress = async (req, res) => {
   }
 };
 
-module.exports.getAddress = async (req, res) => {
+exports.getAddress = async (req, res) => {
   try {
     const { id } = req.params;
     if (isValidObjectId(id)) {

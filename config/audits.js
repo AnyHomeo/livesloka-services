@@ -716,3 +716,64 @@ const editSchedule = async (req, res) => {
       });
     }
   };
+
+  
+
+  let allSlots = [];
+  Object.keys(slots).forEach((day) => {
+    allSlots = [...allSlots, ...slots[day]];
+  });
+  let meetingLinkResponse = {};
+
+  //* 3 generate a meeting link through zoom by selecting an account incase if not able to generate link send message in chatbot
+  let availableZoomAccount = await ZoomAccountModel.findOne({
+    timeSlots: {
+      $nin: allSlots,
+    },
+  });
+  let zoomAccountId = "";
+  try {
+    if (availableZoomAccount) {
+      const { _id, zoomEmail, zoomJwt, zoomPassword } =
+        availableZoomAccount;
+      zoomAccountId = _id;
+      const formData = {
+        topic: "Livesloka Online Class",
+        type: 3,
+        password: zoomPassword,
+        settings: {
+          host_video: true,
+          participant_video: true,
+          join_before_host: true,
+          jbh_time: 0,
+          mute_upon_entry: true,
+          watermark: false,
+          use_pmi: false,
+          approval_type: 2,
+          audio: "both",
+          auto_recording: "none",
+          waiting_room: false,
+          meeting_authentication: false,
+        },
+      };
+      meetingLinkResponse = await fetch(
+        `https://api.zoom.us/v2/users/${zoomEmail}/meetings`,
+        {
+          method: "post",
+          body: JSON.stringify(formData),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${zoomJwt}`,
+          },
+        }
+      );
+    }
+  } catch (error) {
+    console.log(error);
+  }
+  //* 5 get the selected zoom account and update timeslots
+  allSlots.forEach((slot) => {
+    availableZoomAccount.timeSlots.push(slot);
+  });
+  await availableZoomAccount.save();
+  meetingLinkResponse = await meetingLinkResponse.json();
