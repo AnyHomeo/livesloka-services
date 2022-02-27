@@ -41,6 +41,10 @@ const SlotOptionsSchema = new mongoose.Schema(
     isScheduled:{
       type: Boolean,
       default: false
+    },
+    selectedPlan:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref:"Plan"
     }
   }, 
   { timestamps: true }

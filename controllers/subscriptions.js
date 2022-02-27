@@ -26,7 +26,7 @@ const {
   ADMIN_PAYMENT_SUCCESSFUL,
   ADMIN_UNSUBSCRIBE,
 } = require("../config/messages");
-const { createSlotsZoomLink } = require("../config/util");
+const { createSlotsZoomLink, generateSlots } = require("../config/util");
 
 let accessToken = "";
 let expiresAt = new Date().getTime();
@@ -793,7 +793,6 @@ const scheduleAndupdateCustomer = async (
         {
           $set: {
             scheduleDescription,
-            meetingLink: meetingLinkResponse.join_url,
             teacherId: teacher.id,
             classStatusId: "113975223750050",
             paidTill: periodEndDate,
@@ -802,6 +801,7 @@ const scheduleAndupdateCustomer = async (
       );
 
       //* 8 update teacher avaialable and scheduled slots
+      let [,allSlots] = generateSlots(slots)
       allSlots.forEach((slot) => {
         let index = teacher.availableSlots.indexOf(slot);
         if (index != -1) {

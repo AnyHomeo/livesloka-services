@@ -289,7 +289,10 @@ exports.handleSuccessfulRazorpayPayment = async (req, res) => {
 
     const option = await OptionModel.findOne({
       customer: customerId,
-    }).lean();
+    });
+
+    option.selectedPlan = planId;
+    await option.save();
 
     let nextDate = moment(
       option.isScheduled ? customer.paidTill : option.startDate
