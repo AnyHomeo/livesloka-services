@@ -28,6 +28,15 @@ const GroupMessageSchema = new mongoose.Schema(
       type: ReplySchema,
       default: null,
     },
+    messageType: {
+      type: String,
+      default: 'TEXT',
+      enum: ['TEXT', 'IMAGE', 'VIDEO', 'AUDIO', 'DOCUMENT'],
+    },
+    fileURL: {
+      type: String,
+      default: '',
+    },
   },
   { timestamps: true }
 );
