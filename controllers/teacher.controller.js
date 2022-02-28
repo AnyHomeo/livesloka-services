@@ -10,6 +10,7 @@ const momentTZ = require("moment-timezone");
 const TeacherLeavesModel = require("../models/TeacherLeaves.model");
 const SubjectModel = require("../models/Subject.model");
 const TimeZoneModel = require("../models/timeZone.model");
+const { retrieveMeetingLink } = require("../config/util");
 
 const days = [
   "MONDAY",
@@ -485,16 +486,19 @@ exports.GetSalaries = async (req, res) => {
 exports.joinClass = async (req, res) => {
   try {
     const { scheduleId } = req.params;
-    let schedule = await SchedulerModel.findById(scheduleId).select(
-      "meetingLink wherebyHostUrl"
-    );
+    let schedule = await SchedulerModel.findById(scheduleId)
+      .select("meetingLink meetingLinks")
+      .lean();
     if (schedule) {
-      schedule.lastTimeJoinedClass = new Date();
-      await schedule.save();
+      await SchedulerModel.updateOne(
+        { _id: scheduleId },
+        { $set: { lastTimeJoinedClass: new Date() } }
+      );
+      const link = retrieveMeetingLink(schedule);
+      console.log(link);
       return res.json({
         message: "Last time joined updated Successfully!",
-        link: schedule.meetingLink,
-        hostLink: schedule.wherebyHostUrl,
+        link,
       });
     }
   } catch (error) {

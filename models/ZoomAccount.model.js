@@ -10,7 +10,7 @@ var ZoomAccountSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    ZoomAccountDesc: {
+    ZoomAccountDesc: { 
       type: String,
       trim: true,
     },

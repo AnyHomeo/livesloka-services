@@ -1,23 +1,24 @@
 const express = require("express");
 const router = express.Router();
 const {
-  addSchedule,
   getScheduleById,
   deleteScheduleById,
-  editSchedule,
   getAllSchedules,
   getAllSchedulesByZoomAccountId,
   getAllScheduleswithZoomAccountSorted,
   dangerousScheduleUpdate,
-  editIfWhereby,
   changeZoomLink,
   getSchedulesByScheduleIdAndTime,
-  getPresentAndNextScheduleOfATeacher
+  getPresentAndNextScheduleOfATeacher,
+  createNewSchedule,
+  updateSchedule,
+  deleteAllZoomMeetings
 } = require("../controllers/schedule.controller");
 
-router.post("/", addSchedule);
+router.post("/", createNewSchedule);
+ router.get("/", deleteAllZoomMeetings);
 router.post("/dangerous/edit/:scheduleId", dangerousScheduleUpdate);
-router.post("/edit/:id",editIfWhereby,editSchedule);
+router.post("/edit/:scheduleId",updateSchedule);
 router.get("/delete/:id", deleteScheduleById);
 router.get("/data/all", getAllSchedules);
 router.get("/zoom/all", getAllScheduleswithZoomAccountSorted);
