@@ -7,8 +7,8 @@ const Customer = require("../models/Customer.model");
 const Payment = require("../models/Payments");
 const Currency = require("../models/Currency.model");
 const TimeZoneModel = require("../models/timeZone.model");
-const OptionsModel = require("../models/SlotOptions"); 
-const shortid = require("shortid")
+const OptionsModel = require("../models/SlotOptions");
+const shortid = require("shortid");
 const moment = require("moment");
 const {
   isFutureDate,
@@ -36,7 +36,9 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-const getPayableAmount = (plan,discount,customer) => ((plan.amount - ((discount?.amount || 0)*plan.intervalCount))*(customer?.numberOfStudents || 1))
+const getPayableAmount = (plan, discount, customer) =>
+  (plan.amount - (discount?.amount || 0) * plan.intervalCount) *
+  (customer?.numberOfStudents || 1);
 
 exports.createAPayment = async (req, res) => {
   try {
@@ -44,27 +46,27 @@ exports.createAPayment = async (req, res) => {
     const customer = await Customer.findById(customerId)
       .select("firstName discount numberOfStudents isSubscription")
       .lean();
-      let planConfig = {
-        _id: planId,
-        isSubscription: !!customer.isSubscription,
-      }
-    const plan = await Plans.findOne(planConfig)
-      .populate("currency")
-      .lean();
+    let planConfig = {
+      _id: planId,
+      isSubscription: !!customer.isSubscription,
+    };
+    const plan = await Plans.findOne(planConfig).populate("currency").lean();
 
     if (!customer) {
       return res.status(400).json({ error: "Invalid Customer" });
     }
-    
+
     if (!plan) {
       return res.status(400).json({ error: "Invalid Plan" });
     }
 
     const option = await OptionsModel.findOne({
       customer,
-    })
-    const discount = option.discounts.filter(discount =>  discount.plan.equals(plan._id))[0]
-    let amount = getPayableAmount(plan,discount,customer) 
+    });
+    const discount = option.discounts.filter((discount) =>
+      discount.plan.equals(plan._id)
+    )[0];
+    let amount = getPayableAmount(plan, discount, customer);
     if (plan.currency.currencyName !== "INR") {
       const payment_json = {
         intent: "sale",
@@ -114,9 +116,9 @@ exports.createAPayment = async (req, res) => {
         }
       });
     } else {
-      console.log(amount)
+      console.log(amount);
       const options = {
-        amount: amount*100,
+        amount: amount * 100,
         currency: "INR",
         receipt: shortid.generate(),
         payment_capture: 1,
@@ -183,8 +185,10 @@ exports.handlePaypalSuccessfulPayment = async (req, res) => {
       customer: customerId,
     }).lean();
 
-    const discount = option.discounts.filter(discount =>  discount.plan.equals(plan._id))[0]
-    let amount = getPayableAmount(plan,discount,customer)
+    const discount = option.discounts.filter((discount) =>
+      discount.plan.equals(plan._id)
+    )[0];
+    let amount = getPayableAmount(plan, discount, customer);
 
     const execute_payment_json = {
       payer_id: PayerID,
@@ -203,10 +207,8 @@ exports.handlePaypalSuccessfulPayment = async (req, res) => {
       execute_payment_json,
       async function (error, payment) {
         if (error) {
-          console.log(JSON.stringify(error,null,2));
-          return res.redirect(
-            `${process.env.USER_CLIENT_URL}/payment-failed`
-          );
+          console.log(JSON.stringify(error, null, 2));
+          return res.redirect(`${process.env.USER_CLIENT_URL}/payment-failed`);
         } else {
           let nextDate;
           if (customer.paidTill) {
@@ -268,9 +270,7 @@ exports.handlePaypalSuccessfulPayment = async (req, res) => {
     );
   } catch (error) {
     console.log(error);
-    return res.redirect(
-      `${process.env.USER_CLIENT_URL}/payment-failed`
-    );
+    return res.redirect(`${process.env.USER_CLIENT_URL}/payment-success`);
   }
 };
 
@@ -289,14 +289,21 @@ exports.handleSuccessfulRazorpayPayment = async (req, res) => {
 
     const option = await OptionModel.findOne({
       customer: customerId,
-    }).lean();
+    });
 
-    let nextDate = moment(option.isScheduled ? customer.paidTill : option.startDate)
-    .add(plan.interval + "s", plan.intervalCount)
-    .format();
+    option.selectedPlan = planId;
+    await option.save();
 
-    const discount = option.discounts.filter(discount =>  discount.plan.equals(plan._id))[0]
-    let amount = getPayableAmount(plan,discount,customer)
+    let nextDate = moment(
+      option.isScheduled ? customer.paidTill : option.startDate
+    )
+      .add(plan.interval + "s", plan.intervalCount)
+      .format();
+
+    const discount = option.discounts.filter((discount) =>
+      discount.plan.equals(plan._id)
+    )[0];
+    let amount = getPayableAmount(plan, discount, customer);
 
     //message to admin and customer
     const zone = getNameFromTimezone(timeZone.timeZoneName) || "Asia/Kolkata";

@@ -136,6 +136,7 @@ module.exports = {
   },
 
   async updateCustomer(req, res) {
+    console.log(req.body);
     CustomerModel.updateOne(
       {
         _id: req.body._id,

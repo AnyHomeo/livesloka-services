@@ -8,6 +8,7 @@ const Routes = require('./Routes');
 const Swagger = require('./Swagger');
 const Socket = require('./Socket');
 const { detectIntent } = require('./dialogflow');
+// const { deleteZoomLinks, createZoomLinks } = require('./scripts/main');
 
 const app = express();
 const http = require('http').createServer(app);
@@ -28,6 +29,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+// app.get('/zoom/delete',deleteZoomLinks)
+// app.get('/zoom/create',createZoomLinks)
 
 Routes(app);
 Swagger(app);

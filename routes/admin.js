@@ -1,14 +1,38 @@
-require("dotenv").config()
-var express = require("express");
-var router = express.Router();
-var twilio = require('twilio');
-var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
-var ctrl = require("../controllers/admin.controller");
-var customerCtrl = require("../controllers/Customer.controller");
-const { addOtpToAdminCollection, validateOtpAndResetPassword,getAddress,postAddress } = require("../controllers/admin.controller");
+require("dotenv").config();
+const express = require("express");
+const router = express.Router();
+const twilio = require("twilio");
+const client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
+const {
+  registerCustomer,
+  details,
+  getRespectiveDetails,
+  updateCustomer,
+  deleteCustomer,
+} = require("../controllers/Customer.controller");
+const {
+  addOtpToAdminCollection,
+  validateOtpAndResetPassword,
+  getAddress,
+  postAddress,
+  authentication,
+  changePassword,
+  getCorrespondingData,
+  addField,
+  updateStatus,
+  updateCorrespondingData,
+  deleteCorrespondingData,
+  addcomment, 
+  getComments,
+  editComment,
+  deleteComment,
+  resetPassword,
+  getAllAdmins,
+  getSingleTeacher,
+} = require("../controllers/admin.controller");
 
-router.get('/address/:id',getAddress);
-router.post('/address/:id',postAddress);
+router.get("/address/:id", getAddress);
+router.post("/address/:id", postAddress);
 
 /**
  *@swagger
@@ -17,14 +41,14 @@ router.post('/address/:id',postAddress);
  *   description: Apis to Login user
  */
 
- /**
+/**
  *@swagger
  * tags:
  *   name: Customer Data
  *   description: Apis to Manage Customer Data
  */
 
-  /**
+/**
  *@swagger
  * tags:
  *   name: Add Fields
@@ -34,7 +58,7 @@ router.post('/address/:id',postAddress);
 /**
  * @swagger
  *  /login:
- *  post: 
+ *  post:
  *   summary: Login a User
  *   tags: [Login]
  *   requestBody:
@@ -50,7 +74,7 @@ router.post('/address/:id',postAddress);
  *         example: ram
  *       required:
  *        - userId
- *        - password                     
+ *        - password
  *   responses:
  *    200:
  *     description: Login Successful
@@ -60,12 +84,12 @@ router.post('/address/:id',postAddress);
  *     description: Something went wrong!
  */
 
-router.post("/login", ctrl.authentication);
+router.post("/login", authentication);
 
 /**
  * @swagger
  *  /ChangePassword:
- *  post: 
+ *  post:
  *   summary: Change Password of Loggedin User
  *   tags: [Login]
  *   requestBody:
@@ -84,7 +108,7 @@ router.post("/login", ctrl.authentication);
  *         example: ram
  *       required:
  *        - userId
- *        - password                     
+ *        - password
  *   responses:
  *    200:
  *     description: Login Successful
@@ -93,26 +117,28 @@ router.post("/login", ctrl.authentication);
  *    500:
  *     description: Something went wrong!
  */
-router.post("/ChangePassword", ctrl.ChangePassword);
-router.get("/otp/:number",(req,res) => {
-    const { number } = req.params
-	let otp = Math.floor(Math.random()*10000)
-    client.messages.create({
-        body: `Live Sloka:Your OTP for Registration is ${otp}`,
-        to: number,  // Text this number
-        from: process.env.TWILIO_NUMBER // From a valid Twilio number
+router.post("/ChangePassword", changePassword);
+router.get("/otp/:number", (req, res) => {
+  const { number } = req.params;
+  let otp = Math.floor(Math.random() * 10000);
+  client.messages
+    .create({
+      body: `Live Sloka:Your OTP for Registration is ${otp}`,
+      to: number, // Text this number
+      from: process.env.TWILIO_NUMBER, // From a valid Twilio number
     })
     .then((message) => {
-        return res.json({
-            message:"Otp sent!",
-            result:otp+3456
-        })
-    }).catch(err =>{
-        console.log(err)
-        return res.status(500).json({
-            error:"Something went wrong!!"
-        })
+      return res.json({
+        message: "Otp sent!",
+        result: otp + 3456,
+      });
     })
+    .catch((err) => {
+      console.log(err);
+      return res.status(500).json({
+        error: "Something went wrong!!",
+      });
+    });
 });
 
 /**
@@ -161,7 +187,7 @@ router.get("/otp/:number",(req,res) => {
  *         example: 55666556665
  *        proposedAmount:
  *         type: number
- *         example: 50       
+ *         example: 50
  *   responses:
  *    200:
  *     description: Customer Inserted SuccessfulLy
@@ -169,12 +195,12 @@ router.get("/otp/:number",(req,res) => {
  *     description: Something went wrong!
  */
 
-router.post("/customer/registerCustomer", customerCtrl.registerCustomer);
+router.post("/customer/registerCustomer", registerCustomer);
 
 /**
  * @swagger
  *  /customer/details:
- *  get: 
+ *  get:
  *   summary: get all Customers data
  *   tags: [Customer Data]
  *   responses:
@@ -184,11 +210,11 @@ router.post("/customer/registerCustomer", customerCtrl.registerCustomer);
  *     description: Something went wrong!
  */
 
-router.get("/customer/details", customerCtrl.details);
+router.get("/customer/details", details);
 /**
  * @swagger
  *  /customer/details:
- *  get: 
+ *  get:
  *   summary: get all login users data
  *   tags: [Attendance]
  *   responses:
@@ -198,8 +224,7 @@ router.get("/customer/details", customerCtrl.details);
  *     description: Something went wrong!
  */
 
-router.get("/customer/data", customerCtrl.getRespectiveDetails);
-
+router.get("/customer/data", getRespectiveDetails);
 
 /**
  * @swagger
@@ -247,7 +272,7 @@ router.get("/customer/data", customerCtrl.getRespectiveDetails);
  *         example: 55666556665
  *        proposedAmount:
  *         type: number
- *         example: 50       
+ *         example: 50
  *   responses:
  *    200:
  *     description: Customer Updated SuccessfulLy
@@ -255,7 +280,7 @@ router.get("/customer/data", customerCtrl.getRespectiveDetails);
  *     description: Something went wrong!
  */
 
-router.post("/customer/updateCustomer", customerCtrl.updateCustomer);
+router.post("/customer/updateCustomer", updateCustomer);
 
 /**
  * @swagger
@@ -273,14 +298,7 @@ router.post("/customer/updateCustomer", customerCtrl.updateCustomer);
  *     description: Something went wrong!
  */
 
-router.get("/customer/delete/:customerId", customerCtrl.deleteCustomer);
-
-//invoice
-router.post("/admin/addinvoice", ctrl.addinvoice);
-router.post("/admin/getinvoices", ctrl.getinvoices);
-router.post("/admin/deleteinvoice", ctrl.deleteInvoice);
-
-
+router.get("/customer/delete/:customerId", deleteCustomer);
 
 /**
  * @swagger
@@ -301,16 +319,15 @@ router.post("/admin/deleteinvoice", ctrl.deleteInvoice);
  *     description: Something went wrong!
  */
 
-
 //Getting all Feilds
-router.get("/admin/get/:name", ctrl.getCorrespondingData);
+router.get("/admin/get/:name", getCorrespondingData);
 
 //add all fields
-router.post("/admin/add/:name", ctrl.addField);
+router.post("/admin/add/:name", addField);
 
 //Updating Every Fields
-router.post("/admin/update/status", ctrl.updateStatus);
-router.post("/admin/update/:name", ctrl.updateCorrespondingData);
+router.post("/admin/update/status", updateStatus);
+router.post("/admin/update/:name", updateCorrespondingData);
 
 /**
  * @swagger
@@ -331,23 +348,21 @@ router.post("/admin/update/:name", ctrl.updateCorrespondingData);
  *     description: Something went wrong!
  */
 //deleting Every Fields
-router.post("/admin/delete/:name/:id", ctrl.DeleteCorrespondingData);
+router.post("/admin/delete/:name/:id", deleteCorrespondingData);
 
 //working with comments
-router.post("/admin/addcomment", ctrl.addcomment);
-router.get("/admin/comments/:id", ctrl.getComments);
-router.post("/admin/updatecomment", ctrl.updatecomment);
-router.post("/admin/deletecomment", ctrl.deletecomment);
+router.post("/admin/comments", addcomment);
+router.get("/admin/comments/customer/:customerId", getComments);
+router.patch("/admin/comments/:commentId", editComment);
+router.delete("/admin/comments/:commentId", deleteComment);
 
 //password reset
 
+router.get("/admin/reset/:id", resetPassword);
+router.get("/all/admins", getAllAdmins);
 
-router.get("/admin/reset/:id", ctrl.resetPassword);
-router.get("/all/admins", ctrl.getAllAdmins);
+router.get("/admin/getSingleTeacher/:id", getSingleTeacher);
 
-router.get("/admin/getSingleTeacher/:id", ctrl.getSingleTeacher)
-
-
-router.post("/forgot-password",addOtpToAdminCollection);
-router.post("/user/password-reset",validateOtpAndResetPassword);
+router.post("/forgot-password", addOtpToAdminCollection);
+router.post("/user/password-reset", validateOtpAndResetPassword);
 module.exports = router;

@@ -26,6 +26,7 @@ const {
   ADMIN_PAYMENT_SUCCESSFUL,
   ADMIN_UNSUBSCRIBE,
 } = require("../config/messages");
+const { createSlotsZoomLink, generateSlots } = require("../config/util");
 
 let accessToken = "";
 let expiresAt = new Date().getTime();
@@ -723,13 +724,11 @@ const scheduleAndupdateCustomer = async (
   needToSendToSuccessPage
 ) => {
   if (option) {
-    if(option.isScheduled){
+    if (option.isScheduled) {
       customer.paidTill = periodEndDate;
-      await customer.save(); 
-      if(needToSendToSuccessPage){
-        return res.redirect(
-          `${process.env.USER_CLIENT_URL}/payment-success`
-        );
+      await customer.save();
+      if (needToSendToSuccessPage) {
+        return res.redirect(`${process.env.USER_CLIENT_URL}/payment-success`);
       } else {
         return res.json({
           message: "Scheduled Meeting Successfully!",
@@ -747,63 +746,12 @@ const scheduleAndupdateCustomer = async (
       )[0];
       let { scheduleDescription, slots } =
         generateScheduleDescriptionAndSlots(selectedOption);
-      let allSlots = [];
-      Object.keys(slots).forEach((day) => {
-        allSlots = [...allSlots, ...slots[day]];
-      });
-      let meetingLinkResponse = {};
-      //* 3 generate a meeting link through zoom by selecting an account incase if not able to generate link send message in chatbot
-      let availableZoomAccount = await ZoomAccountModel.findOne({
-        timeSlots: {
-          $nin: allSlots,
-        },
-      });
-      let zoomAccountId = "";
-      try {
-        if (availableZoomAccount) {
-          const { _id, zoomEmail, zoomJwt, zoomPassword } =
-            availableZoomAccount;
-          zoomAccountId = _id;
-          const formData = {
-            topic: "Livesloka Online Class",
-            type: 3,
-            password: zoomPassword,
-            settings: {
-              host_video: true,
-              participant_video: true,
-              join_before_host: true,
-              jbh_time: 0,
-              mute_upon_entry: true,
-              watermark: false,
-              use_pmi: false,
-              approval_type: 2,
-              audio: "both",
-              auto_recording: "none",
-              waiting_room: false,
-              meeting_authentication: false,
-            },
-          };
-          meetingLinkResponse = await fetch(
-            `https://api.zoom.us/v2/users/${zoomEmail}/meetings`,
-            {
-              method: "post",
-              body: JSON.stringify(formData),
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${zoomJwt}`,
-              },
-            }
-          );
-        }
-      } catch (error) {
-        console.log(error);
+
+      let meetingLinks = await createSlotsZoomLink(slots);
+      if (typeof meetingLinks.message === "string") {
+        meetingLinks = {}   
       }
-      //* 5 get the selected zoom account and update timeslots
-      allSlots.forEach((slot) => {
-        availableZoomAccount.timeSlots.push(slot);
-      });
-      await availableZoomAccount.save();
-      meetingLinkResponse = await meetingLinkResponse.json();
+
       let otherSchedulesOfCustomer = await SchedulerModel.find({
         students: {
           $in: [customer._id],
@@ -825,11 +773,10 @@ const scheduleAndupdateCustomer = async (
 
       //* 4 create a schedule
       const schedule = new SchedulerModel({
-        meetingAccount: zoomAccountId,
-        meetingLink: meetingLinkResponse.join_url || "",
+        meetingLinks,
         teacher: teacher.id,
         students: [customer._id],
-        startDate: moment().format("DD-MM-YYYY"),
+        startDate: moment().format(),
         slots,
         demo: false,
         OneToOne: true,
@@ -846,7 +793,6 @@ const scheduleAndupdateCustomer = async (
         {
           $set: {
             scheduleDescription,
-            meetingLink: meetingLinkResponse.join_url,
             teacherId: teacher.id,
             classStatusId: "113975223750050",
             paidTill: periodEndDate,
@@ -855,6 +801,7 @@ const scheduleAndupdateCustomer = async (
       );
 
       //* 8 update teacher avaialable and scheduled slots
+      let [,allSlots] = generateSlots(slots)
       allSlots.forEach((slot) => {
         let index = teacher.availableSlots.indexOf(slot);
         if (index != -1) {
@@ -865,11 +812,9 @@ const scheduleAndupdateCustomer = async (
       teacher.availableSlots = [...new Set(teacher.availableSlots)];
       teacher.scheduledSlots = [...new Set(teacher.scheduledSlots)];
       await teacher.save();
-      await OptionModel.updateOne({ _id: option._id },{isScheduled:true});
-      if(needToSendToSuccessPage){
-        return res.redirect(
-          `${process.env.USER_CLIENT_URL}/payment-success`
-        );
+      await OptionModel.updateOne({ _id: option._id }, { isScheduled: true });
+      if (needToSendToSuccessPage) {
+        return res.redirect(`${process.env.USER_CLIENT_URL}/payment-success`);
       } else {
         return res.json({
           message: "Scheduled Meeting Successfully!",
@@ -906,11 +851,9 @@ const scheduleAndupdateCustomer = async (
       customer.paidTill = periodEndDate;
       await customer.save();
       await schedule.save();
-      await OptionModel.updateOne({ _id: option._id },{isScheduled:true});
-      if(needToSendToSuccessPage){
-        return res.redirect(
-          `${process.env.USER_CLIENT_URL}/payment-success`
-        );
+      await OptionModel.updateOne({ _id: option._id }, { isScheduled: true });
+      if (needToSendToSuccessPage) {
+        return res.redirect(`${process.env.USER_CLIENT_URL}/payment-success`);
       } else {
         return res.json({
           message: "Scheduled Meeting Successfully!",
@@ -926,7 +869,7 @@ const scheduleAndupdateCustomer = async (
   }
 };
 
-exports.scheduleAndupdateCustomer = scheduleAndupdateCustomer
+exports.scheduleAndupdateCustomer = scheduleAndupdateCustomer;
 
 const deleteExistingSubscription = async (customer, reason) => {
   const latestSubscription = await SubscriptionModel.findOne({
@@ -961,12 +904,14 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     await deleteExistingSubscription(customer, "Remove old subscriptions");
     const subscription = await stripe.subscriptions.retrieve(sub_id);
     periodEndDate = moment(subscription.current_period_end * 1000).format();
-    const planId = await Plan.findOne({stripe: subscription.items.data[0].plan.id })
+    const planId = await Plan.findOne({
+      stripe: subscription.items.data[0].plan.id,
+    });
     const newSubscription = new SubscriptionModel({
       customerId,
       stripeCustomer: customer.stripeId,
       type: "STRIPE",
-      planId:planId ? planId._id : "",
+      planId: planId ? planId._id : "",
       isActive: true,
       id: sub_id,
     });

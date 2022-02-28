@@ -11,6 +11,7 @@ const momentTZ = require("moment-timezone");
 const moment = require("moment");
 const twilio = require("twilio");
 const CurrencyModel = require("../models/Currency.model");
+const { scheduleAndupdateCustomer } = require("./subscriptions");
 var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 
 const getStartTime = (slots, zoneName) => {
@@ -30,7 +31,7 @@ const getStartTime = (slots, zoneName) => {
     `${day} ${selectedStartTime.split("-")[0]}`,
     "dddd hh:mm A"
   ).format("YYYY-MM-DD HH:mm");
-  console.log(time)
+  console.log(time);
   time = momentTZ
     .tz(time, "Asia/Kolkata")
     .clone()
@@ -90,7 +91,7 @@ exports.getOnlyDemoCustomers = async (req, res) => {
 
 exports.postAnOption = async (req, res) => {
   try {
-    const { customer, options, teacher,schedules } = req.body;
+    const { customer, options, teacher, schedules } = req.body;
 
     if (!customer) {
       return res.status(400).json({ error: "Customer Id is Required!" });
@@ -100,7 +101,10 @@ exports.postAnOption = async (req, res) => {
       return res.status(400).json({ error: "Teacher Id is Required!" });
     }
 
-    if ((!Array.isArray(options) || !options.length) && (!Array.isArray(schedules) || !schedules.length)) {
+    if (
+      (!Array.isArray(options) || !options.length) &&
+      (!Array.isArray(schedules) || !schedules.length)
+    ) {
       return res.status(400).json({ error: "Minimum 1 slot is required!" });
     }
 
@@ -150,9 +154,9 @@ exports.postAnOption = async (req, res) => {
 exports.getOptions = async (req, res) => {
   try {
     const result = await OptionsModel.find({
-      isScheduled:{
-        $ne:true
-      }
+      isScheduled: {
+        $ne: true,
+      },
     })
       .populate("customer", "id firstName lastName")
       .populate("schedules", "scheduleDescription className")
@@ -271,40 +275,83 @@ exports.getAnOption = async (req, res) => {
   }
 };
 
-exports.getOptionByCustomer = async (req,res) => {
-  const { customerId } = req.params
-  const option = await OptionsModel.findOne({ customer:customerId }).populate("discounts.plan").populate('customer').lean();
-  
-  CurrencyModel.populate(option, 'discounts.plan.currency', function(err, results){
-    if(err){
-      return res.status(500).json({ 
-      result:null,
-      error:"Option retrieved successfully!"
-      })
+exports.getOptionByCustomer = async (req, res) => {
+  const { customerId } = req.params;
+  const option = await OptionsModel.findOne({ customer: customerId })
+    .populate("discounts.plan")
+    .populate("customer")
+    .lean();
+
+  CurrencyModel.populate(
+    option,
+    "discounts.plan.currency",
+    function (err, results) {
+      if (err) {
+        return res.status(500).json({
+          result: null,
+          error: "Option retrieved successfully!",
+        });
+      }
+      return res.json({
+        result: results,
+        message: "Option retrieved successfully!",
+      });
     }
-    return res.json({
-      result:results,
-      message:"Option retrieved successfully!"
-    })
-  });
-  
-}
+  );
+};
 
 exports.getOptionsByTeacherId = async (req, res) => {
   try {
-    const {teacherId} = req.params;
+    const { teacherId } = req.params;
     const options = await OptionsModel.find({
-      teacher:teacherId
-    }).populate("schedules").populate("customer")
-    return res.json({
-      message:"Options retrieved successfully",
-      result:options
+      teacher: teacherId,
     })
+      .populate("schedules")
+      .populate("customer");
+    return res.json({
+      message: "Options retrieved successfully",
+      result: options,
+    });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.status(500).json({
       error,
-      message:"Something went wrong!"
-    })
+      message: "Something went wrong!",
+    });
   }
-}
+};
+
+exports.manuallyMakeOptionsToSchedule = async (req, res) => {
+  try {
+    const { optionsId } = req.params;
+    console.log(optionsId)
+    const option = await OptionsModel.findById(optionsId);
+    const customer = await CustomerModel.findById(option.customer);
+    let nextDate;
+    if (customer.paidTill) {
+      nextDate = moment(customer.paidTill)
+        .add(plan.interval + "s", plan.intervalCount)
+        .format();
+    } else {
+      nextDate = moment()
+        .add(plan.interval + "s", plan.intervalCount)
+        .format();
+    }
+    const teacher = await TeacherModel.findOne({ id: option.teacher });
+    const subject = await SubjectModel.findOne({ id: customer.subjectId });
+    return scheduleAndupdateCustomer(
+      nextDate,
+      customer,
+      teacher,
+      subject,
+      option,
+      res,
+      false
+    );
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};

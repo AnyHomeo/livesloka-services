@@ -1,26 +1,27 @@
 const mongoose = require("mongoose");
+const { Schema, model } = mongoose;
+const CustomerMessageTemplateSchema = require('./CustomerMessageTemplates.model')
 
-const Comments = new mongoose.Schema({
-  comment: {
-    type: String,
-    trim: true,
+const Comments = new Schema(
+  {
+    message: {
+      type: Schema.Types.ObjectId,
+      ref: "CustomerMessageTemplate",
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "Agent",
+    },
+    customer: {
+      type: Schema.Types.ObjectId,
+      ref: "Customer",
+    },
+    timeStamp: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  auditUserId: {
-    type: String,
-    trim: true,
-  },
-  customerId: {
-    type: String,
-    trim: true,
-  },
-  commentStatus: {
-    type: Number,
-    trim: true,
-  },
-  timeStamp: {
-    type: Date,
-    trim: true,
-  },
-});
+  { timestamps: true }
+);
 
-module.exports = mongoose.model("Comments", Comments);
+module.exports = model("Comments", Comments);
