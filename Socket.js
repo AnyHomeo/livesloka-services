@@ -139,7 +139,19 @@ module.exports = (io) => {
     );
     socket.on(
       'messageFromBotToGroup',
-      async ({ groupID, message, userID, username, role, reply }, callback) => {
+      async (
+        {
+          groupID,
+          message,
+          userID,
+          username,
+          role,
+          reply,
+          messageType,
+          fileURL,
+        },
+        callback
+      ) => {
         try {
           const data = await addMessageToGroup(
             groupID,
@@ -147,7 +159,9 @@ module.exports = (io) => {
             role,
             userID,
             username,
-            reply
+            reply,
+            messageType,
+            fileURL
           );
           socket.to(groupID).emit('messageToGroupFromBot', {
             role,
@@ -155,6 +169,8 @@ module.exports = (io) => {
             userID,
             username,
             reply,
+            messageType,
+            fileURL,
           });
           socket.broadcast.emit('message-to-group-from-bot', {
             groupID,

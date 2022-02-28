@@ -146,7 +146,9 @@ const addMessageToGroup = async (
   role,
   userID,
   username,
-  reply
+  reply,
+  messageType,
+  fileURL
 ) => {
   const msg = new GroupMessage({
     role,
@@ -154,6 +156,8 @@ const addMessageToGroup = async (
     username,
     userID,
     reply: reply && new Reply(reply),
+    messageType,
+    fileURL,
   });
   return await Group.findOneAndUpdate(
     { groupID },
