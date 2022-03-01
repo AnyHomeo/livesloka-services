@@ -29,7 +29,7 @@ require('./models/db');
 batch();
 
 app.use((req, res, next) => {
-  console.log(req.hostname)
+  console.log(req.ip)
   next()
 })
 
