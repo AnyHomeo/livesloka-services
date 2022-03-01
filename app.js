@@ -8,6 +8,8 @@ const Routes = require('./Routes');
 const Swagger = require('./Swagger');
 const Socket = require('./Socket');
 const { detectIntent } = require('./dialogflow');
+var ip = require('ip');
+
 // const { deleteZoomLinks, createZoomLinks } = require('./scripts/main');
 
 let allowedOrigins = ["https://livesloka.com","https://livekumon.netlify.app"]
@@ -15,6 +17,8 @@ let allowedOrigins = ["https://livesloka.com","https://livekumon.netlify.app"]
 if(process.env.ENVIRONMENT !== "PROD"){
   allowedOrigins.push("http://localhost:3000")
 }
+
+console.log(ip.address())
 
 const app = express();
 const http = require('http').createServer(app);
