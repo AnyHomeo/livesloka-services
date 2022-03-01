@@ -10,11 +10,17 @@ const Socket = require('./Socket');
 const { detectIntent } = require('./dialogflow');
 // const { deleteZoomLinks, createZoomLinks } = require('./scripts/main');
 
+let allowedOrigins = ["https://livesloka.com","https://livekumon.netlify.app"]
+
+if(process.env.ENVIRONMENT !== "PROD"){
+  allowedOrigins.push("http://localhost:3000")
+}
+
 const app = express();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http, {
   cors: {
-    origin: '*',
+    origin: "*",
     methods: ['GET', 'POST'],
   },
 });
@@ -22,8 +28,15 @@ require('dotenv').config();
 require('./models/db');
 batch();
 
+app.use((req, res, next) => {
+  console.log(req.hostname)
+  next()
+})
+
 // view engine setup
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigins
+}));
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
