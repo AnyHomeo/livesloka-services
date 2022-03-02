@@ -12,7 +12,7 @@ var ip = require('ip');
 
 // const { deleteZoomLinks, createZoomLinks } = require('./scripts/main');
 
-let allowedOrigins = ["https://livesloka.com","https://livekumon.netlify.app"]
+let allowedOrigins = ["https://livesloka.com","https://livekumon.netlify.app","https://mylivesloka.com"]
 
 if(process.env.ENVIRONMENT !== "PROD"){
   allowedOrigins.push("http://localhost:3000")
@@ -32,10 +32,6 @@ require('dotenv').config();
 require('./models/db');
 batch();
 
-app.use((req, res, next) => {
-  console.log(req.ip)
-  next()
-})
 
 // view engine setup
 app.use(cors({
