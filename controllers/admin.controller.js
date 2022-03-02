@@ -149,7 +149,8 @@ exports.getComments = async (req, res) => {
     const { customerId } = req.params;
     let comments = await Comment.find({ customer: customerId })
       .populate("message")
-      .populate("createdBy");
+      .populate("createdBy")
+      .sort({ timeStamp: -1 });
     return res.send({
       message: "Comments retrieved successfully",
       result: comments,
