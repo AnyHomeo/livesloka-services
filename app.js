@@ -10,15 +10,8 @@ const Socket = require("./Socket");
 const { detectIntent } = require("./dialogflow");
 const ip = require("ip");
 
-
-let allowedOrigins = [
-  "https://livesloka.com",
-  "https://livekumon.netlify.app",
-  "https://mylivesloka.com",
-];
-
 if (process.env.ENVIRONMENT !== "PROD") {
-  allowedOrigins.push("http://localhost:3000");
+  allowedOrigins.push("http://localhost:3000", "http://localhost:3001");
 }
 
 console.log(ip.address());
@@ -36,17 +29,12 @@ require("./models/db");
 batch();
 
 // view engine setup
-app.use(
-  cors({
-    origin: allowedOrigins,
-  })
-);
+app.use(cors());
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
-
 
 Routes(app);
 Swagger(app);
