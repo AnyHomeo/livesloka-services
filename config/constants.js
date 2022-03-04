@@ -22,5 +22,5 @@ exports.rolePermissions = [
   "Paypal & Stripe",
   "Video Manager",
   "Accounts",
-  "Currency History",
+  "Currency",
 ];
