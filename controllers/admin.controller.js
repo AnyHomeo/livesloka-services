@@ -5,7 +5,6 @@ const { model } = require("../models/Admin.model");
 const admin = require("../models/Admin.model");
 const Comment = require("../models/comments.model");
 const CustomerModel = require("../models/Customer.model");
-const InvoiceModel = require("../models/Invoice.model");
 const TimeZoneModel = require("../models/timeZone.model");
 var twilio = require("twilio");
 const { isValidObjectId } = require("mongoose");
@@ -411,95 +410,7 @@ exports.addField = (req, res) => {
   }
 };
 
-exports.addinvoice = (req, res) => {
-  req.body.invoiceDate = new Date(req.body.invoiceDate);
-  req.body.dueDate = new Date(req.body.dueDate);
 
-  let invoice = new InvoiceModel(req.body);
-
-  invoice
-    .save()
-    .then((val) => {
-      res.status(200).send({
-        status: "OK",
-        message: "Invoice inserted Successfully",
-        result: null,
-      });
-    })
-    .catch((err) => {
-      res.status(500).send({
-        status: "Bad Request",
-        message: "Internal Error",
-        result: null,
-      });
-    });
-};
-
-exports.getinvoices = (req, res) => {
-  if (req.body.start == "") {
-    let d = new Date();
-    req.body.start =
-      d.getFullYear().toString() + "-" + (d.getMonth() + 1).toString() + "-01";
-    req.body.end =
-      d.getFullYear().toString() + "-" + (d.getMonth() + 1).toString() + "-30";
-  }
-
-  let startDate = new Date(req.body.start);
-  let endDate = new Date(req.body.end);
-
-  InvoiceModel.find({ invoiceDate: { $gte: startDate, $lte: endDate } })
-    .then((val) => {
-      let parse = (d) => {
-        let givenDate = new Date(d.toString());
-        return (
-          givenDate.getDay() +
-          "-" +
-          givenDate.getMonth() +
-          "-" +
-          givenDate.getFullYear()
-        );
-      };
-
-      val = val.map((value, index) => {
-        let ds = value.toJSON();
-        ds.invoiceDate = parse(ds.invoiceDate);
-        ds.dueDate = parse(ds.dueDate);
-
-        return ds;
-      });
-
-      res.status(200).send({
-        status: "OK",
-        message: "Invoice fetched Successfully",
-        result: val,
-      });
-    })
-    .catch((err) => {
-      res.status(500).send({
-        status: "Bad Request",
-        message: "Internal Error",
-        result: null,
-      });
-    });
-};
-
-exports.deleteInvoice = (req, res) => {
-  InvoiceModel.deleteOne({ _id: req.body._id })
-    .then((result) => {
-      res.status(200).send({
-        status: "OK",
-        message: "Invoice Deleted Successfully",
-        result: null,
-      });
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: "Internal Error",
-        result: null,
-        status: "Bad request",
-      });
-    });
-};
 
 exports.resetPassword = (req, res) => {
   const { id } = req.params;

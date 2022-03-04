@@ -10,10 +10,6 @@ const Socket = require("./Socket");
 const { detectIntent } = require("./dialogflow");
 const ip = require("ip");
 
-if (process.env.ENVIRONMENT !== "PROD") {
-  allowedOrigins.push("http://localhost:3000", "http://localhost:3001");
-}
-
 console.log(ip.address());
 
 const app = express();

@@ -3,8 +3,10 @@ const momentTZ = require("moment-timezone");
 const company = require("../config/company.json");
 const InvoicesModel = require("../models/invoices.model");
 const Transactions = require("../models/Transactions");
-const exchangeRates = require("./exchange-rates.json");
 const { toFixed } = require("../config/helper");
+const forexEndpoint = "https://api.fastforex.io";
+const fetch = require("node-fetch");
+const ExchangeRatesModel = require("../models/ExchangeRates.model");
 
 exports.getInvoicesByTransactionId = async (req, res) => {
   try {
@@ -37,15 +39,23 @@ exports.getInvoicesByTransactionId = async (req, res) => {
 
 exports.createAllInvoices = async (req, res) => {
   try {
+    let date = momentTZ().subtract(2, "month");
     const allJanuaryPayments = await PaymentsModel.find({
       createdAt: {
-        $gte: momentTZ().subtract(1, "month").startOf("month").format(),
-        $lte: momentTZ().subtract(1, "month").endOf("month").format(),
+        $gte: date.clone().startOf("month").format(),
+        $lte: momentTZ().subtract(2, "days"),
       },
       status: "SUCCESS",
     })
       .populate("customerId", "numberOfStudents whatsAppnumber lastName")
       .lean();
+
+    const exchangeRates = await ExchangeRatesModel.find({
+      date: {
+        $gte: date.clone().startOf("month").subtract(2, "days").format(),
+        $lte: momentTZ().subtract(2, "days"),
+      },
+    }).lean();
 
     let data = allJanuaryPayments.reduce((acc, payment) => {
       if (payment.status === "SUCCESS") {
@@ -67,6 +77,25 @@ exports.createAllInvoices = async (req, res) => {
               },
             },
           } = payment.paymentData;
+
+          let depositExchangeRate = exchangeRates.filter(
+            (exchangeRate) =>
+              momentTZ(exchangeRate.date).utc().unix() ===
+              momentTZ(payment.createdAt).utc().startOf("day").unix()
+          )?.[0]?.rate;
+
+          let exchangeRate = exchangeRates.filter(
+            (exchangeRate) =>
+              momentTZ(exchangeRate.date).utc().unix() ===
+              momentTZ(payment.createdAt)
+                .add(1, "day")
+                .utc()
+                .startOf("day")
+                .unix()
+          )?.[0]?.rate;
+
+          console.log(payment.createdAt, exchangeRate, depositExchangeRate);
+
           acc.push({
             company,
             customer: {
@@ -94,6 +123,8 @@ exports.createAllInvoices = async (req, res) => {
             sgst: 0,
             paymentMethod: "Paypal",
             paymentDate: payment.createdAt,
+            depositExchangeRate,
+            exchangeRate,
           });
         } else {
           const {
@@ -139,10 +170,10 @@ exports.createAllInvoices = async (req, res) => {
       await createNewInvoice(invoice);
     }
 
-    return res.json({ success: true });
+    return res.json({ success: true, data });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ success: false });
+    return res.status(500).json({ error, message: error.message });
   }
 };
 
@@ -179,7 +210,6 @@ exports.getInvoices = async (req, res) => {
       .set("year", year)
       .startOf("month");
     const endDate = startDate.clone().endOf("month");
-    console.log(startDate, endDate);
     let invoices = await InvoicesModel.find({
       paymentDate: {
         $gte: startDate.format(),
@@ -189,29 +219,19 @@ exports.getInvoices = async (req, res) => {
 
     invoices = invoices.map((invoice) => {
       if (invoice.paymentMethod === "Paypal") {
-        let exchangeRateIndex = exchangeRates.findIndex((rate) => {
-          return (
-            momentTZ(invoice.paymentDate)
-              .tz("Asia/Kolkata")
-              .format("DD/MM/YYYY") === rate.date
-          );
-        });
-        let exchangeRate = 0;
-        let depositExchangeRate = 0;
-        if (exchangeRateIndex !== -1) {
-          depositExchangeRate = exchangeRates[exchangeRateIndex-1]?.amount || 0;
-          exchangeRate = exchangeRates[exchangeRateIndex].amount;
-        }
+        let { depositExchangeRate, exchangeRate } = invoice;
+        console.log(depositExchangeRate, exchangeRate);
         let transactionFee = toFixed(invoice.transactionFee ?? 0);
         let net = toFixed(invoice.taxableValue - transactionFee);
         let turnover = toFixed(net * exchangeRate);
         let feeInInr = toFixed(transactionFee * exchangeRate * -1);
         let recieved = toFixed(net * depositExchangeRate);
-        let exchangeRateDifference = toFixed(exchangeRate - depositExchangeRate,5);
+        let exchangeRateDifference = toFixed(
+          exchangeRate - depositExchangeRate,
+          5
+        );
         return {
           ...invoice,
-          exchangeRate,
-          depositExchangeRate,
           exchangeRateDifference,
           net,
           turnover,
@@ -237,5 +257,38 @@ exports.getInvoices = async (req, res) => {
     return res.json({ result: invoices });
   } catch (error) {
     console.log(error);
+  }
+};
+
+exports.storeAllExhangeRates = async (req, res) => {
+  try {
+    let startDate = momentTZ("01-01-2022", "DD-MM-YYYY").utc();
+    let exchangeRates = [];
+    while (startDate.unix() < momentTZ().unix()) {
+      console.log(startDate.format("MMMM Do, YYYY"));
+
+      let date = startDate.format("YYYY-MM-DD");
+      let response = await fetch(
+        `${forexEndpoint}/historical?api_key=${process.env.FAST_FOREX_KEY}&from=USD&to=INR&date=${date}`
+      );
+      response = await response.json();
+      if (!response.error) {
+        exchangeRates.push({
+          from: "USD",
+          to: "INR",
+          id: momentTZ().unix() + parseInt(Math.random() * 10000000),
+          date: date,
+          rate: response.results["INR"],
+        });
+      }
+
+      startDate.add(1, "day");
+    }
+
+    await ExchangeRatesModel.insertMany(exchangeRates);
+    return res.json({ success: true, result: exchangeRates });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error, message: error.message });
   }
 };
