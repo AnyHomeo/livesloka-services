@@ -220,10 +220,9 @@ exports.getInvoices = async (req, res) => {
     invoices = invoices.map((invoice) => {
       if (invoice.paymentMethod === "Paypal") {
         let { depositExchangeRate, exchangeRate } = invoice;
-        console.log(depositExchangeRate, exchangeRate);
         let transactionFee = toFixed(invoice.transactionFee ?? 0);
         let net = toFixed(invoice.taxableValue - transactionFee);
-        let turnover = toFixed(net * exchangeRate);
+        let turnover = toFixed(invoice.taxableValue * exchangeRate);
         let feeInInr = toFixed(transactionFee * exchangeRate * -1);
         let recieved = toFixed(net * depositExchangeRate);
         let exchangeRateDifference = toFixed(
