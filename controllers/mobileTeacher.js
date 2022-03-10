@@ -1,5 +1,7 @@
 const SchedulerModel = require("../models/Scheduler.model");
 const TeacherModel = require("../models/Teacher.model");
+const days = require("../config/days.json");
+const hours = require("../config/hours.json");
 
 const colors = [
   "#f1c40f",
@@ -43,6 +45,7 @@ exports.getTeachersCategoried = async (req, res) => {
 exports.getTeacherSchedules = async (req, res) => {
   try {
     const { teacherId } = req.params;
+    const { web } = req.query;
     let teacher = await TeacherModel.findOne({ id: teacherId });
     if (teacher) {
       let schedulesOfTeacher = await SchedulerModel.find({
@@ -54,27 +57,51 @@ exports.getTeacherSchedules = async (req, res) => {
       schedulesOfTeacher = schedulesOfTeacher.map((schedule, i) => ({
         ...schedule,
       }));
-      let finalSchedules = schedulesOfTeacher.reduce(
-        (accumulator, schedule, i) => {
-          schedule.color = colors[i % colors.length];
-          const { monday, tuesday, wednesday, thursday, friday, saturday } =
-            schedule.slots;
-          let allSlots = [
-            ...monday,
-            ...tuesday,
-            ...wednesday,
-            ...thursday,
-            ...friday,
-            ...saturday,
-          ];
-          schedule.slots = undefined;
-          allSlots.forEach((slot) => {
-            accumulator[slot] = schedule;
+
+      let finalSchedules = [];
+      if (!web) {
+        finalSchedules = schedulesOfTeacher.reduce(
+          (accumulator, schedule, i) => {
+            schedule.color = colors[i % colors.length];
+            const { monday, tuesday, wednesday, thursday, friday, saturday } =
+              schedule.slots;
+            let allSlots = [
+              ...monday,
+              ...tuesday,
+              ...wednesday,
+              ...thursday,
+              ...friday,
+              ...saturday,
+            ];
+            schedule.slots = undefined;
+            allSlots.forEach((slot) => {
+              accumulator[slot] = schedule;
+            });
+            return accumulator;
+          },
+          {}
+        );
+      } else {
+        days.forEach((day) => {
+          finalSchedules.push({
+            day,
+            schedules: hours.reduce((schedules, hour, i) => {
+              let scheduleIndex = schedulesOfTeacher.findIndex((schedule) =>
+                schedule.slots[day.toLowerCase()].includes(
+                  `${day}-${hour}-${hours[i+1]}`
+                )
+              );
+              if (scheduleIndex !== -1) {
+                schedules.push({
+                  hour,
+                  schedule: schedulesOfTeacher[scheduleIndex],
+                });
+              }
+              return schedules;
+            }, []),
           });
-          return accumulator;
-        },
-        {}
-      );
+        });
+      }
 
       return res.json({
         result: {
