@@ -95,11 +95,13 @@ exports.getTeacherSchedules = async (req, res) => {
                 schedules.push({
                   hour,
                   schedule: schedulesOfTeacher[scheduleIndex],
+                  slot,
                 });
               } else if (isAvailableSlot) {
                 schedules.push({
                   hour,
                   isAvailableSlot,
+                  slot,
                 });
               }
               return schedules;
