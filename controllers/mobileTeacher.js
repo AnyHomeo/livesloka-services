@@ -86,15 +86,20 @@ exports.getTeacherSchedules = async (req, res) => {
           finalSchedules.push({
             day,
             schedules: hours.reduce((schedules, hour, i) => {
+              let slot = `${day}-${hour}-${hours[i + 1]}`;
               let scheduleIndex = schedulesOfTeacher.findIndex((schedule) =>
-                schedule.slots[day.toLowerCase()].includes(
-                  `${day}-${hour}-${hours[i+1]}`
-                )
+                schedule.slots[day.toLowerCase()].includes(slot)
               );
+              let isAvailableSlot = teacher.availableSlots.includes(slot);
               if (scheduleIndex !== -1) {
                 schedules.push({
                   hour,
                   schedule: schedulesOfTeacher[scheduleIndex],
+                });
+              } else if (isAvailableSlot) {
+                schedules.push({
+                  hour,
+                  isAvailableSlot,
                 });
               }
               return schedules;
