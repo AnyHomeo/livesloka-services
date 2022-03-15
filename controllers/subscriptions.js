@@ -749,7 +749,7 @@ const scheduleAndupdateCustomer = async (
 
       let meetingLinks = await createSlotsZoomLink(slots);
       if (typeof meetingLinks.message === "string") {
-        meetingLinks = {}   
+        meetingLinks = {};
       }
 
       let otherSchedulesOfCustomer = await SchedulerModel.find({
@@ -779,7 +779,8 @@ const scheduleAndupdateCustomer = async (
         startDate: moment().format(),
         slots,
         demo: false,
-        OneToOne: true,
+        OneToOne: false,
+        OneToMany: true,
         className,
         subject: subject._id,
         scheduleDescription,
@@ -801,7 +802,7 @@ const scheduleAndupdateCustomer = async (
       );
 
       //* 8 update teacher avaialable and scheduled slots
-      let [,allSlots] = generateSlots(slots)
+      let [, allSlots] = generateSlots(slots);
       allSlots.forEach((slot) => {
         let index = teacher.availableSlots.indexOf(slot);
         if (index != -1) {
