@@ -343,7 +343,7 @@ module.exports = {
             let selectedZones = allTimeZones.filter((name) =>
               selectedZoneUTCArray.includes(name)
             );
-            let teacherLeave = await TeacherLeavesModel.countDocuments({
+            let teacherLeave = await TeacherLeavesModel.findOne({
               $or: [
                 {
                   scheduleId: actualSchedule._id,
@@ -384,20 +384,9 @@ module.exports = {
                 actualSchedule.slots,
                 selectedZones[0]
               ),
-              // !actualSchedule.isSummerCampClass
-              //   ? generateScheduleDescription(
-              //       actualSchedule.slots,
-              //       selectedZones[0]
-              //     )
-              //   : 'Monday to Friday - ' +
-              //     generateScheduleDescription(
-              //       actualSchedule.slots,
-              //       selectedZones[0]
-              //     )
-              //       .split('and')[0]
-              //       .split('-')[1],
-
-              isTeacherOnLeave: !!teacherLeave,
+              isTeacherOnLeave: teacherLeave
+                ? teacherLeave.reason || "Teacher is on leave"
+                : "",
               scheduleDays: generateScheduleDays(
                 actualSchedule.slots,
                 selectedZones[0]
