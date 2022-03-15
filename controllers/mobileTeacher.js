@@ -81,6 +81,8 @@ exports.getTeacherSchedules = async (req, res) => {
           },
           {}
         );
+      } else if (web === "noFormat") {
+        finalSchedules = schedulesOfTeacher;
       } else {
         days.forEach((day) => {
           finalSchedules.push({
