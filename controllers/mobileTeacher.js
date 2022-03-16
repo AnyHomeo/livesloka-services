@@ -52,7 +52,7 @@ exports.getTeacherSchedules = async (req, res) => {
         teacher: teacher.id,
         isDeleted: { $ne: true },
       })
-        .populate("students", "firstName lastName")
+        .populate("students", "firstName lastName numberOfClassesBought countryCode whatsAppnumber")
         .lean();
       schedulesOfTeacher = schedulesOfTeacher.map((schedule, i) => ({
         ...schedule,
