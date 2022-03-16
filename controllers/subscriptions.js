@@ -780,7 +780,7 @@ const scheduleAndupdateCustomer = async (
         slots,
         demo: false,
         OneToOne: false,
-        OneToMany: true,
+        oneToMany: true,
         className,
         subject: subject._id,
         scheduleDescription,

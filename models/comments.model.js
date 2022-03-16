@@ -2,11 +2,14 @@ const mongoose = require("mongoose");
 const { Schema, model } = mongoose;
 const CustomerMessageTemplateSchema = require('./CustomerMessageTemplates.model')
 
-const Comments = new Schema(
+const Comments = new Schema( 
   {
     message: {
       type: Schema.Types.ObjectId,
       ref: "CustomerMessageTemplate",
+    },
+    text:{
+      type:String
     },
     createdBy: {
       type: Schema.Types.ObjectId,
