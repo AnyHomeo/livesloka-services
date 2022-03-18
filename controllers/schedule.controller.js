@@ -214,22 +214,23 @@ exports.deleteSchedule = async (req, res) => {
   try {
     const { id } = req.params;
     const schedule = await SchedulerModel.findById(id);
-    const teacher = await Teacher.findOne({ id: schedule.teacher })
-    const [_,allSlots] = generateSlots(schedule.slots)
-    teacher.availableSlots = [...new Set([...teacher.availableSlots,...allSlots])]
+    const teacher = await Teacher.findOne({ id: schedule.teacher });
+    const [_, allSlots] = generateSlots(schedule.slots);
+    teacher.availableSlots = [
+      ...new Set([...teacher.availableSlots, ...allSlots]),
+    ];
     teacher.scheduledSlots = teacher.scheduledSlots.filter(
-      slot => !allSlots.includes(slot)
-    )
-    await deleteExistingZoomLinkOfTheSchedule(schedule,false)
-    await teacher.save()
+      (slot) => !allSlots.includes(slot)
+    );
+    await deleteExistingZoomLinkOfTheSchedule(schedule, false);
+    await teacher.save();
     schedule.isDeleted = true;
     schedule.lastTimeJoinedClass = undefined;
     schedule.startDate = undefined;
-    await schedule.save()
+    await schedule.save();
     return res.status(200).json({
       message: "Schedule Deleted Successfully",
     });
-
   } catch (error) {
     console.log(error);
     return res.status(500).json({
@@ -412,10 +413,30 @@ exports.dangerousScheduleUpdate = async (req, res) => {
   const { message } = req.query;
   try {
     const { scheduleId } = req.params;
-    let updatedSchedule = await SchedulerModel.updateOne(
-      { _id: scheduleId },
-      { ...req.body }
-    );
+    if (typeof req.body.isClassTemperarilyCancelled != "undefined") {
+      if (req.body.isClassTemperarilyCancelled) {
+        const schedule = new SchedulerModel.findById(scheduleId);
+        await deleteExistingZoomLinkOfTheSchedule(schedule);
+      } else {
+        let schedule = await SchedulerModel.findById(scheduleId);
+        const { slots } = schedule;
+
+        const meetingLinks = await createSlotsZoomLink(slots);
+        if (typeof meetingLinks.message === "string") {
+          throw new Error(meetingLinks.message);
+        } else {
+          await deleteExistingZoomLinkOfTheSchedule(schedule);
+        }
+
+        await Schedule.findByIdAndUpdate(
+          scheduleId,
+          { $set: { meetingLinks } },
+          { new: true, useFindAndModify: false }
+        );
+      }
+    }
+    await SchedulerModel.updateOne({ _id: scheduleId }, { ...req.body });
+
     return res.json({
       message: message ? message + " successful" : "Updated Successfully",
     });
@@ -424,289 +445,6 @@ exports.dangerousScheduleUpdate = async (req, res) => {
     return res.status(500).json({
       error: message ? message + " failed" : "Internal Server Error",
     });
-  }
-};
-
-exports.editIfWhereby = async (req, res, next) => {
-  if (req.body.isZoomMeeting) {
-    next();
-  } else {
-    try {
-      const { id } = req.params;
-      let {
-        teacher,
-        students,
-        startDate,
-        slots,
-        demo,
-        subject,
-        className,
-        meetingAccount,
-        isMeetingLinkChangeNeeded,
-        isZoomMeeting,
-      } = req.body;
-
-      req.body.meetingAccount = meetingAccount ? meetingAccount : null;
-
-      let slotschange = {
-        monday: req.body.slots.monday,
-        tuesday: req.body.slots.tuesday,
-        wednesday: req.body.slots.wednesday,
-        thursday: req.body.slots.thursday,
-        friday: req.body.slots.friday,
-        saturday: req.body.slots.saturday,
-        sunday: req.body.slots.sunday,
-      };
-
-      try {
-        let selectedSubject = await Subject.findOne({ _id: subject }).lean();
-        var selectedTeacher = await Teacher.findOne({ id: teacher }).lean();
-        if (className) {
-          req.body.className = className;
-        } else {
-          req.body.className = `${selectedSubject.subjectName} ${
-            selectedTeacher.TeacherName
-          } ${startDate} ${demo ? "Demo" : ""}`;
-        }
-      } catch (error) {
-        console.log(error);
-        return res.status(400).json({
-          error: "Can't Add className",
-        });
-      }
-      let scheduleDescription = scheduleDescriptionGenerator(slotschange);
-      req.body.scheduleDescription = scheduleDescription;
-      const oldSchedule = await Schedule.findOne({ _id: id }).lean();
-      let oldTeacher = await TeacherModel.findOne({ id: oldSchedule.teacher });
-      let { monday, tuesday, wednesday, thursday, friday, saturday, sunday } =
-        oldSchedule.slots;
-      let allSlots = [
-        ...monday,
-        ...tuesday,
-        ...wednesday,
-        ...thursday,
-        ...friday,
-        ...saturday,
-        ...sunday,
-      ];
-      oldTeacher.availableSlots = oldTeacher.availableSlots.concat(allSlots);
-      oldTeacher.availableSlots = [...new Set(oldTeacher.availableSlots)];
-      let allScheduledSlotsOfTeacher = [...oldTeacher.scheduledSlots];
-      allScheduledSlotsOfTeacher.forEach((slot) => {
-        if (allSlots.includes(slot)) {
-          let index = oldTeacher.scheduledSlots.indexOf(slot);
-          oldTeacher.scheduledSlots.splice(index, 1);
-        }
-      });
-      await oldTeacher.save();
-
-      if (isMeetingLinkChangeNeeded || oldSchedule.isZoomMeeting) {
-        if (oldSchedule.isZoomMeeting) {
-          ZoomAccountModel.findById(oldSchedule.meetingAccount)
-            .then(async (data) => {
-              if (data) {
-                allSlots.forEach((slot) => {
-                  let slotIndex = data.timeSlots.indexOf(slot);
-                  if (slotIndex != -1) {
-                    data.timeSlots.splice(slotIndex, 1);
-                  }
-                });
-                if (data.zoomJwt) {
-                  await fetch(
-                    `https://api.zoom.us/v2/meetings/${
-                      oldSchedule.meetingLink.split("/")[4].split("?")[0]
-                    }`,
-                    {
-                      method: "DELETE",
-                      headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${data.zoomJwt}`,
-                      },
-                    }
-                  );
-                }
-              }
-              await data.save();
-            })
-            .catch((err) => {
-              console.log(err);
-            });
-        } else {
-          let deletedMeeting = await fetch(
-            "https://api.whereby.dev/v1/meetings/" +
-              oldSchedule.wherebyMeetingId,
-            {
-              method: "delete",
-              headers: {
-                Authorization: `Bearer ${process.env.WHEREBY_API_KEY}`,
-                "Content-type": "application/json",
-                Accept: "application/json",
-                "Accept-Charset": "utf-8",
-              },
-            }
-          );
-          deletedMeeting = await deletedMeeting.json();
-        }
-        const data = {
-          startDate: moment().format(),
-          endDate: moment().add(1, "year").format(),
-          roomMode: "group",
-          roomNamePattern: "human-short",
-          fields: ["hostRoomUrl"],
-        };
-        let meetingLinkData = await fetch(
-          "https://api.whereby.dev/v1/meetings",
-          {
-            method: "post",
-            headers: {
-              Authorization: `Bearer ${process.env.WHEREBY_API_KEY}`,
-              "Content-type": "application/json",
-              Accept: "application/json",
-              "Accept-Charset": "utf-8",
-            },
-            body: JSON.stringify(data),
-          }
-        );
-        meetingLinkData = await meetingLinkData.json();
-        req.body.wherebyMeetingId = meetingLinkData.meetingId;
-        req.body.wherebyHostUrl = meetingLinkData.hostRoomUrl;
-        req.body.meetingLink = meetingLinkData.roomUrl;
-        await SchedulerModel.updateOne(
-          {
-            _id: id,
-          },
-          { ...req.body }
-        );
-
-        students.forEach(async (student) => {
-          let anyPayments = await Payments.countDocuments({
-            customerId: student,
-          });
-          await Customer.updateOne(
-            { _id: student },
-            {
-              $set: {
-                meetingLink: req.body.meetingLink,
-                teacherId: selectedTeacher.id,
-                classStatusId: demo
-                  ? "38493085684944"
-                  : anyPayments
-                  ? "113975223750050"
-                  : "121975682530440",
-              },
-            }
-          );
-        });
-        Teacher.findOne({ id: teacher })
-          .then((data) => {
-            if (data) {
-              let { availableSlots } = data;
-              if (availableSlots) {
-                Object.keys(slots).forEach((day) => {
-                  let arr = slots[day];
-                  arr.forEach((slot) => {
-                    let index = availableSlots.indexOf(slot);
-                    if (index != -1) {
-                      data.availableSlots.splice(index, 1);
-                    }
-                    data.scheduledSlots.push(slot);
-                  });
-                });
-              }
-              data.availableSlots = [...new Set(data.availableSlots)];
-              data.scheduledSlots = [...new Set(data.scheduledSlots)];
-              data.save((err, docs) => {
-                if (err) {
-                  console.log(err);
-                  return res.status(500).json({
-                    error: "error in updating teacher slots",
-                  });
-                } else {
-                  return res.json({
-                    message: "schedule updated successfully",
-                  });
-                }
-              });
-            }
-          })
-          .catch((err) => {
-            console.log(err);
-            return res.status(500).json({
-              error: "Error in updating slots of teachers",
-            });
-          });
-      } else {
-        await SchedulerModel.updateOne(
-          {
-            _id: id,
-          },
-          { ...req.body }
-        );
-
-        students.forEach(async (student) => {
-          let anyPayments = await Payments.countDocuments({
-            customerId: student,
-          });
-          await Customer.updateOne(
-            { _id: student },
-            {
-              $set: {
-                meetingLink: req.body.meetingLink,
-                teacherId: selectedTeacher.id,
-                classStatusId: demo
-                  ? "38493085684944"
-                  : anyPayments
-                  ? "113975223750050"
-                  : "121975682530440",
-              },
-            }
-          );
-        });
-        Teacher.findOne({ id: teacher })
-          .then((data) => {
-            if (data) {
-              let { availableSlots } = data;
-              if (availableSlots) {
-                Object.keys(slots).forEach((day) => {
-                  let arr = slots[day];
-                  arr.forEach((slot) => {
-                    let index = availableSlots.indexOf(slot);
-                    if (index != -1) {
-                      data.availableSlots.splice(index, 1);
-                    }
-                    data.scheduledSlots.push(slot);
-                  });
-                });
-              }
-              data.availableSlots = [...new Set(data.availableSlots)];
-              data.scheduledSlots = [...new Set(data.scheduledSlots)];
-              data.save((err, docs) => {
-                if (err) {
-                  console.log(err);
-                  return res.status(500).json({
-                    error: "error in updating teacher slots",
-                  });
-                } else {
-                  return res.json({
-                    message: "schedule updated successfully",
-                  });
-                }
-              });
-            }
-          })
-          .catch((err) => {
-            console.log(err);
-            return res.status(500).json({
-              error: "Error in updating slots of teachers",
-            });
-          });
-      }
-    } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        error: "Error in editing Schedule",
-      });
-    }
   }
 };
 

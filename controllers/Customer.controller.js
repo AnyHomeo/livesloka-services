@@ -923,7 +923,7 @@ module.exports = {
           $in: [...new Set(allSchedules.map((schedule) => schedule.teacher))],
         },
       })
-        .select("TeacherName id Phone_number")
+        .select("TeacherName id Phone_number TeacherStatus")
         .lean();
       allSchedules = allSchedules.map((schedule) => ({
         ...schedule,
