@@ -214,20 +214,25 @@ exports.deleteSchedule = async (req, res) => {
   try {
     const { id } = req.params;
     const schedule = await SchedulerModel.findById(id);
-    const teacher = await Teacher.findOne({ id: schedule.teacher });
-    const [_, allSlots] = generateSlots(schedule.slots);
-    teacher.availableSlots = [
-      ...new Set([...teacher.availableSlots, ...allSlots]),
-    ];
-    teacher.scheduledSlots = teacher.scheduledSlots.filter(
-      (slot) => !allSlots.includes(slot)
-    );
-    await deleteExistingZoomLinkOfTheSchedule(schedule, false);
-    await teacher.save();
-    schedule.isDeleted = true;
-    schedule.lastTimeJoinedClass = undefined;
-    schedule.startDate = undefined;
-    await schedule.save();
+    if(schedule){
+      const teacher = await Teacher.findOne({ id: schedule.teacher });
+      const [_, allSlots] = generateSlots(schedule.slots);
+      if(teacher){
+        teacher.availableSlots = [
+          ...new Set([...teacher.availableSlots, ...allSlots]),
+        ];
+        teacher.scheduledSlots = teacher.scheduledSlots.filter(
+          (slot) => !allSlots.includes(slot)
+        );
+        await teacher.save();
+      }
+  
+      await deleteExistingZoomLinkOfTheSchedule(schedule, false);
+      schedule.isDeleted = true;
+      schedule.lastTimeJoinedClass = undefined;
+      schedule.startDate = undefined;
+      await schedule.save();
+    }
     return res.status(200).json({
       message: "Schedule Deleted Successfully",
     });
@@ -415,16 +420,14 @@ exports.dangerousScheduleUpdate = async (req, res) => {
     const { scheduleId } = req.params;
     if (typeof req.body.isClassTemperarilyCancelled != "undefined") {
       if (req.body.isClassTemperarilyCancelled) {
-        const schedule = new SchedulerModel.findById(scheduleId);
+        const schedule = await SchedulerModel.findById(scheduleId);
         await deleteExistingZoomLinkOfTheSchedule(schedule);
       } else {
         let schedule = await SchedulerModel.findById(scheduleId);
         const { slots } = schedule;
 
         const meetingLinks = await createSlotsZoomLink(slots);
-        if (typeof meetingLinks.message === "string") {
-          throw new Error(meetingLinks.message);
-        } else {
+        if (typeof meetingLinks.message !== "string") {
           await deleteExistingZoomLinkOfTheSchedule(schedule);
         }
 
