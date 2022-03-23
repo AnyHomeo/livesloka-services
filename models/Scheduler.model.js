@@ -102,9 +102,8 @@ const SchedulerSchema = new mongoose.Schema(
     lastTimeJoinedClass: {
       type: Date,
     },
-    isClassTemperarilyCancelled: {
-      type: Boolean,
-      default: false,
+    cancelledTill:{
+      type:Date
     },
     message: {
       type: String,

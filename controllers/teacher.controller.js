@@ -539,7 +539,7 @@ exports.getTeacherLeavesAndSchedules = async (req, res) => {
       isDeleted: { $ne: true },
     })
       .select(
-        "students slots className demo isClassTemperarilyCancelled message"
+        "students slots className demo isClassTemperarilyCancelled cancelledTill message"
       )
       .populate("students", "firstName")
       .lean();
