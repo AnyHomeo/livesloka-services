@@ -39,11 +39,11 @@ exports.getInvoicesByTransactionId = async (req, res) => {
 
 exports.createAllInvoices = async (req, res) => {
   try {
-    let date = momentTZ().subtract(2, "month");
-    const allJanuaryPayments = await PaymentsModel.find({
+    let date = momentTZ().tz("Asia/Kolkata").subtract(3, "month").startOf('month');
+    const allPayments = await PaymentsModel.find({
       createdAt: {
-        $gte: date.clone().startOf("month").format(),
-        $lte: momentTZ().subtract(2, "days"),
+        $gte: date.clone().format(),
+        $lte: date.clone().add(1,'months').format(),
       },
       status: "SUCCESS",
     })
@@ -52,12 +52,12 @@ exports.createAllInvoices = async (req, res) => {
 
     const exchangeRates = await ExchangeRatesModel.find({
       date: {
-        $gte: date.clone().startOf("month").subtract(2, "days").format(),
-        $lte: momentTZ().subtract(2, "days"),
+        $gte: date.clone().format(),
+        $lte: date.clone().add(1,'months').add(3,'days').format(),
       },
     }).lean();
 
-    let data = allJanuaryPayments.reduce((acc, payment) => {
+    let data = allPayments.reduce((acc, payment) => {
       if (payment.status === "SUCCESS") {
         if (payment.type === "PAYPAL") {
           const {
@@ -261,9 +261,10 @@ exports.getInvoices = async (req, res) => {
 
 exports.storeAllExhangeRates = async (req, res) => {
   try {
-    let startDate = momentTZ("01-01-2022", "DD-MM-YYYY").utc();
+    let startDate = momentTZ("31-12-2021", "DD-MM-YYYY").utc();
+    let endDate = momentTZ("01-01-2022", "DD-MM-YYYY").utc();
     let exchangeRates = [];
-    while (startDate.unix() < momentTZ().unix()) {
+    while (startDate.unix() < endDate.unix()) {
       console.log(startDate.format("MMMM Do, YYYY"));
 
       let date = startDate.format("YYYY-MM-DD");
