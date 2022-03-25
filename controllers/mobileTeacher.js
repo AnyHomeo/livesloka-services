@@ -45,14 +45,24 @@ exports.getTeachersCategoried = async (req, res) => {
 exports.getTeacherSchedules = async (req, res) => {
   try {
     const { teacherId } = req.params;
-    const { web } = req.query;
+    const { web, search } = req.query;
     let teacher = await TeacherModel.findOne({ id: teacherId });
     if (teacher) {
-      let schedulesOfTeacher = await SchedulerModel.find({
+      let query = {
         teacher: teacher.id,
         isDeleted: { $ne: true },
-      })
-        .populate("students", "firstName lastName numberOfClassesBought countryCode whatsAppnumber")
+      };
+      if (search) {
+        query = {
+          ...query,
+          className: { $regex: "^" + search, $options: "i" },
+        };
+      }
+      let schedulesOfTeacher = await SchedulerModel.find(query)
+        .populate(
+          "students",
+          "firstName lastName numberOfClassesBought countryCode whatsAppnumber"
+        )
         .lean();
       schedulesOfTeacher = schedulesOfTeacher.map((schedule, i) => ({
         ...schedule,
