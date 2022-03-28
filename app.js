@@ -32,6 +32,12 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
+
+app.post("/api/wati", (req, res) => {
+  console.log(JSON.stringify(req.body,null,2), req.query);
+  return res.status(200).json({ success: true });
+});
+
 Routes(app);
 Swagger(app);
 Socket(io);

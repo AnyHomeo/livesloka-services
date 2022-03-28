@@ -4,10 +4,10 @@ const CustomerMessageTemplateSchema = require('./CustomerMessageTemplates.model'
 
 const Comments = new Schema( 
   {
-    message: {
-      type: Schema.Types.ObjectId,
-      ref: "CustomerMessageTemplate",
-    },
+    // message: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: "CustomerMessageTemplate",
+    // },
     text:{
       type:String
     },
