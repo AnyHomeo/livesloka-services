@@ -29,6 +29,7 @@ const {
   resetPassword,
   getAllAdmins,
   getSingleTeacher,
+  getCommentsByCustomerIds
 } = require("../controllers/admin.controller");
 
 router.get("/address/:id", getAddress);
@@ -353,6 +354,7 @@ router.post("/admin/delete/:name/:id", deleteCorrespondingData);
 //working with comments
 router.post("/admin/comments", addcomment);
 router.get("/admin/comments/customer/:customerId", getComments);
+router.get("/admin/comments", getCommentsByCustomerIds);
 router.patch("/admin/comments/:commentId", editComment);
 router.delete("/admin/comments/:commentId", deleteComment);
 

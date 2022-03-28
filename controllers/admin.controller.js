@@ -1,7 +1,6 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const AdminModel = require("../models/Admin.model");
-const { model } = require("../models/Admin.model");
 const admin = require("../models/Admin.model");
 const Comment = require("../models/comments.model");
 const CustomerModel = require("../models/Customer.model");
@@ -10,7 +9,8 @@ var twilio = require("twilio");
 const { isValidObjectId } = require("mongoose");
 const { mongooseError } = require("../config/helper");
 const AgentModel = require("../models/Agent.model");
-var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
+const client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
+const momentTZ = require("moment-timezone");
 
 exports.authentication = async (req, res) => {
   try {
@@ -239,6 +239,46 @@ exports.updateStatus = (req, res) => {
     });
 };
 
+exports.getCommentsByCustomerIds = async (req, res) => {
+  try {
+    const { customers } = req.query;
+    if (customers) {
+      const customerIds = customers.split(",");
+
+      let comments = await Comment.find({
+        timeStamp: {
+          $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
+          $lte: momentTZ().tz("Asia/Kolkata").endOf("day").format(),
+        },
+        customer: { $in: customerIds },
+      }).sort({ timeStamp: -1 });
+
+      comments = Object.values(
+        comments.reduce((accumulator, comment) => {
+          if (!accumulator[comment.customer]) {
+            accumulator[comment.customer] = comment;
+          }
+          return accumulator;
+        }, {})
+      );
+
+      return res.status(200).json({
+        message: "Comments retrieved successfully",
+        result: comments,
+      });
+    } else {
+      return res.status(400).json({
+        message: "Customer Ids are required",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
 exports.updateCorrespondingData = (req, res) => {
   try {
     const vell = require(`../models/${req.params.name}.model`);
@@ -409,8 +449,6 @@ exports.addField = (req, res) => {
     res.status("400").send({ error: "something went wrong !!" });
   }
 };
-
-
 
 exports.resetPassword = (req, res) => {
   const { id } = req.params;
