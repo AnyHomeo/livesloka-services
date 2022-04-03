@@ -21,7 +21,6 @@ exports.watiWebhookController = async (req, res) => {
 // exports.addWatiContacts = async (req, res) => {
 //   try {
 //     const customersWithoutWatiContactId = await CustomerModel.find({
-//       watiContactId: { $exists: false },
 //       classStatusId: {
 //         $in: ["113975223750050", "38493085684944", "155576230867877"],
 //       },
@@ -57,23 +56,23 @@ exports.watiWebhookController = async (req, res) => {
 //           formattedPhoneNumber = customer.countryCode + formattedPhoneNumber;
 //         }
 
-//         try {
-//           let response = await fetch(
-//             `${watiApiHost}/api/v1/addContact/${formattedPhoneNumber}`,
-//             {
-//               method: "POST",
-//               body: JSON.stringify(data),
-//               headers: {
-//                 "Content-Type": "application/json",
-//                 Authorization: `Bearer ${watiApiKey}`,
-//               },
-//             }
-//           );
-//           response = await response.json();
-//           const { id } = response.contact;
+        // try {
+          // let response = await fetch(
+          //   `${watiApiHost}/api/v1/addContact/${formattedPhoneNumber}`,
+          //   {
+          //     method: "POST",
+          //     body: JSON.stringify(data),
+          //     headers: {
+          //       "Content-Type": "application/json",
+          //       Authorization: `Bearer ${watiApiKey}`,
+          //     },
+          //   }
+          // );
+          // response = await response.json();
+          // const { id } = response.contact;
 //           await CustomerModel.updateMany(
 //             { whatsAppnumber: customer.whatsAppnumber },
-//             { $set: { watiContactId: id } }
+//             { $set: { watiId: formattedPhoneNumber } }
 //           );
 //           addedMobileNumbers.push(customer.whatsAppnumber);
 //         } catch (error) {

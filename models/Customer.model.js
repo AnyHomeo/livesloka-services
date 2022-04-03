@@ -172,6 +172,9 @@ const Customer = new mongoose.Schema(
     watiContactId:{
       type:String,
     },
+    watiId:{
+      type:String,
+    }
   },
   { timestamps: true }
 );
