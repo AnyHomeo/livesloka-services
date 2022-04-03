@@ -37,8 +37,19 @@ const rewardsRouter = require("./routes/rewards");
 const rolesRouter = require("./routes/roles");
 const invoicesRouter = require("./routes/invoices");
 const watiMessagesRouter = require("./routes/wati");
+const { detectIntent } = require("./dialogflow");
 
 module.exports = (app) => {
+  app.post("/dialogflow", async (req, res) => {
+    try {
+      const { languageCode, queryText, sessionId } = req.body;
+      let responseData = await detectIntent(languageCode, queryText, sessionId);
+      res.send(responseData.response);
+    } catch (error) {
+      console.log(error);
+      return res.send({ success: false });
+    }
+  });
 
   app.use("/", indexRouter);
   app.use("/", customerRouter);
