@@ -2,9 +2,9 @@ const express = require("express");
 const router = express.Router();
 const {
   watiWebhookController,
-  addWatiContacts,
+  // addWatiContacts,
 } = require("../controllers/wati.controller");
 
 router.post("/", watiWebhookController);
-router.get("/", addWatiContacts);
+// router.get("/", addWatiContacts);
 module.exports = router;

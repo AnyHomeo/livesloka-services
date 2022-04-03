@@ -11,9 +11,9 @@ const uploadRouter = require("./routes/uploads");
 const cancelClassRouter = require("./routes/cancelledClasses");
 const classHistoryRouter = require("./routes/classHistory");
 const summerCampRouter = require("./routes/summerCamp");
-const CareersRouter = require("./routes/careersApplications");
+const careersRouter = require("./routes/careersApplications");
 const teacherLeavesRouter = require("./routes/teacherLeaves");
-const AdMessagesRouter = require("./routes/adMessage");
+const adMessagesRouter = require("./routes/adMessage");
 const allocateRouter = require("./routes/AgentsAssignmentsToClass");
 const extraAmountsRouter = require("./routes/extraAmounts");
 const agentsRouter = require("./routes/agents");
@@ -23,19 +23,20 @@ const expensesRouter = require("./routes/expenses");
 const optionsRouter = require("./routes/options");
 const scriptsRouter = require("./routes/scripts");
 const subscriptionsRouter = require("./routes/subscriptions");
-const MobileCustomerApiRouter = require("./routes/customers");
+const mobileCustomerApiRouter = require("./routes/customers");
 const videosRouter = require("./routes/videos");
-const MobileTeachersApiRouter = require("./routes/mobileTeacher");
+const mobileTeachersApiRouter = require("./routes/mobileTeacher");
 const chat = require("./routes/chat");
 const nonchat = require("./routes/nonchat");
 const group = require("./routes/group");
 const plansRouter = require("./routes/plan");
 const productsRouter = require("./routes/product");
 const paymentsRouter = require("./routes/payments");
-const Reviews = require("./routes/Reviews");
-const RewardsRouter = require("./routes/rewards");
-const RolesRouter = require("./routes/roles");
-const InvoicesRouter = require("./routes/invoices");
+const reviews = require("./routes/Reviews");
+const rewardsRouter = require("./routes/rewards");
+const rolesRouter = require("./routes/roles");
+const invoicesRouter = require("./routes/invoices");
+const watiMessagesRouter = require("./routes/wati");
 
 module.exports = (app) => {
 
@@ -45,9 +46,9 @@ module.exports = (app) => {
   app.use("/", chat);
   app.use("/", nonchat);
   app.use("/", group);
-  app.use("/messages", AdMessagesRouter);
+  app.use("/messages", adMessagesRouter);
   app.use("/summercamps", summerCampRouter);
-  app.use("/careers", CareersRouter);
+  app.use("/careers", careersRouter);
   app.use("/class-history", classHistoryRouter);
   app.use("/cancelclass", cancelClassRouter);
   app.use("/teacher-leaves", teacherLeavesRouter);
@@ -71,12 +72,13 @@ module.exports = (app) => {
   app.use("/products", productsRouter);
   app.use("/plans", plansRouter);
   app.use("/payments", paymentsRouter);
-  app.use("/reviews", Reviews);
-  app.use("/rewards", RewardsRouter);
-  app.use("/roles", RolesRouter);
-  app.use("/invoices", InvoicesRouter);
+  app.use("/reviews", reviews);
+  app.use("/rewards", rewardsRouter);
+  app.use("/roles", rolesRouter);
+  app.use("/invoices", invoicesRouter);
 
   //mobile routes
-  app.use("/api/customers", MobileCustomerApiRouter);
-  app.use("/api/teachers", MobileTeachersApiRouter);
+  app.use("/api/customers", mobileCustomerApiRouter);
+  app.use("/api/teachers", mobileTeachersApiRouter);
+  app.use("/api/wati", watiMessagesRouter);
 };
