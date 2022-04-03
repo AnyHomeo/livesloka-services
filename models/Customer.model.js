@@ -168,7 +168,10 @@ const Customer = new mongoose.Schema(
     isRedeemedCustomer:{
       type:Boolean,
       default: false,
-    }
+    },
+    watiContactId:{
+      type:String,
+    },
   },
   { timestamps: true }
 );

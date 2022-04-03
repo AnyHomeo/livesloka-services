@@ -39,7 +39,6 @@ const InvoicesRouter = require("./routes/invoices");
 
 module.exports = (app) => {
 
-
   app.use("/", indexRouter);
   app.use("/", customerRouter);
   app.use("/", attendanceRouter);
