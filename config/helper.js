@@ -93,3 +93,8 @@ exports.mongooseError = (error) => {
 }
 
 exports.toFixed = (value,decimals = 2) => typeof value === 'number' ? value.toFixed(decimals) : value
+
+exports.getSlotByDate = () => {
+  const date = new moment().format('DDDD - HH:MM A')
+  console.log(date)
+}

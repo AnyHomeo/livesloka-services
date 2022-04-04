@@ -11,6 +11,11 @@ const CancelledClassesModel = require("../models/CancelledClasses.model");
 const AdminModel = require("../models/Admin.model");
 const CustomerModel = require("../models/Customer.model");
 const moment = require("moment");
+const { getSlotByDate } = require("./helper");
+const WatiMessagesModel = require("../models/WatiMessages.model");
+
+const watiApiKey = process.env.WATI_API_KEY;
+const watiApiHost = process.env.WATI_API_HOST;
 
 const savePaypalTransactions = async (transactions) => {
   try {
@@ -145,13 +150,15 @@ const fetchPaypalAndRazorpay = async () => {
   }
 };
 
-const getPresentSlot = () => {
-  const nextSlot = momentTZ()
+const getPresentSlot = (date) => {
+  const nextSlot = momentTZ(date)
     .tz("Asia/Kolkata")
     .add(30, "minutes")
+    .subtract(moment().minutes() % 30, "minutes")
     .format("hh:mm A");
-  const presentSlot = momentTZ()
+  const presentSlot = momentTZ(date)
     .tz("Asia/Kolkata")
+    .subtract(moment().minutes() % 30, "minutes")
     .format("dddd-hh:mm A")
     .toUpperCase();
 
@@ -259,6 +266,82 @@ const getPrevSlot = (slot) => {
 //   }
 // };
 
+const isRecent = (date) => {
+  let unix = moment().subtract(1, "hour").unix();
+  let dateUnix = moment(date).unix();
+  return Math.abs(unix - dateUnix) < 15 * 60 * 1000;
+};
+
+const sendWatiFeedbackMessage = async () => {
+  try {
+    let presentSlot = getPresentSlot(moment().format());
+    let prevSlot = getPrevSlot(presentSlot);
+    console.log(presentSlot, prevSlot);
+    let lowercasedDay = prevSlot.split("-")[0].toLowerCase();
+    const schedules = await SchedulerModel.find({
+      [`slots.${lowercasedDay}`]: {
+        $nin: [presentSlot],
+        $in: [prevSlot],
+      },
+      lastTimeJoinedClass: {
+        $gte: moment().subtract(2, "hour").format(),
+      },
+    })
+      .select("students slots teacherData teacher")
+      .populate("students", "firstName lastName lastTimeJoined watiId")
+      .populate("teacherData")
+      .lean();
+
+    let students = schedules.reduce((acc, schedule) => {
+      schedule.students.forEach((student) => {
+        if (student.lastTimeJoined && isRecent(student.lastTimeJoined)) {
+          acc.push(student);
+        }
+      });
+      return acc;
+    }, []);
+
+    console.log(students);
+
+    if (students.length) {
+      let messages = {
+        template_name: "feedback",
+        broadcast_name: "feedback",
+        receivers: students.map((student) => ({
+          whatsappNumber: student.watiId,
+        })),
+      };
+      console.log(messages);
+      let response = await fetch(`${watiApiHost}/api/v1/sendTemplateMessages`, {
+        method: "POST",
+        body: JSON.stringify(messages),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${watiApiKey}`,
+        },
+      });
+      response = await response.json();
+      const watiMessages = schedules.reduce((acc, schedule) => {
+        let messagesOfThisSchedule = []
+        schedule.students.forEach((student) => {
+          if (student.lastTimeJoined && isRecent(student.lastTimeJoined)) {
+            messagesOfThisSchedule.push({
+              customer: student._id,
+              schedule: schedule._id,
+              teacher: schedule?.teacherData?._id
+            });
+          }
+        });
+
+        return [...acc,...messagesOfThisSchedule]
+      }, []);
+      await WatiMessagesModel.insertMany(watiMessages);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 const sendPaymentDueMessages = async () => {
   try {
     const customersWithDueDateTomorrow = await CustomerModel.find({
@@ -287,9 +370,8 @@ const sendPaymentDueMessages = async () => {
         $in: customersWithClassesLeftLessThanZeroIds,
       },
       ["slots." + nextDay]: { $exists: true },
-      isDeleted: { $ne: true }
+      isDeleted: { $ne: true },
     });
-    
   } catch (error) {
     console.log(error);
   }
@@ -307,6 +389,10 @@ const batch = () => {
     // });
 
     cron.schedule("0 21 * * *", sendPaymentDueMessages, {
+      timezone: "Asia/Kolkata",
+    });
+
+    cron.schedule("15,45 * * * *", sendWatiFeedbackMessage, {
       timezone: "Asia/Kolkata",
     });
   }
