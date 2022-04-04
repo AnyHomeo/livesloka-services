@@ -1,13 +1,63 @@
 require("dotenv").config();
 const CustomerModel = require("../models/Customer.model");
 const fetch = require("node-fetch");
+const moment = require("moment");
+const WatiMessagesModel = require("../models/WatiMessages.model");
 
 const watiApiKey = process.env.WATI_API_KEY;
 const watiApiHost = process.env.WATI_API_HOST;
 
+let templateIds = {
+  Yes: "testtemplate",
+  No: "testtemplate",
+};
+
 exports.watiWebhookController = async (req, res) => {
   try {
-    console.log(JSON.stringify(req.body, null, 2), req.query);
+    const { text, waId } = req.body;
+    if (text === "Yes" || text === "No") {
+      const customers = await CustomerModel.find({ watiId: waId });
+      const customerIds = customers.map((c) => c._id);
+      if (customerIds.length) {
+        await WatiMessagesModel.updateOne(
+          {
+            customer: { $in: customerIds },
+            response: "No response",
+            createdAt: {
+              $gte: moment().subtract(12, "hours").format(),
+            },
+          },
+          {
+            $set: { response: text },
+          }
+        );
+
+        const data = {
+          template_name: templateIds[text],
+          broadcast_name: "Reply",
+          receivers: [
+            {
+              whatsappNumber: waId,
+            },
+          ],
+        };
+
+        console.log(data);
+
+        let response = await fetch(
+          `${watiApiHost}/api/v1/sendTemplateMessages`,
+          {
+            method: "POST",
+            body: JSON.stringify(data),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${watiApiKey}`,
+            },
+          }
+        );
+        console.log(response);
+      }
+    }
     return res.status(200).json({ success: true });
   } catch (error) {
     console.log(error);
@@ -56,20 +106,20 @@ exports.watiWebhookController = async (req, res) => {
 //           formattedPhoneNumber = customer.countryCode + formattedPhoneNumber;
 //         }
 
-        // try {
-          // let response = await fetch(
-          //   `${watiApiHost}/api/v1/addContact/${formattedPhoneNumber}`,
-          //   {
-          //     method: "POST",
-          //     body: JSON.stringify(data),
-          //     headers: {
-          //       "Content-Type": "application/json",
-          //       Authorization: `Bearer ${watiApiKey}`,
-          //     },
-          //   }
-          // );
-          // response = await response.json();
-          // const { id } = response.contact;
+// try {
+// let response = await fetch(
+//   `${watiApiHost}/api/v1/addContact/${formattedPhoneNumber}`,
+//   {
+//     method: "POST",
+//     body: JSON.stringify(data),
+//     headers: {
+//       "Content-Type": "application/json",
+//       Authorization: `Bearer ${watiApiKey}`,
+//     },
+//   }
+// );
+// response = await response.json();
+// const { id } = response.contact;
 //           await CustomerModel.updateMany(
 //             { whatsAppnumber: customer.whatsAppnumber },
 //             { $set: { watiId: formattedPhoneNumber } }
