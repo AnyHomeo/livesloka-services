@@ -68,6 +68,50 @@ exports.watiWebhookController = async (req, res) => {
   }
 };
 
+exports.getWatiMessages = async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    let query = {};
+    if (from) {
+      query["createdAt"] = { $gte: moment(from).format() };
+    }
+    if (to) {
+      if (query["createdAt"]) {
+        query["createdAt"]["$lte"] = moment(to).format();
+      } else {
+        query["createdAt"] = { $lte: moment(to).format() };
+      }
+    }
+
+    const messages = await WatiMessagesModel.find(query)
+      .populate("customer", "firstName lastName email")
+      .populate("teacher", "TeacherName")
+      .populate("schedule", "className");
+
+    const chart = messages.reduce((acc, message) => {
+      let { teacher } = message; 
+      if (acc[teacher.TeacherName]) {
+        let prevCount = acc[teacher.TeacherName][message.response];
+        acc[teacher.TeacherName] = {
+          ...acc[teacher.TeacherName],
+          [message.response]: prevCount ? prevCount + 1 : 1,
+        };
+      } else {
+        acc[teacher.TeacherName] = { [message.response]: 1 };
+      }
+      return acc
+    }, {});
+
+    return res.status(200).json({ result: { messages, chart } });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      message: error.message,
+      result: error,
+    });
+  }
+};
+
 // exports.addWatiContacts = async (req, res) => {
 //   try {
 //     const customersWithoutWatiContactId = await CustomerModel.find({

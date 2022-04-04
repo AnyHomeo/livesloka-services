@@ -21,6 +21,10 @@ const WatiMessageSchema = new mongoose.Schema(
     watiMessageId: {
       type: String,
     },
+    context: {
+      type: String,
+      default: "FEEDBACK"
+    },
   },
   {
     timestamps: true,
