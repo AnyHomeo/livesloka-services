@@ -39,7 +39,7 @@ exports.getInvoicesByTransactionId = async (req, res) => {
 
 exports.createAllInvoices = async (req, res) => {
   try {
-    let date = momentTZ().tz("Asia/Kolkata").subtract(3, "month").startOf('month');
+    let date = momentTZ().tz("Asia/Kolkata").subtract(1, "month").startOf('month');
     const allPayments = await PaymentsModel.find({
       createdAt: {
         $gte: date.clone().format(),
@@ -261,8 +261,8 @@ exports.getInvoices = async (req, res) => {
 
 exports.storeAllExhangeRates = async (req, res) => {
   try {
-    let startDate = momentTZ("31-12-2021", "DD-MM-YYYY").utc();
-    let endDate = momentTZ("01-01-2022", "DD-MM-YYYY").utc();
+    let startDate = momentTZ("31-03-2022", "DD-MM-YYYY").utc();
+    let endDate = momentTZ("05-04-2022", "DD-MM-YYYY").utc();
     let exchangeRates = [];
     while (startDate.unix() < endDate.unix()) {
       console.log(startDate.format("MMMM Do, YYYY"));
@@ -280,11 +280,14 @@ exports.storeAllExhangeRates = async (req, res) => {
           date: date,
           rate: response.results["INR"],
         });
+      } else {
+        console.log(response.error)
       }
 
       startDate.add(1, "day");
     }
 
+    console.log(exchangeRates)
     await ExchangeRatesModel.insertMany(exchangeRates);
     return res.json({ success: true, result: exchangeRates });
   } catch (error) {
