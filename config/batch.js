@@ -286,6 +286,7 @@ const sendWatiFeedbackMessage = async () => {
       lastTimeJoinedClass: {
         $gte: moment().subtract(2, "hour").format(),
       },
+      demo:false
     })
       .select("students slots teacherData teacher")
       .populate("students", "firstName lastName lastTimeJoined watiId")
