@@ -276,7 +276,7 @@ const sendWatiFeedbackMessage = async () => {
   try {
     let presentSlot = getPresentSlot(moment().format());
     let prevSlot = getPrevSlot(presentSlot);
-    console.log(presentSlot, prevSlot);
+
     let lowercasedDay = prevSlot.split("-")[0].toLowerCase();
     const schedules = await SchedulerModel.find({
       [`slots.${lowercasedDay}`]: {
@@ -301,17 +301,15 @@ const sendWatiFeedbackMessage = async () => {
       return acc;
     }, []);
 
-    console.log(students);
-
     if (students.length) {
       let messages = {
-        template_name: "feedback",
+        template_name: "feedback_main",
         broadcast_name: "feedback",
         receivers: students.map((student) => ({
           whatsappNumber: student.watiId,
         })),
       };
-      console.log(messages);
+
       let response = await fetch(`${watiApiHost}/api/v1/sendTemplateMessages`, {
         method: "POST",
         body: JSON.stringify(messages),

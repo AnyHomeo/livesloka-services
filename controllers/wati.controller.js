@@ -8,8 +8,8 @@ const watiApiKey = process.env.WATI_API_KEY;
 const watiApiHost = process.env.WATI_API_HOST;
 
 let templateIds = {
-  Yes: "testtemplate",
-  No: "testtemplate",
+  Yes: "facebook_yes",
+  No: "feedback_no", 
 };
 
 exports.watiWebhookController = async (req, res) => {
