@@ -391,9 +391,9 @@ const batch = () => {
       timezone: "Asia/Kolkata",
     });
 
-    cron.schedule("15,45 * * * *", sendWatiFeedbackMessage, {
-      timezone: "Asia/Kolkata",
-    });
+    // cron.schedule("15,45 * * * *", sendWatiFeedbackMessage, {
+    //   timezone: "Asia/Kolkata",
+    // });
   }
 };
 
