@@ -19,8 +19,16 @@ exports.getInvoicesByTransactionId = async (req, res) => {
     if (transactionDate) {
       let invoices = await InvoicesModel.find({
         paymentDate: {
-          $gte: momentTZ(transactionDate).utc().startOf("day").format(),
-          $lte: momentTZ(transactionDate).utc().endOf("day").format(),
+          $gte: momentTZ(transactionDate)
+            .tz("Asia/Kolkata")
+            .subtract(1, "day")
+            .startOf("day")
+            .format(),
+          $lte: momentTZ(transactionDate)
+            .tz("Asia/Kolkata")
+            .subtract(1, "day")
+            .endOf("day")
+            .format(),
         },
         paymentMethod:
           transaction?.mode === "PAYPAL" ? "Paypal" : { $ne: "Paypal" },
@@ -39,11 +47,14 @@ exports.getInvoicesByTransactionId = async (req, res) => {
 
 exports.createAllInvoices = async (req, res) => {
   try {
-    let date = momentTZ().tz("Asia/Kolkata").subtract(1, "month").startOf('month');
+    let date = momentTZ()
+      .tz("Asia/Kolkata")
+      .subtract(1, "month")
+      .startOf("month");
     const allPayments = await PaymentsModel.find({
       createdAt: {
         $gte: date.clone().format(),
-        $lte: date.clone().add(1,'months').format(),
+        $lte: date.clone().add(1, "months").format(),
       },
       status: "SUCCESS",
     })
@@ -53,7 +64,7 @@ exports.createAllInvoices = async (req, res) => {
     const exchangeRates = await ExchangeRatesModel.find({
       date: {
         $gte: date.clone().format(),
-        $lte: date.clone().add(1,'months').add(3,'days').format(),
+        $lte: date.clone().add(1, "months").add(3, "days").format(),
       },
     }).lean();
 
@@ -281,13 +292,13 @@ exports.storeAllExhangeRates = async (req, res) => {
           rate: response.results["INR"],
         });
       } else {
-        console.log(response.error)
+        console.log(response.error);
       }
 
       startDate.add(1, "day");
     }
 
-    console.log(exchangeRates)
+    console.log(exchangeRates);
     await ExchangeRatesModel.insertMany(exchangeRates);
     return res.json({ success: true, result: exchangeRates });
   } catch (error) {

@@ -94,7 +94,6 @@ const InvoicesSchema = new mongoose.Schema(
     paymentMethod: {
       type: String,
     },
-
     paymentDate: {
       type: Date,
     },
