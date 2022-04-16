@@ -13,9 +13,7 @@ const CustomerModel = require("../models/Customer.model");
 const moment = require("moment");
 const { getSlotByDate } = require("./helper");
 const WatiMessagesModel = require("../models/WatiMessages.model");
-
-const watiApiKey = process.env.WATI_API_KEY;
-const watiApiHost = process.env.WATI_API_HOST;
+const { sendWatiMessages } = require("./wati");
 
 const savePaypalTransactions = async (transactions) => {
   try {
@@ -286,7 +284,7 @@ const sendWatiFeedbackMessage = async () => {
       lastTimeJoinedClass: {
         $gte: moment().subtract(2, "hour").format(),
       },
-      demo:false
+      demo: false,
     })
       .select("students slots teacherData teacher")
       .populate("students", "firstName lastName lastTimeJoined watiId")
@@ -311,28 +309,20 @@ const sendWatiFeedbackMessage = async () => {
         })),
       };
 
-      let response = await fetch(`${watiApiHost}/api/v1/sendTemplateMessages`, {
-        method: "POST",
-        body: JSON.stringify(messages),
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${watiApiKey}`,
-        },
-      });
-      response = await response.json();
+      await sendWatiMessages(messages);
       const watiMessages = schedules.reduce((acc, schedule) => {
-        let messagesOfThisSchedule = []
+        let messagesOfThisSchedule = [];
         schedule.students.forEach((student) => {
           if (student.lastTimeJoined && isRecent(student.lastTimeJoined)) {
             messagesOfThisSchedule.push({
               customer: student._id,
               schedule: schedule._id,
-              teacher: schedule?.teacherData?._id
+              teacher: schedule?.teacherData?._id,
             });
           }
         });
 
-        return [...acc,...messagesOfThisSchedule]
+        return [...acc, ...messagesOfThisSchedule];
       }, []);
       await WatiMessagesModel.insertMany(watiMessages);
     }
@@ -376,6 +366,41 @@ const sendPaymentDueMessages = async () => {
   }
 };
 
+const sendLateWatiMessageToTeacherAndStudents = async () => {
+  try {
+    let presentSlot = getPresentSlot(moment().format());
+    let prevSlot = getPrevSlot(presentSlot);
+    let lowercasedDay = prevSlot.split("-")[0].toLowerCase();
+
+    const schedules = SchedulerModel.find({
+      [`slots.${lowercasedDay}`]: {
+        $in: [presentSlot],
+        $nin: [prevSlot],
+      },
+    })
+      .select("students slots teacherData teacher")
+      .populate("students", "firstName lastName lastTimeJoined watiId")
+      .populate("teacherData")
+      .lean();
+
+    if (schedules.length) {
+      for (let i = 0; i < schedules.length; i++) {
+        let schedule = schedules[i];
+        if (
+          moment(schedule.lastTimeJoinedClass).unix() <
+          moment().subtract(20, "minutes").unix()
+        ) {
+          
+        }
+      }
+    } else {
+      console.log("NO CLASSES AT THIS POINT OF TIME");
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 const batch = () => {
   if (process.env.ENVIRONMENT !== "DEV") {
     console.log("Scheduling Cron Batches....");
@@ -394,6 +419,10 @@ const batch = () => {
     // cron.schedule("15,45 * * * *", sendWatiFeedbackMessage, {
     //   timezone: "Asia/Kolkata",
     // });
+
+    cron.schedule("2,32 * * * *", sendLateWatiMessageToTeacherAndStudents, {
+      timezone: "Asia/Kolkata",
+    });
   }
 };
 
