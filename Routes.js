@@ -41,7 +41,6 @@ const { detectIntent } = require("./dialogflow");
 const CustomerModel = require("./models/Customer.model");
 const AdminModel = require("./models/Admin.model");
 
-
 module.exports = (app) => {
   app.post("/dialogflow", async (req, res) => {
     try {
@@ -56,17 +55,19 @@ module.exports = (app) => {
 
   app.post("/api/webhook/zapier", async (req, res) => {
     try {
+      const { whatsapp, name } = req.body;
+      const loginId = whatsapp.slice(whatsapp.length - 10);
       let newCustomer = new CustomerModel({
-        whatsAppnumber: req.body.whatsapp,
-        email: req.body.whatsapp,
-        lastName: req.body.name,
+        whatsAppnumber: whatsapp,
+        email: loginId,
+        lastName: name,
       });
       await newCustomer.save();
       const newUser = new AdminModel({
-        userId: req.body.whatsapp,
+        userId: loginId,
         roleId: 1,
         customerId: newCustomer._id,
-        username: req.body.name,
+        username: name,
       });
       await newUser.save();
       return res.status(200).send({ success: true });
