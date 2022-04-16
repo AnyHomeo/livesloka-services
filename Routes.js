@@ -38,6 +38,9 @@ const rolesRouter = require("./routes/roles");
 const invoicesRouter = require("./routes/invoices");
 const watiMessagesRouter = require("./routes/wati");
 const { detectIntent } = require("./dialogflow");
+const CustomerModel = require("./models/Customer.model");
+const AdminModel = require("./models/Admin.model");
+
 
 module.exports = (app) => {
   app.post("/dialogflow", async (req, res) => {
@@ -51,9 +54,26 @@ module.exports = (app) => {
     }
   });
 
-  app.post("/api/webhook/zapier", (req, res) => {
-    console.log(JSON.stringify(req.body, null, 2), req.query);
-    return res.status(200).send({ success: true });
+  app.post("/api/webhook/zapier", async (req, res) => {
+    try {
+      let newCustomer = new CustomerModel({
+        whatsAppnumber: req.body.whatsapp,
+        email: req.body.whatsapp,
+        lastName: req.body.name,
+      });
+      await newCustomer.save();
+      const newUser = new AdminModel({
+        userId: req.body.whatsapp,
+        roleId: 1,
+        customerId: newCustomer._id,
+        username: req.body.name,
+      });
+      await newUser.save();
+      return res.status(200).send({ success: true });
+    } catch (error) {
+      console.log(error);
+      return res.send({ success: true });
+    }
   });
 
   app.use("/", indexRouter);
