@@ -1,5 +1,7 @@
 const Customers = require("../models/Customer.model");
 const Admins = require("../models/Admin.model");
+const moment = require("moment");
+const ClassStatusesModel = require("../models/ClassStatuses.model");
 
 exports.getCustomers = async (req, res) => {
   try {
@@ -76,7 +78,7 @@ exports.getCustomers = async (req, res) => {
 
 exports.getCustomerById = (req, res) => {};
 
-exports.postNotificationToken = async(req, res) => {
+exports.postNotificationToken = async (req, res) => {
   try {
     const { token } = req.body;
     const login = await Admins.findOne({ userId: req.params.userId });
@@ -96,5 +98,49 @@ exports.postNotificationToken = async(req, res) => {
     return res
       .status(500)
       .json({ error: "Something went wrong!", result: null });
+  }
+};
+
+exports.getCustomerDashboardData = async (req, res) => {
+  try {
+    const { from, to } = req.query;
+    let query = {
+      createdAt: {
+        $gte: moment(from).format(),
+        $lte: moment(to).format(),
+      },
+    };
+
+    const customers = await Customers.find(query)
+      .populate("classStatus")
+      .populate("timeZone")
+      .lean();
+
+    const statuses = await ClassStatusesModel.find().lean();
+
+    let result = statuses.reduce((acc, status) => {
+      acc[status._id] = {
+        items: [],
+        data: status,
+      };
+      return acc;
+    }, {});
+
+    customers.forEach((customer) => {
+      if (customer.classStatus && result[customer.classStatus._id]) {
+        result[customer.classStatus._id].items.push({
+          id: customer._id,
+          content: customer,
+        });
+      }
+    });
+
+    return res.json({
+      message: "Retrieved customer data successfully",
+      result,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: error.message });
   }
 };

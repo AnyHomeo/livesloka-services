@@ -110,7 +110,7 @@ const Customer = new mongoose.Schema(
     },
     proposedAmount: {
       type: Number,
-      default: 50,
+      default: 59,
     },
     proposedCurrencyId: {
       trim: true,
