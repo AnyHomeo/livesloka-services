@@ -373,7 +373,7 @@ const updateCustomerWithUpdatedSchedule = async (oldSchedule, newSchedule) => {
         previousValue,
         nextValue,
         comment: "Scheduled a Demo class",
-        customerId: stud_id,
+        customerId,
       });
       await newUpdate.save();
     }
