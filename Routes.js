@@ -51,6 +51,11 @@ module.exports = (app) => {
     }
   });
 
+  app.post("/api/webhook/zapier", (req, res) => {
+    console.log(JSON.stringify(req.body, null, 2), req.query);
+    return res.status(200).send({ success: true });
+  });
+
   app.use("/", indexRouter);
   app.use("/", customerRouter);
   app.use("/", attendanceRouter);
