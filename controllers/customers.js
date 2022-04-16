@@ -115,6 +115,11 @@ exports.getCustomerDashboardData = async (req, res) => {
       .populate("classStatus")
       .populate("timeZone")
       .populate("subject")
+      .populate("class")
+      .populate("category")
+      .populate("currency")
+      .populate("agent")
+      .populate("teacher")
       .lean();
 
     const statuses = await ClassStatusesModel.find().lean();
