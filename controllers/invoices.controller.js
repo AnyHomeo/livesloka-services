@@ -231,7 +231,7 @@ exports.getInvoices = async (req, res) => {
     invoices = invoices.map((invoice) => {
       if (invoice.paymentMethod === "Paypal") {
         let { depositExchangeRate, exchangeRate } = invoice;
-        let transactionFee = toFixed(invoice.transactionFee ?? 0);
+        let transactionFee = toFixed(invoice.transactionFee || 0);
         let net = toFixed(invoice.taxableValue - transactionFee);
         let turnover = toFixed(invoice.taxableValue * exchangeRate);
         let feeInInr = toFixed(transactionFee * exchangeRate * -1);
@@ -258,7 +258,7 @@ exports.getInvoices = async (req, res) => {
           turnover: toFixed(invoice.taxableValue),
           feeInInr: toFixed(invoice.transactionFee),
           recieved: toFixed(
-            invoice.taxableValue - (invoice.transactionFee ?? 0)
+            invoice.taxableValue - (invoice.transactionFee || 0)
           ),
         };
       }

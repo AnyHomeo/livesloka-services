@@ -132,7 +132,7 @@ exports.getWatiMessages = async (req, res) => {
 //         !addedMobileNumbers.includes(customer.whatsAppnumber)
 //       ) {
 //         let data = {
-//           name: `${customer.firstName ?? ""} (${customer.lastName ?? ""})`,
+//           name: `${customer.firstName || ""} (${customer.lastName || ""})`,
 //           customParams: [],
 //         };
 
