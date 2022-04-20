@@ -390,7 +390,7 @@ exports.getZoomAccountDashboardOfDay = async (req, res) => {
           let filteredSchedules = schedules.filter((schedule) => {
             return (
               schedule.slots[day].includes(slot) &&
-              schedule.meetingLinks.[day].meetingAccount.toString() ===
+              schedule.meetingLinks[day].meetingAccount.toString() ===
                 zoomAccount._id.toString()
             );
           });

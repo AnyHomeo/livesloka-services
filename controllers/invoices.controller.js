@@ -93,7 +93,7 @@ exports.createAllInvoices = async (req, res) => {
             (exchangeRate) =>
               momentTZ(exchangeRate.date).utc().unix() ===
               momentTZ(payment.createdAt).utc().startOf("day").unix()
-          ).[0].rate;
+          )[0].rate;
 
           let exchangeRate = exchangeRates.filter(
             (exchangeRate) =>
@@ -103,7 +103,7 @@ exports.createAllInvoices = async (req, res) => {
                 .utc()
                 .startOf("day")
                 .unix()
-          ).[0].rate;
+          )[0].rate;
 
           console.log(payment.createdAt, exchangeRate, depositExchangeRate);
 
