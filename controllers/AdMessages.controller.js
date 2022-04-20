@@ -29,7 +29,7 @@ exports.getMessagesByEmail = async (req, res) => {
         let timeRightNow = new Date().getTime();
         let unSeenMessages = allMessages.filter(
           (message) =>
-            !message?.acknowledgedBy?.some((id) => id.equals(admin._id)) &&
+            !message.acknowledgedBy.some((id) => id.equals(admin._id)) &&
             new Date(message.expiryDate).getTime() > timeRightNow
         );
         return res.json({

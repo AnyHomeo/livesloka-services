@@ -270,66 +270,70 @@ const isRecent = (date) => {
   return Math.abs(unix - dateUnix) < 15 * 60 * 1000;
 };
 
-const sendWatiFeedbackMessage = async () => {
-  try {
-    let presentSlot = getPresentSlot(moment().format());
-    let prevSlot = getPrevSlot(presentSlot);
+// const sendWatiFeedbackMessage = async () => {
+//   try {
+//     let presentSlot = getPresentSlot(moment().format());
+//     let prevSlot = getPrevSlot(presentSlot);
 
-    let lowercasedDay = prevSlot.split("-")[0].toLowerCase();
-    const schedules = await SchedulerModel.find({
-      [`slots.${lowercasedDay}`]: {
-        $nin: [presentSlot],
-        $in: [prevSlot],
-      },
-      lastTimeJoinedClass: {
-        $gte: moment().subtract(2, "hour").format(),
-      },
-      demo: false,
-    })
-      .select("students slots teacherData teacher")
-      .populate("students", "firstName lastName lastTimeJoined watiId")
-      .populate("teacherData")
-      .lean();
+//     let lowercasedDay = prevSlot.split("-")[0].toLowerCase();
+//     const schedules = await SchedulerModel.find({
+//       [`slots.${lowercasedDay}`]: {
+//         $nin: [presentSlot],
+//         $in: [prevSlot],
+//       },
+//       lastTimeJoinedClass: {
+//         $gte: moment().subtract(2, "hour").format(),
+//       },
+//       demo: false,
+//     })
+//       .select("students slots teacherData teacher")
+//       .populate("students", "firstName lastName lastTimeJoined watiId")
+//       .populate("teacherData")
+//       .lean();
 
-    let students = schedules.reduce((acc, schedule) => {
-      schedule.students.forEach((student) => {
-        if (student.lastTimeJoined && isRecent(student.lastTimeJoined)) {
-          acc.push(student);
-        }
-      });
-      return acc;
-    }, []);
+//     let students = schedules.reduce((acc, schedule) => {
+//       schedule.students.forEach((student) => {
+//         if (student.lastTimeJoined && isRecent(student.lastTimeJoined)) {
+//           acc.push(student);
+//         }
+//       });
+//       return acc;
+//     }, []);
 
-    if (students.length) {
-      let messages = {
-        template_name: "feedback_main",
-        broadcast_name: "feedback",
-        receivers: students.map((student) => ({
-          whatsappNumber: student.watiId,
-        })),
-      };
+//     if (students.length) {
+//       let messages = {
+//         template_name: "feedback_main",
+//         broadcast_name: "feedback",
+//         receivers: students.map((student) => ({
+//           whatsappNumber: student.watiId,
+//         })),
+//       };
 
-      await sendWatiMessages(messages);
-      const watiMessages = schedules.reduce((acc, schedule) => {
-        let messagesOfThisSchedule = [];
-        schedule.students.forEach((student) => {
-          if (student.lastTimeJoined && isRecent(student.lastTimeJoined)) {
-            messagesOfThisSchedule.push({
-              customer: student._id,
-              schedule: schedule._id,
-              teacher: schedule?.teacherData?._id,
-            });
-          }
-        });
+//       await sendWatiMessages(messages);
+//       const watiMessages = schedules.reduce((acc, schedule) => {
+//         let messagesOfThisSchedule = [];
+//         schedule.students.forEach((student) => {
+//           if (
+//             student.lastTimeJoined &&
+//             isRecent(student.lastTimeJoined) &&
+//             schedule.teacherData
+//           ) {
+//             messagesOfThisSchedule.push({
+//               customer: student._id,
+//               schedule: schedule._id,
+//               teacher: schedule.teacherData._id,
+//             });
+//           }
+//         });
 
-        return [...acc, ...messagesOfThisSchedule];
-      }, []);
-      await WatiMessagesModel.insertMany(watiMessages);
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
+//         return [...acc, ...messagesOfThisSchedule];
+//       }, []);
+//       await WatiMessagesModel.insertMany(watiMessages);
+//     }
+//   } catch (error) {
+//     console.log(error);
+//   }
+// };
 
 const sendPaymentDueMessages = async () => {
   try {
@@ -366,40 +370,39 @@ const sendPaymentDueMessages = async () => {
   }
 };
 
-const sendLateWatiMessageToTeacherAndStudents = async () => {
-  try {
-    let presentSlot = getPresentSlot(moment().format());
-    let prevSlot = getPrevSlot(presentSlot);
-    let lowercasedDay = prevSlot.split("-")[0].toLowerCase();
+// const sendLateWatiMessageToTeacherAndStudents = async () => {
+//   try {
+//     let presentSlot = getPresentSlot(moment().format());
+//     let prevSlot = getPrevSlot(presentSlot);
+//     let lowercasedDay = prevSlot.split("-")[0].toLowerCase();
 
-    const schedules = SchedulerModel.find({
-      [`slots.${lowercasedDay}`]: {
-        $in: [presentSlot],
-        $nin: [prevSlot],
-      },
-    })
-      .select("students slots teacherData teacher")
-      .populate("students", "firstName lastName lastTimeJoined watiId")
-      .populate("teacherData")
-      .lean();
+//     const schedules = SchedulerModel.find({
+//       [`slots.${lowercasedDay}`]: {
+//         $in: [presentSlot],
+//         $nin: [prevSlot],
+//       },
+//     })
+//       .select("students slots teacherData teacher")
+//       .populate("students", "firstName lastName lastTimeJoined watiId")
+//       .populate("teacherData")
+//       .lean();
 
-    if (schedules.length) {
-      for (let i = 0; i < schedules.length; i++) {
-        let schedule = schedules[i];
-        if (
-          moment(schedule.lastTimeJoinedClass).unix() <
-          moment().subtract(20, "minutes").unix()
-        ) {
-          
-        }
-      }
-    } else {
-      console.log("NO CLASSES AT THIS POINT OF TIME");
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
+//     if (schedules.length) {
+//       for (let i = 0; i < schedules.length; i++) {
+//         let schedule = schedules[i];
+//         if (
+//           moment(schedule.lastTimeJoinedClass).unix() <
+//           moment().subtract(20, "minutes").unix()
+//         ) {
+//         }
+//       }
+//     } else {
+//       console.log("NO CLASSES AT THIS POINT OF TIME");
+//     }
+//   } catch (error) {
+//     console.log(error);
+//   }
+// };
 
 const batch = () => {
   if (process.env.ENVIRONMENT !== "DEV") {
@@ -420,9 +423,9 @@ const batch = () => {
     //   timezone: "Asia/Kolkata",
     // });
 
-    cron.schedule("2,32 * * * *", sendLateWatiMessageToTeacherAndStudents, {
-      timezone: "Asia/Kolkata",
-    });
+    // cron.schedule("2,32 * * * *", sendLateWatiMessageToTeacherAndStudents, {
+    //   timezone: "Asia/Kolkata",
+    // });
   }
 };
 

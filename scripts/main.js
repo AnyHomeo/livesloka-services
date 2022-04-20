@@ -18,7 +18,7 @@ const deleteAllZoomLinksOfAnAccount = async (account) => {
     );
     res = await res.json();
     for (let i = 0; i < res.meetings.length; i++) {
-      const meeting = res?.meetings[i]?.join_url;
+      const meeting = res.meetings[i].join_url;
       let deletedResponse = await fetch(
         `https://api.zoom.us/v2/meetings/${
           meeting.split("/")[4].split("?")[0]

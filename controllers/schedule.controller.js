@@ -334,15 +334,15 @@ exports.getAllScheduleswithZoomAccountSorted = async (req, res) => {
 
       schedules.forEach((schedule) => {
         if (
-          schedule?.meetingLinks &&
-          Object.values(schedule?.meetingLinks).length &&
-          schedule?.meetingLinks[day] &&
-          schedule?.meetingLinks[day]?.meetingAccount?.toString() ===
-            zoomAccount?._id?.toString()
+          schedule.meetingLinks &&
+          Object.values(schedule.meetingLinks).length &&
+          schedule.meetingLinks[day] &&
+          schedule.meetingLinks[day].meetingAccount.toString() ===
+            zoomAccount._id.toString()
         ) {
           console.log("SLOTS", schedule);
           schedule.slots = schedule.slots[day];
-          finalSortedData[zoomAccount?.ZoomAccountName]?.schedules?.push(
+          finalSortedData[zoomAccount.ZoomAccountName].schedules.push(
             schedule
           );
         }
@@ -390,7 +390,7 @@ exports.getZoomAccountDashboardOfDay = async (req, res) => {
           let filteredSchedules = schedules.filter((schedule) => {
             return (
               schedule.slots[day].includes(slot) &&
-              schedule?.meetingLinks?.[day]?.meetingAccount.toString() ===
+              schedule.meetingLinks.[day].meetingAccount.toString() ===
                 zoomAccount._id.toString()
             );
           });

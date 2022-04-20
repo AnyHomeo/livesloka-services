@@ -357,12 +357,6 @@ const updateCustomerWithUpdatedSchedule = async (oldSchedule, newSchedule) => {
       (newSchedule.demo && newStudents.includes(customerId)) ||
       (newSchedule.demo && !oldSchedule.demo);
 
-    console.log(
-      "CUSTOMER > NEED TO ADD CLASS",
-      customer?.firstName,
-      needToAddOneClass
-    );
-
     let previousValue = customer.numberOfClassesBought;
     let nextValue = needToAddOneClass
       ? customer.numberOfClassesBought + 1
@@ -399,8 +393,8 @@ const retrieveMeetingLink = (schedule) => {
   const { meetingLink, meetingLinks } = schedule;
   const day = momentTZ().tz("Asia/Kolkata").format("dddd").toLowerCase();
   if (typeof meetingLinks === "object" && Object.keys(meetingLinks).length) {
-    if (meetingLinks[day]?.link) {
-      return meetingLinks[day]?.link;
+    if (meetingLinks[day].link) {
+      return meetingLinks[day].link;
     } else {
       let link;
       let dayIndex = days.indexOf(day);
@@ -411,8 +405,8 @@ const retrieveMeetingLink = (schedule) => {
         ];
         for (let i = 0; i < nextDaysOrder.length; i++) {
           const nextDay = nextDaysOrder[i];
-          if (meetingLinks[nextDay]?.link) {
-            link = meetingLinks[nextDay]?.link;
+          if (meetingLinks[nextDay].link) {
+            link = meetingLinks[nextDay].link;
             break;
           }
         }

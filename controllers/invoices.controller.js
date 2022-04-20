@@ -15,7 +15,7 @@ exports.getInvoicesByTransactionId = async (req, res) => {
       id: transactionId,
     });
 
-    let transactionDate = transaction?.date;
+    let transactionDate = transaction.date;
     if (transactionDate) {
       let invoices = await InvoicesModel.find({
         paymentDate: {
@@ -31,7 +31,7 @@ exports.getInvoicesByTransactionId = async (req, res) => {
             .format(),
         },
         paymentMethod:
-          transaction?.mode === "PAYPAL" ? "Paypal" : { $ne: "Paypal" },
+          transaction.mode === "PAYPAL" ? "Paypal" : { $ne: "Paypal" },
       });
       return res.json({
         result: invoices,
@@ -93,7 +93,7 @@ exports.createAllInvoices = async (req, res) => {
             (exchangeRate) =>
               momentTZ(exchangeRate.date).utc().unix() ===
               momentTZ(payment.createdAt).utc().startOf("day").unix()
-          )?.[0]?.rate;
+          ).[0].rate;
 
           let exchangeRate = exchangeRates.filter(
             (exchangeRate) =>
@@ -103,7 +103,7 @@ exports.createAllInvoices = async (req, res) => {
                 .utc()
                 .startOf("day")
                 .unix()
-          )?.[0]?.rate;
+          ).[0].rate;
 
           console.log(payment.createdAt, exchangeRate, depositExchangeRate);
 
@@ -114,22 +114,22 @@ exports.createAllInvoices = async (req, res) => {
               address: `${recipient_name}, ${line1}, ${city}, ${state} - ${postal_code}`,
               person: first_name,
               country: country_code,
-              contact: payment?.customerId?.whatsAppnumber || "",
+              contact: payment.customerId.whatsAppnumber || "",
               state,
               stateCode: state,
             },
             items: [
               {
                 description: transactions[0].description,
-                quantity: payment?.customerId?.numberOfStudents || 1,
-                amount: transactions[0]?.amount?.total,
+                quantity: payment.customerId.numberOfStudents || 1,
+                amount: transactions[0].amount.total,
               },
             ],
 
-            taxableValue: transactions[0]?.amount?.total,
+            taxableValue: transactions[0].amount.total,
             transactionFee:
-              transactions[0]?.related_resources[0]?.sale?.transaction_fee
-                ?.value,
+              transactions[0].related_resources[0].sale.transaction_fee
+                .value,
             cgst: 0,
             sgst: 0,
             paymentMethod: "Paypal",
@@ -148,9 +148,9 @@ exports.createAllInvoices = async (req, res) => {
           acc.push({
             company,
             customer: {
-              name: payment?.customerId?.lastName,
+              name: payment.customerId.lastName,
               address: "",
-              person: payment?.customerId?.lastName,
+              person: payment.customerId.lastName,
               country: "",
               contact,
               state: "",
@@ -159,7 +159,7 @@ exports.createAllInvoices = async (req, res) => {
             items: [
               {
                 description: `payment for Livesloka class`,
-                quantity: payment?.customerId?.numberOfStudents || 1,
+                quantity: payment.customerId.numberOfStudents || 1,
                 amount: amount / 100,
               },
             ],

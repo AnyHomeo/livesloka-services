@@ -136,7 +136,7 @@ exports.getWatiMessages = async (req, res) => {
 //           customParams: [],
 //         };
 
-//         if (customer?.timeZone?.timeZoneName) {
+//         if (customer.timeZone.timeZoneName) {
 //           data.customParams.push({
 //             name: "Timezone",
 //             value: customer.timeZone.timeZoneName,

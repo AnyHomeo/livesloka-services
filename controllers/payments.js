@@ -37,8 +37,8 @@ const razorpay = new Razorpay({
 });
 
 const getPayableAmount = (plan, discount, customer) =>
-  (plan.amount - (discount?.amount || 0) * plan.intervalCount) *
-  (customer?.numberOfStudents || 1);
+  (plan.amount - (discount.amount || 0) * plan.intervalCount) *
+  (customer.numberOfStudents || 1);
 
 exports.createAPayment = async (req, res) => {
   try {

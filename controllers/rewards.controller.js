@@ -13,7 +13,7 @@ exports.getRewardsHistoryByUser = async (req, res) => {
       return res.json({
         message: "Rewards retrieved successfully",
         result: {
-          rewards: admin?.rewards,
+          rewards: admin.rewards,
           redeems: redeemData,
         },
       });
@@ -21,7 +21,7 @@ exports.getRewardsHistoryByUser = async (req, res) => {
     return res.json({
       message: "Rewards retrieved successfully",
       result: {
-        rewards: admin?.rewards,
+        rewards: admin.rewards,
       },
     });
   } catch (error) {
