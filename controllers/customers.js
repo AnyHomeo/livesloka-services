@@ -2,6 +2,8 @@ const Customers = require("../models/Customer.model");
 const Admins = require("../models/Admin.model");
 const moment = require("moment");
 const ClassStatusesModel = require("../models/ClassStatuses.model");
+const AdminModel = require("../models/Admin.model");
+const CustomerModel = require("../models/Customer.model");
 
 exports.getCustomers = async (req, res) => {
   try {
@@ -103,12 +105,18 @@ exports.postNotificationToken = async (req, res) => {
 
 exports.getCustomerDashboardData = async (req, res) => {
   try {
-    const { from, to } = req.query;
+    const { from, to, category } = req.query;
+
+    const statuses = await ClassStatusesModel.find({
+      statusCategory: category || "SALES",
+    }).lean();
+
     let query = {
       createdAt: {
         $gte: moment(from).format(),
         $lte: moment(to).format(),
       },
+      classStatusId: { $in: statuses.map((status) => status.id) },
     };
 
     const customers = await Customers.find(query)
@@ -121,8 +129,6 @@ exports.getCustomerDashboardData = async (req, res) => {
       .populate("agent")
       .populate("teacher")
       .lean();
-
-    const statuses = await ClassStatusesModel.find().lean();
 
     let result = statuses.reduce((acc, status) => {
       acc[status._id] = {
@@ -148,5 +154,36 @@ exports.getCustomerDashboardData = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ error: error.message });
+  }
+};
+
+exports.postNewCustomer = async (req, res) => {
+  try {
+    const { firstName, countryCode, whatsAppnumber } = req.body;
+    let newCustomer = new CustomerModel({
+      whatsAppnumber,
+      email: whatsAppnumber,
+      firstName,
+      countryCode,
+    });
+    await newCustomer.save();
+    let alreadyExists = await AdminModel.findOne({ userId: whatsAppnumber });
+    if (!alreadyExists) {
+      const newUser = new AdminModel({
+        userId: whatsAppnumber,
+        roleId: 1,
+        customerId: newCustomer._id,
+        username: firstName,
+      });
+      await newUser.save();
+    }
+    return res
+      .status(200)
+      .send({ message: "New admission added successfully" });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ error: error.message || "Something went wrong" });
   }
 };

@@ -58,9 +58,10 @@ module.exports = (app) => {
       const { whatsapp, name } = req.body;
       const loginId = whatsapp.slice(whatsapp.length - 10);
       let newCustomer = new CustomerModel({
-        whatsAppnumber: whatsapp,
+        whatsAppnumber: loginId,
         email: loginId,
         lastName: name,
+        countryCode: whatsapp.split(loginId)[0],
       });
       await newCustomer.save();
       const newUser = new AdminModel({

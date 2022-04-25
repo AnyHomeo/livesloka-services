@@ -5,12 +5,14 @@ const {
   getCustomerById,
   postNotificationToken,
   getCustomerDashboardData,
+  postNewCustomer
 } = require("../controllers/customers");
 const { isLoggedId, isAdmin } = require("../controllers/helpers");
 
 router.get("/", isLoggedId, isAdmin, getCustomers);
 router.post("/:userId/notification-token", postNotificationToken);
 router.get("/dashboard", getCustomerDashboardData);
+router.post("/dashboard/customer", postNewCustomer);
 router.get("/:id", isLoggedId, isAdmin, getCustomerById);
 
 module.exports = router;

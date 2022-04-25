@@ -18,6 +18,13 @@ var ClassStatusSchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
+    statusCategory: {
+      type: String,
+      enum: ["SALES", "SUPPORT"],
+    },
+    statusOrder:{
+      type: String,
+    }
   },
   { timestamps: true }
 );
