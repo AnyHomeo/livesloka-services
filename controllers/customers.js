@@ -187,3 +187,76 @@ exports.postNewCustomer = async (req, res) => {
       .json({ error: error.message || "Something went wrong" });
   }
 };
+
+exports.getAllLookups = async (req, res) => {
+  try {
+    const lookups = [
+      "ClassStatuses",
+      "Agent",
+      "timeZone",
+      "classes",
+      "Subject",
+      "Teacher",
+      "Country",
+      "Currency",
+      "Category",
+    ];
+
+    const resultKeys = [
+      "classStatusLookup",
+      "agentLookup",
+      "timeZoneLookup",
+      "classLookup",
+      "subjectLookup",
+      "teachersLookup",
+      "countriesLookup",
+      "currencyLookup",
+      "categoryDropdown",
+    ];
+
+    let result = {
+      classStatusLookup: {},
+      agentLookup: {},
+      timeZoneLookup: {},
+      classLookup: {},
+      subjectLookup: {},
+      teachersLookup: {},
+      countriesLookup: {},
+      currencyLookup: {},
+      categoryDropdown: {},
+    };
+
+    let valueKeys = [
+      "classStatusName",
+      "Agent",
+      "timeZoneName",
+      "className",
+      "subjectName",
+      "TeacherName",
+      "countryName",
+      "currencyName",
+      "categoryName",
+    ];
+
+    for (let i = 0; i < lookups.length; i++) {
+      const name = lookups[i];
+      const Model = require(`../models/${name}.model`);
+      const output = await Model.find();
+      if (output && output.length > 0) {
+        result[resultKeys[i]] = output.reduce((acc, obj) => {
+          acc[obj.id] = obj[valueKeys[i]];
+          return acc
+        }, {});
+      }
+    }
+
+    return res.json({
+      result,
+    });
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .json({ error: error.message || "Something went wrong" });
+  }
+};
