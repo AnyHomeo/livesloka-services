@@ -17,7 +17,7 @@ module.exports = (app) => {
           },
           servers: [
             { url: "http://localhost:5000" },
-            { url: "https://livekumon-development-services.herokuapp.com" },
+            { url: "https://livesloka-prod-7lzei.ondigitalocean.app" },
           ],
         },
       },

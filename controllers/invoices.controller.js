@@ -128,8 +128,7 @@ exports.createAllInvoices = async (req, res) => {
 
             taxableValue: transactions[0].amount.total,
             transactionFee:
-              transactions[0].related_resources[0].sale.transaction_fee
-                .value,
+              transactions[0].related_resources[0].sale.transaction_fee.value,
             cgst: 0,
             sgst: 0,
             paymentMethod: "Paypal",
@@ -272,8 +271,8 @@ exports.getInvoices = async (req, res) => {
 
 exports.storeAllExhangeRates = async (req, res) => {
   try {
-    let startDate = momentTZ("31-03-2022", "DD-MM-YYYY").utc();
-    let endDate = momentTZ("05-04-2022", "DD-MM-YYYY").utc();
+    let startDate = momentTZ.tz("2022-05-01 00:00", "Africa/Monrovia").utc();
+    let endDate = momentTZ.tz("2022-06-04 00:00", "Africa/Monrovia").utc();
     let exchangeRates = [];
     while (startDate.unix() < endDate.unix()) {
       console.log(startDate.format("MMMM Do, YYYY"));
