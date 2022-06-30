@@ -71,7 +71,9 @@ exports.addAvailableSlot = async (req, res) => {
             message: "Cannot make available as it is already scheduled slot",
           });
         } else {
-          teacher.scheduledSlots =  teacher.scheduledSlots.filter((scheduledSlot) => scheduledSlot !== slot)
+          teacher.scheduledSlots = teacher.scheduledSlots.filter(
+            (scheduledSlot) => scheduledSlot !== slot
+          );
           teacher.availableSlots.push(slot);
         }
       } else {
@@ -82,7 +84,7 @@ exports.addAvailableSlot = async (req, res) => {
         }
       }
       await teacher.save();
-      return res.status(200).json({message: "Slot added successfully"})
+      return res.status(200).json({ message: "Slot added successfully" });
     } else {
       return res.status(404).json({
         message: "Teacher not found",
@@ -307,6 +309,7 @@ exports.getOccupancyDashboardData = async (req, res) => {
         "firstName lastName numberOfClassesBought email whatsAppnumber countryCode age timeZoneId"
       )
       .populate("group", "_id")
+      .populate("teacherData","joinLink")
       .lean();
 
     let finalObject = {};
@@ -386,6 +389,7 @@ exports.GetTeacherMeetings = async (req, res) => {
   Schedule.find({ teacher: req.params.id, isDeleted: { $ne: true } })
     .populate("subject")
     .populate("students")
+    .populate("teacherData")
     .lean()
     .then(async (result) => {
       result = await Promise.all(
@@ -486,15 +490,16 @@ exports.joinClass = async (req, res) => {
   try {
     const { scheduleId } = req.params;
     let schedule = await SchedulerModel.findById(scheduleId)
-      .select("meetingLink meetingLinks")
+      .select("teacher")
+      .populate("teacherData")
       .lean();
     if (schedule) {
       await SchedulerModel.updateOne(
         { _id: scheduleId },
         { $set: { lastTimeJoinedClass: new Date() } }
-      );
-      const link = retrieveMeetingLink(schedule);
-      console.log(link);
+      )
+      const link = schedule.teacherData?.joinLink;
+      console.log(link, schedule);
       return res.json({
         message: "Last time joined updated Successfully!",
         link,

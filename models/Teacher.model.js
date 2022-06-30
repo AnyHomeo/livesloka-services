@@ -103,6 +103,9 @@ var TeacherSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    joinLink: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

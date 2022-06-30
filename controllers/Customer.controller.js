@@ -917,25 +917,14 @@ module.exports = {
           "students",
           "firstName lastTimeJoined lastName numberOfClassesBought timeZoneId email whatsAppnumber paidTill autoDemo countryCode isJoinButtonEnabledByAdmin"
         )
+        .populate("teacherData")
         .lean();
-      let allTeachers = await TeacherModel.find({
-        id: {
-          $in: [...new Set(allSchedules.map((schedule) => schedule.teacher))],
-        },
-      })
-        .select("TeacherName id Phone_number TeacherStatus")
-        .lean();
-      allSchedules = allSchedules.map((schedule) => ({
-        ...schedule,
-        teacher: allTeachers.filter(
-          (teacher) => teacher.id === schedule.teacher
-        )[0],
-      }));
 
       return res.json({
         result: allSchedules.map((schedule) => {
           return {
             ...schedule,
+            teacher: schedule.teacherData,
             isTeacherJoined:
               typeof schedule.lastTimeJoinedClass === "object"
                 ? momentTZ(schedule.lastTimeJoinedClass)
