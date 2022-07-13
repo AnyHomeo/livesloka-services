@@ -347,14 +347,12 @@ exports.updateCorrespondingData = (req, res) => {
             loginData.username = req.body.AgentName;
             await loginData.save();
           } else {
-            console.log(req.body);
             let body = {
               username: req.body.AgentName,
               userId: req.body.AgentLoginId,
               roleId: req.body.AgentRole,
               agentId: req.body.id,
             };
-            console.log(body);
             const newAgent = new admin(body);
             await newAgent.save();
           }
@@ -573,7 +571,6 @@ exports.addOtpToAdminCollection = async (req, res) => {
 exports.validateOtpAndResetPassword = async (req, res) => {
   try {
     const { userId, otp } = req.body;
-    console.log(userId, otp);
     const admin = await AdminModel.findOne({ userId, otp });
     if (!admin) {
       return res.status(400).json({ error: "Invalid OTP,Try again!!" });

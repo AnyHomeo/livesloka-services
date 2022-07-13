@@ -2,15 +2,6 @@
 const dialogflow = require('@google-cloud/dialogflow');
 require('dotenv').config();
 
-// const PROJECID = process.env.PROJEC_ID;
-
-// const CONFIGURATION = {
-//   credentials: {
-//     private_key: process.env.PRIVATE_KEY,
-//     client_email: process.env.CLIENT_EMAIL,
-//   },
-// };
-// console.log(CONFIGURATION);
 const CREDENTIALS = {
   project_id: 'livesloka-93a02',
   private_key:
@@ -18,7 +9,6 @@ const CREDENTIALS = {
   client_email: 'livesloka-93a02@appspot.gserviceaccount.com',
 };
 
-// console.log(JSON.stringify(CREDENTIALS));
 
 const PROJECID = CREDENTIALS.project_id;
 
@@ -44,9 +34,7 @@ const detectIntent = async (languageCode, queryText, sessionId) => {
   };
 
   const responses = await sessionClient.detectIntent(request);
-  // console.log(responses);
   const result = responses[0].queryResult;
-  // console.log(result);
 
   return {
     response: result.fulfillmentText,

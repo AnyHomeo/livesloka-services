@@ -78,7 +78,7 @@ const createZoomLink = async (slots) => {
       return "Zoom account not available";
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return error.message;
   }
 };
@@ -344,8 +344,6 @@ const updateCustomerWithUpdatedSchedule = async (oldSchedule, newSchedule) => {
     },
     []
   );
-
-  console.log("NEW STUDENTS", newStudents);
 
   for (let i = 0; i < newScheduleStudents.length; i++) {
     const customerId = newScheduleStudents[i];

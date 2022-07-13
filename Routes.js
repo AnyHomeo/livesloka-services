@@ -48,7 +48,7 @@ module.exports = (app) => {
       let responseData = await detectIntent(languageCode, queryText, sessionId);
       res.send(responseData.response);
     } catch (error) {
-      console.log(error);
+      console.error(error);
       return res.send({ success: false });
     }
   });
@@ -73,7 +73,7 @@ module.exports = (app) => {
       await newUser.save();
       return res.status(200).send({ success: true });
     } catch (error) {
-      console.log(error);
+      console.error(error);
       return res.send({ success: true });
     }
   });

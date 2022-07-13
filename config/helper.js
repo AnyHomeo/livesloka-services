@@ -32,7 +32,7 @@ exports.sendSMS = async (message, phone) => {
     });
     return { type: "success", result: sent };
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return { type: "error", result: error };
   }
 };
@@ -50,7 +50,7 @@ exports.sendAdminsMessage = async (message) => {
       }
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
 
@@ -96,5 +96,4 @@ exports.toFixed = (value,decimals = 2) => typeof value === 'number' ? value.toFi
 
 exports.getSlotByDate = () => {
   const date = new moment().format('DDDD - HH:MM A')
-  console.log(date)
 }

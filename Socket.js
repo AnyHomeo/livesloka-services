@@ -22,8 +22,6 @@ module.exports = (io) => {
 
   io.on('connection', (socket) => {
     socket.on('login', function (data) {
-      console.log('a user ' + data.userId + ' connected');
-      // saving userId to object with socket ID
       chatAgents[socket.id] = data.userId;
     });
     socket.on('teacher-joined-class', (msg) => {
@@ -42,7 +40,6 @@ module.exports = (io) => {
     socket.on('create-room', async ({ roomID, userID }, callback) => {
       try {
         const data = await createNewRoom(userID, roomID);
-        console.log(data);
       } catch (error) {
         if (error) return callback(error);
       }
@@ -55,9 +52,7 @@ module.exports = (io) => {
       async ({ roomID, username, country }, callback) => {
         try {
           const data = await createNewNonRoom(username, roomID, country);
-          console.log(data);
         } catch (error) {
-          console.log(error);
           if (error) return callback(error);
         }
         socket.join(roomID);
@@ -75,7 +70,6 @@ module.exports = (io) => {
         try {
           // socket.to(roomID).emit('messageToRoom', { role, message });
           const theAgent = await getAgentAssignedToRoom(roomID);
-          console.log(theAgent);
 
           if (!theAgent.agentID) {
             socket.broadcast.emit('userWating', {
@@ -109,7 +103,6 @@ module.exports = (io) => {
     socket.on(
       'messageFromNonBot',
       async ({ roomID, message, username, isBot }, callback) => {
-        console.log(roomID, message);
         try {
           await addNewMessageToNonRoom(roomID, message, 0, username);
           socket
@@ -132,7 +125,6 @@ module.exports = (io) => {
             callback({ error: false, data: null });
           }
         } catch (error) {
-          console.log(error);
           if (error) return callback({ error: true, data: error });
         }
       }
@@ -190,7 +182,6 @@ module.exports = (io) => {
       'messageFromAdmin',
       async ({ roomID, message, isSuperAdmin, name }, callback) => {
         let role = isSuperAdmin ? 3 : 4;
-        console.log(role);
         try {
           await addNewMessageToRoom(roomID, message, role, name);
           socket.to(roomID).emit('messageToRoomFromAdmin', {
@@ -261,8 +252,6 @@ module.exports = (io) => {
     socket.on(
       'user-typing',
       async ({ roomID, name, typing, message }, callback) => {
-        console.log(roomID, name, message, typing);
-
         socket.to(roomID).emit('user-typing', { name, message, typing });
         try {
         } catch (error) {
@@ -283,8 +272,6 @@ module.exports = (io) => {
     socket.on(
       'non-user-typing',
       async ({ roomID, username, typing, message }, callback) => {
-        console.log(roomID, username, message, typing);
-
         socket
           .to(roomID)
           .emit('non-user-typing', { username, message, typing });
@@ -309,8 +296,6 @@ module.exports = (io) => {
 
     socket.on('joinChatRoom', async ({ roomID, adminID }, callback) => {
       try {
-        // const data = await addAdminToChatRoom(roomID, adminID);
-        console.log('injoin chatroom', adminID, roomID);
         socket.join(roomID);
       } catch (error) {
         if (error) return callback(error);
@@ -319,20 +304,15 @@ module.exports = (io) => {
     });
     socket.on('JOIN_ROOM', async ({ roomID, isAdmin, isAgent }, callback) => {
       try {
-        console.log('joined the chatroom', isAdmin, roomID, isAgent);
         if (isAgent) {
           const data = await addAgentToChatRoom(roomID, isAgent);
-          console.log(data.agentID);
           const id = socket.id;
           socket.broadcast.emit('agent-joined-room', isAgent);
-          console.log('agent joined the chatroom', isAgent);
 
           const value = Object.values(users).find(
             (user) => user.roomID === roomID && user.agent === isAgent
           );
           if (value) {
-            console.log(value);
-
             delete users[value.id];
           }
 
@@ -352,7 +332,6 @@ module.exports = (io) => {
 
     socket.on('JOIN_NONROOM', async ({ roomID, isAgent }, callback) => {
       try {
-        console.log('joined the group', roomID, isAgent);
       } catch (error) {
         if (error) return callback(error);
       }
@@ -361,7 +340,6 @@ module.exports = (io) => {
     });
     socket.on('JOIN_GROUP', async ({ groupID, isAgent }, callback) => {
       try {
-        console.log('joined the group', groupID, isAgent);
       } catch (error) {
         if (error) return callback(error);
       }

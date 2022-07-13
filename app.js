@@ -7,9 +7,6 @@ const batch = require("./config/batch");
 const Routes = require("./Routes");
 const Swagger = require("./Swagger");
 const Socket = require("./Socket");
-const ip = require("ip");
-
-console.log(ip.address());
 
 const app = express();
 const http = require("http").createServer(app);
