@@ -249,7 +249,7 @@ exports.getScheduleById = (req, res) => {
   Schedule.findById(id)
     .populate(
       "students",
-      "firstName lastName phone whatsAppnumber meetingLink email numberOfClassesBought"
+      "firstName lastName phone whatsAppnumber meetingLink email numberOfClassesBought paidTill"
     )
     .then((data) => {
       return res.status(200).json({
@@ -418,26 +418,6 @@ exports.dangerousScheduleUpdate = async (req, res) => {
   const { message } = req.query;
   try {
     const { scheduleId } = req.params;
-    // if (typeof req.body.isClassTemperarilyCancelled != "undefined") {
-    //   if (req.body.isClassTemperarilyCancelled) {
-    //     const schedule = await SchedulerModel.findById(scheduleId);
-    //     await deleteExistingZoomLinkOfTheSchedule(schedule);
-    //   } else {
-    //     let schedule = await SchedulerModel.findById(scheduleId);
-    //     const { slots } = schedule;
-
-    //     const meetingLinks = await createSlotsZoomLink(slots);
-    //     if (typeof meetingLinks.message !== "string") {
-    //       await deleteExistingZoomLinkOfTheSchedule(schedule);
-    //     }
-
-    //     await Schedule.findByIdAndUpdate(
-    //       scheduleId,
-    //       { $set: { meetingLinks } },
-    //       { new: true, useFindAndModify: false }
-    //     );
-    //   }
-    // }
     await SchedulerModel.updateOne({ _id: scheduleId }, { ...req.body });
 
     return res.json({

@@ -63,13 +63,13 @@ exports.createAllInvoices = async (req, res) => {
 
     const exchangeRates = await ExchangeRatesModel.find({
       date: {
-        $gte: date.clone().format(),
+        $gte: date.clone().subtract(2,'day').format(),
         $lte: date.clone().add(1, "months").add(3, "days").format(),
       },
     }).lean();
 
     let data = allPayments.reduce((acc, payment) => {
-      if (payment.status === "SUCCESS") {
+      if (payment.status === "SUCCESS" && payment.createdAt ) {
         if (payment.type === "PAYPAL") {
           const {
             transactions,
@@ -114,14 +114,14 @@ exports.createAllInvoices = async (req, res) => {
               address: `${recipient_name}, ${line1}, ${city}, ${state} - ${postal_code}`,
               person: first_name,
               country: country_code,
-              contact: payment.customerId.whatsAppnumber || "",
+              contact: payment.customerId?.whatsAppnumber || "",
               state,
               stateCode: state,
             },
             items: [
               {
                 description: transactions[0].description,
-                quantity: payment.customerId.numberOfStudents || 1,
+                quantity: payment.customerId?.numberOfStudents || 1,
                 amount: transactions[0].amount.total,
               },
             ],
@@ -147,9 +147,9 @@ exports.createAllInvoices = async (req, res) => {
           acc.push({
             company,
             customer: {
-              name: payment.customerId.lastName,
+              name: payment.customerId?.lastName,
               address: "",
-              person: payment.customerId.lastName,
+              person: payment.customerId?.lastName,
               country: "",
               contact,
               state: "",
@@ -158,7 +158,7 @@ exports.createAllInvoices = async (req, res) => {
             items: [
               {
                 description: `payment for Livesloka class`,
-                quantity: payment.customerId.numberOfStudents || 1,
+                quantity: payment.customerId?.numberOfStudents || 1,
                 amount: amount / 100,
               },
             ],
@@ -271,8 +271,8 @@ exports.getInvoices = async (req, res) => {
 
 exports.storeAllExhangeRates = async (req, res) => {
   try {
-    let startDate = momentTZ.tz("2022-05-01 00:00", "Africa/Monrovia").utc();
-    let endDate = momentTZ.tz("2022-06-04 00:00", "Africa/Monrovia").utc();
+    let startDate = momentTZ.tz("2022-06-03 00:00", "Africa/Monrovia").utc();
+    let endDate = momentTZ.tz("2022-07-19 00:00", "Africa/Monrovia").utc();
     let exchangeRates = [];
     while (startDate.unix() < endDate.unix()) {
       console.log(startDate.format("MMMM Do, YYYY"));
