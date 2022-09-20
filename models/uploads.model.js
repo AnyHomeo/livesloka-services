@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var UploadSchema = new mongoose.Schema(
   {
@@ -26,4 +26,4 @@ var UploadSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("Upload", UploadSchema);
+module.exports = mongoose.model('Upload', UploadSchema);

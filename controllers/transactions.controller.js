@@ -1,14 +1,14 @@
-const Transactions = require("../models/Transactions");
-const momentTZ = require("moment-timezone");
-const Attendance = require("../models/Attendance");
-const TeacherModel = require("../models/Teacher.model");
-const ExtraAmountsModel = require("../models/ExtraAmounts.model");
-const FinalizedSalaries = require("../models/finalizedSalaries");
-const ExpensesModel = require("../models/expenses.model");
+const Transactions = require('../models/Transactions');
+const momentTZ = require('moment-timezone');
+const Attendance = require('../models/Attendance');
+const TeacherModel = require('../models/Teacher.model');
+const ExtraAmountsModel = require('../models/ExtraAmounts.model');
+const FinalizedSalaries = require('../models/finalizedSalaries');
+const ExpensesModel = require('../models/expenses.model');
 
 let mapFirstNames = (arr) =>
   arr
-    ? arr.map((customer) => (customer && customer.firstName) || "deleted user")
+    ? arr.map((customer) => (customer && customer.firstName) || 'deleted user')
     : [];
 
 let getCommission = (schedule, teacher) =>
@@ -18,8 +18,8 @@ let getCommission = (schedule, teacher) =>
 
 const getSalariesOfMonth = async (month, teacher) => {
   try {
-    let numericMonth = parseInt(month.split("-")[1]);
-    let numericYear = parseInt(month.split("-")[0]);
+    let numericMonth = parseInt(month.split('-')[1]);
+    let numericYear = parseInt(month.split('-')[0]);
     const finalizeSalariesDocument = await FinalizedSalaries.findOne({
       month: numericMonth,
       year: numericYear,
@@ -45,8 +45,8 @@ const getSalariesOfMonth = async (month, teacher) => {
         date: { $regex: month },
       };
       if (teacher) {
-        query["id"] = teacher;
-        attendanceQuery["teacherId"] = teacher;
+        query['id'] = teacher;
+        attendanceQuery['teacherId'] = teacher;
       }
 
       const allTeachers = await TeacherModel.find(query).lean();
@@ -54,12 +54,12 @@ const getSalariesOfMonth = async (month, teacher) => {
         date: { $regex: month },
       })
         .populate(
-          "scheduleId",
-          "OneToOne oneToMany className students teacher demo"
+          'scheduleId',
+          'OneToOne oneToMany className students teacher demo'
         )
-        .populate("customers", "numberOfStudents firstName")
-        .populate("absentees", "numberOfStudents firstName")
-        .populate("requestedPaidStudents", "numberOfStudents firstName")
+        .populate('customers', 'numberOfStudents firstName')
+        .populate('absentees', 'numberOfStudents firstName')
+        .populate('requestedPaidStudents', 'numberOfStudents firstName')
         .lean();
 
       allTeachers.forEach((teacher) => {
@@ -142,8 +142,8 @@ const getSalariesOfMonth = async (month, teacher) => {
         finalDataObjectArr.push(objToPush);
       });
       //*extra amounts logic
-      let splittedMonth = parseInt(month.split("-")[1]);
-      let year = parseInt(month.split("-")[0]);
+      let splittedMonth = parseInt(month.split('-')[1]);
+      let year = parseInt(month.split('-')[0]);
       let extrasOfThisMonth = await ExtraAmountsModel.find({
         month: splittedMonth,
         year,
@@ -169,7 +169,7 @@ function getDaysInMonth(month, year) {
   var date = new Date(year, month, 1);
   var days = [];
   while (date.getMonth() === month) {
-    days.push(momentTZ(date).format("YYYY-MM-DD"));
+    days.push(momentTZ(date).format('YYYY-MM-DD'));
     date.setDate(date.getDate() + 1);
   }
   return days;
@@ -186,19 +186,19 @@ exports.getTransactionsData = async (req, res) => {
     const { month } = req.query;
     //2021-02 format month
     let months = month
-      .split(",")
+      .split(',')
       .filter((val, i, self) => self.indexOf(val) === i);
     let output = {};
     await asyncForEach(months, async (month) => {
-      let splittedMonth = parseInt(month.split("-")[1]);
-      let splittedYear = parseInt(month.split("-")[0]);
-      let startOfMonth = momentTZ(month, "YYYY-MM")
-        .tz("Asia/Kolkata")
-        .startOf("month")
+      let splittedMonth = parseInt(month.split('-')[1]);
+      let splittedYear = parseInt(month.split('-')[0]);
+      let startOfMonth = momentTZ(month, 'YYYY-MM')
+        .tz('Asia/Kolkata')
+        .startOf('month')
         .format();
-      let endOfMonth = momentTZ(month, "YYYY-MM")
-        .tz("Asia/Kolkata")
-        .endOf("month")
+      let endOfMonth = momentTZ(month, 'YYYY-MM')
+        .tz('Asia/Kolkata')
+        .endOf('month')
         .format();
       let allTransactionsOftheMonth = await Transactions.find({
         date: {
@@ -209,7 +209,7 @@ exports.getTransactionsData = async (req, res) => {
       let allDates = getDaysInMonth(splittedMonth - 1, splittedYear);
       allTransactionsOftheMonth = allTransactionsOftheMonth.reduce(
         (prev, next) => {
-          let key = momentTZ(next["date"]).format("YYYY-MM-DD");
+          let key = momentTZ(next['date']).format('YYYY-MM-DD');
           if (!prev[key]) {
             prev[key] = [];
           }
@@ -235,7 +235,7 @@ exports.getTransactionsData = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something went wrong!",
+      error: 'Something went wrong!',
     });
   }
 };
@@ -243,13 +243,13 @@ exports.getTransactionsData = async (req, res) => {
 exports.getCardsData = async (req, res) => {
   try {
     const { month } = req.query;
-    let startOfMonth = momentTZ(month, "YYYY-MM")
-      .tz("Asia/Kolkata")
-      .startOf("month")
+    let startOfMonth = momentTZ(month, 'YYYY-MM')
+      .tz('Asia/Kolkata')
+      .startOf('month')
       .format();
-    let endOfMonth = momentTZ(month, "YYYY-MM")
-      .tz("Asia/Kolkata")
-      .endOf("month")
+    let endOfMonth = momentTZ(month, 'YYYY-MM')
+      .tz('Asia/Kolkata')
+      .endOf('month')
       .format();
     let allTransactionsOftheMonth = await Transactions.find({
       date: {
@@ -279,12 +279,12 @@ exports.getCardsData = async (req, res) => {
     }, 0);
 
     let expenses = await ExpensesModel.find({
-      date:{
-        $gte : startOfMonth,
-        $lte : endOfMonth
-      }
-    }).select("amount")
-    expenses = expenses.reduce((acc, expense) => acc += expense.amount,0)
+      date: {
+        $gte: startOfMonth,
+        $lte: endOfMonth,
+      },
+    }).select('amount');
+    expenses = expenses.reduce((acc, expense) => (acc += expense.amount), 0);
     res.json({
       netAmount,
       salaries,
@@ -294,39 +294,40 @@ exports.getCardsData = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something went wrong!",
+      error: 'Something went wrong!',
     });
   }
 };
 
 exports.getSalariesOfMonth = getSalariesOfMonth;
 
-exports.getTransactionsTable = async (req,res) => {
+exports.getTransactionsTable = async (req, res) => {
   try {
-   
-  const { month } = req.query;
-      let startOfMonth = momentTZ(month, "YYYY-MM")
-        .tz("Asia/Kolkata")
-        .startOf("month")
-        .format();
-      let endOfMonth = momentTZ(month, "YYYY-MM")
-        .tz("Asia/Kolkata")
-        .endOf("month")
-        .format();
-      let allTransactionsOftheMonth = await Transactions.find({
-        date: {
-          $gte: startOfMonth,
-          $lte: endOfMonth,
-        },
-      }).sort({ date: 1 }).lean();  
-      return res.json({
-        result:allTransactionsOftheMonth,
-        message:"Transactions Retrieved Successfully!"
-      })
-  } catch (error) {
-    console.log(error)
-    return res.status(500).json({
-      error: "Something went wrong!",
+    const { month } = req.query;
+    let startOfMonth = momentTZ(month, 'YYYY-MM')
+      .tz('Asia/Kolkata')
+      .startOf('month')
+      .format();
+    let endOfMonth = momentTZ(month, 'YYYY-MM')
+      .tz('Asia/Kolkata')
+      .endOf('month')
+      .format();
+    let allTransactionsOftheMonth = await Transactions.find({
+      date: {
+        $gte: startOfMonth,
+        $lte: endOfMonth,
+      },
     })
+      .sort({ date: 1 })
+      .lean();
+    return res.json({
+      result: allTransactionsOftheMonth,
+      message: 'Transactions Retrieved Successfully!',
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: 'Something went wrong!',
+    });
   }
-}
+};

@@ -1,22 +1,22 @@
-const SchedulerModel = require("../models/Scheduler.model");
-const TeacherModel = require("../models/Teacher.model");
-const days = require("../config/days.json");
-const hours = require("../config/hours.json");
+const SchedulerModel = require('../models/Scheduler.model');
+const TeacherModel = require('../models/Teacher.model');
+const days = require('../config/days.json');
+const hours = require('../config/hours.json');
 
 const colors = [
-  "#f1c40f",
-  "#e67e22",
-  "#9b59b6",
-  "#273c75",
-  "#40739e",
-  "#82589F",
+  '#f1c40f',
+  '#e67e22',
+  '#9b59b6',
+  '#273c75',
+  '#40739e',
+  '#82589F',
 ];
 
 exports.getTeachersCategoried = async (req, res) => {
   try {
     let allTeachers = await TeacherModel.find()
-      .select("id TeacherName category")
-      .populate("categoryOfTeacher")
+      .select('id TeacherName category')
+      .populate('categoryOfTeacher')
       .lean();
     allTeachers = allTeachers.reduce((accumulator, teacher) => {
       if (teacher.categoryOfTeacher && teacher.categoryOfTeacher.categoryName) {
@@ -38,7 +38,7 @@ exports.getTeachersCategoried = async (req, res) => {
     return res.json({ result: allTeachers });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!" });
+    return res.status(500).json({ error: 'Something went wrong!' });
   }
 };
 
@@ -55,13 +55,13 @@ exports.getTeacherSchedules = async (req, res) => {
       if (search) {
         query = {
           ...query,
-          className: { $regex: "^" + search, $options: "i" },
+          className: { $regex: '^' + search, $options: 'i' },
         };
       }
       let schedulesOfTeacher = await SchedulerModel.find(query)
         .populate(
-          "students",
-          "firstName lastName numberOfClassesBought countryCode whatsAppnumber"
+          'students',
+          'firstName lastName numberOfClassesBought countryCode whatsAppnumber'
         )
         .lean();
       schedulesOfTeacher = schedulesOfTeacher.map((schedule, i) => ({
@@ -91,7 +91,7 @@ exports.getTeacherSchedules = async (req, res) => {
           },
           {}
         );
-      } else if (web === "noFormat") {
+      } else if (web === 'noFormat') {
         finalSchedules = schedulesOfTeacher;
       } else {
         days.forEach((day) => {
@@ -129,10 +129,10 @@ exports.getTeacherSchedules = async (req, res) => {
         },
       });
     } else {
-      return res.status(400).json({ error: "Invalid teacher Id" });
+      return res.status(400).json({ error: 'Invalid teacher Id' });
     }
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!" });
+    return res.status(500).json({ error: 'Something went wrong!' });
   }
 };

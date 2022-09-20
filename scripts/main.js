@@ -1,7 +1,7 @@
-const ZoomAccountModel = require("../models/ZoomAccount.model");
-const fetch = require("node-fetch");
-const { createSlotsZoomLink } = require("../config/util");
-const SchedulerModel = require("../models/Scheduler.model");
+const ZoomAccountModel = require('../models/ZoomAccount.model');
+const fetch = require('node-fetch');
+const { createSlotsZoomLink } = require('../config/util');
+const SchedulerModel = require('../models/Scheduler.model');
 
 const deleteAllZoomLinksOfAnAccount = async (account) => {
   try {
@@ -9,9 +9,9 @@ const deleteAllZoomLinksOfAnAccount = async (account) => {
     let res = await fetch(
       `https://api.zoom.us/v2/users/${zoomEmail}/meetings?page_size=300`,
       {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${zoomJwt}`,
         },
       }
@@ -21,12 +21,12 @@ const deleteAllZoomLinksOfAnAccount = async (account) => {
       const meeting = res.meetings[i].join_url;
       let deletedResponse = await fetch(
         `https://api.zoom.us/v2/meetings/${
-          meeting.split("/")[4].split("?")[0]
+          meeting.split('/')[4].split('?')[0]
         }`,
         {
-          method: "DELETE",
+          method: 'DELETE',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${zoomJwt}`,
           },
         }
@@ -46,7 +46,7 @@ exports.deleteZoomLinks = async (req, res) => {
       .lean();
     for (let i = 0; i < accounts.length; i++) {
       const account = accounts[i];
-      console.log(account.ZoomAccountName)
+      console.log(account.ZoomAccountName);
       await deleteAllZoomLinksOfAnAccount(account);
     }
     await ZoomAccountModel.update({}, { $set: { timeSlots: [] } });
@@ -56,7 +56,7 @@ exports.deleteZoomLinks = async (req, res) => {
       { multi: true }
     );
     return res.json({
-      message: "Deleted all zoom links successfully",
+      message: 'Deleted all zoom links successfully',
     });
   } catch (error) {
     console.log(error);
@@ -72,21 +72,21 @@ exports.createZoomLinks = async (req, res) => {
     for (let i = 0; i < schedules.length; i++) {
       const schedule = schedules[i];
       const { slots } = schedule;
-      console.log(schedule.className)
+      console.log(schedule.className);
       const meetingLinks = await createSlotsZoomLink(slots);
-      schedule.startDate = schedule.createdAt
-      schedule.meetingLinks = meetingLinks
+      schedule.startDate = schedule.createdAt;
+      schedule.meetingLinks = meetingLinks;
       await schedule.save();
-      console.log("saved")
+      console.log('saved');
     }
 
     return res.status(200).json({
-      message: "Meeting Links Updated successfully!",
+      message: 'Meeting Links Updated successfully!',
     });
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      error: err.message || "something went wrong",
+      error: err.message || 'something went wrong',
     });
   }
 };

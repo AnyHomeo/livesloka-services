@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 var adminSchema = new mongoose.Schema(
   {
@@ -12,10 +12,10 @@ var adminSchema = new mongoose.Schema(
       trim: true,
       type: String,
       lowercase: true,
-      required: "email or userid is required",
+      required: 'email or userid is required',
     },
-    rewards:{
-      type:Number
+    rewards: {
+      type: Number,
     },
     roleId: {
       trim: true,
@@ -29,16 +29,16 @@ var adminSchema = new mongoose.Schema(
     profileLocation: {
       trim: true,
       type: String,
-      default: "null",
+      default: 'null',
     },
     firstTimeLogin: {
       type: String,
-      default: "Y",
+      default: 'Y',
       trim: true,
     },
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer",
+      ref: 'Customer',
       trim: true,
     },
     teacherId: {
@@ -52,23 +52,25 @@ var adminSchema = new mongoose.Schema(
     password: {
       type: String,
       required: "Password can't be empty",
-      default: "livesloka",
+      default: 'livesloka',
       trim: true,
-      minlength: [3, "Password must be atleast 4 character long"],
+      minlength: [3, 'Password must be atleast 4 character long'],
     },
     settings: mongoose.Schema.Types.Mixed,
     otp: Number,
-    address:{
-      address:String,
-      state:String,
-      city:String,
-      country:String,
-      zipcode:String,
-      name:String,
+    address: {
+      address: String,
+      state: String,
+      city: String,
+      country: String,
+      zipcode: String,
+      name: String,
     },
-    notificationToken:[{
-      type:String
-    }],
+    notificationToken: [
+      {
+        type: String,
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -93,4 +95,4 @@ adminSchema.methods.generateJwt = function () {
   );
 };
 
-module.exports = mongoose.model("Admin", adminSchema);
+module.exports = mongoose.model('Admin', adminSchema);

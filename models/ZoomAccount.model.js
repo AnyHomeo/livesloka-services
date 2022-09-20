@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var ZoomAccountSchema = new mongoose.Schema(
   {
@@ -10,7 +10,7 @@ var ZoomAccountSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    ZoomAccountDesc: { 
+    ZoomAccountDesc: {
       type: String,
       trim: true,
     },
@@ -39,15 +39,15 @@ var ZoomAccountSchema = new mongoose.Schema(
       default: [],
     },
     color: {
-      type: "String",
-      default: "blue",
+      type: 'String',
+      default: 'blue',
     },
     isDisabled: {
       type: Boolean,
-      default:false
-    }
+      default: false,
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("ZoomAccount", ZoomAccountSchema);
+module.exports = mongoose.model('ZoomAccount', ZoomAccountSchema);

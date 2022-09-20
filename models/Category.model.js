@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 var CategorySchema = new mongoose.Schema(
   {
     id: {
@@ -13,12 +13,12 @@ var CategorySchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
-    isNotAvailableInBooking:{
+    isNotAvailableInBooking: {
       type: Boolean,
       default: false,
-    }
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Category", CategorySchema);
+module.exports = mongoose.model('Category', CategorySchema);

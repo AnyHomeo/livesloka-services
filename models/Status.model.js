@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var StatusSchema = new mongoose.Schema(
   {
@@ -18,4 +18,4 @@ var StatusSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Status", StatusSchema);
+module.exports = mongoose.model('Status', StatusSchema);

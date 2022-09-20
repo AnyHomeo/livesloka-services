@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const {
   makePayment,
   onSuccess,
@@ -9,15 +9,15 @@ const {
   onRazorpaySuccess,
   razorpayWebhook,
   validateRazorpayWebhook,
-} = require("../controllers/payment.controller");
+} = require('../controllers/payment.controller');
 const router = express.Router();
 
-router.post("/pay", makePayment);
-router.get("/success/:id", onSuccess);
-router.get("/razorpay/success/:id", onRazorpaySuccess);
-router.get("/cancel/:id", onFailurePayment);
-router.get("/get/transactions/:id", getTransactions);
-router.get("/get/alltransactions/", getAllTransactions);
-router.get("/get/dailydatagraph/", getDailyDataGraph);
-router.post("/razorpay/webhook",validateRazorpayWebhook,razorpayWebhook);
+router.post('/pay', makePayment);
+router.get('/success/:id', onSuccess);
+router.get('/razorpay/success/:id', onRazorpaySuccess);
+router.get('/cancel/:id', onFailurePayment);
+router.get('/get/transactions/:id', getTransactions);
+router.get('/get/alltransactions/', getAllTransactions);
+router.get('/get/dailydatagraph/', getDailyDataGraph);
+router.post('/razorpay/webhook', validateRazorpayWebhook, razorpayWebhook);
 module.exports = router;

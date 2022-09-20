@@ -1,19 +1,16 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var PaypalTransactionsSchema = new mongoose.Schema(
   {
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref:"Customer"
+      ref: 'Customer',
     },
-    paymentData:{
-        type:mongoose.Schema.Types.Mixed
-    }
+    paymentData: {
+      type: mongoose.Schema.Types.Mixed,
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model(
-  "PaypalTransactions",
-  PaypalTransactionsSchema
-);
+module.exports = mongoose.model('PaypalTransactions', PaypalTransactionsSchema);

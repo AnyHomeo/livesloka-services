@@ -1,25 +1,25 @@
-require("dotenv").config();
-const CustomerModel = require("../models/Customer.model");
-const TeacherModel = require("../models/Teacher.model");
-const OptionsModel = require("../models/SlotOptions");
-const TimeZoneModel = require("../models/timeZone.model");
-const ObjectId = require("mongoose").Types.ObjectId;
-const SchedulerModel = require("../models/Scheduler.model");
-const allZones = require("../models/timeZone.json");
-const times = require("../models/times.json");
-const momentTZ = require("moment-timezone");
-const moment = require("moment");
-const twilio = require("twilio");
-const CurrencyModel = require("../models/Currency.model");
-const { scheduleAndupdateCustomer } = require("./subscriptions");
+require('dotenv').config();
+const CustomerModel = require('../models/Customer.model');
+const TeacherModel = require('../models/Teacher.model');
+const OptionsModel = require('../models/SlotOptions');
+const TimeZoneModel = require('../models/timeZone.model');
+const ObjectId = require('mongoose').Types.ObjectId;
+const SchedulerModel = require('../models/Scheduler.model');
+const allZones = require('../models/timeZone.json');
+const times = require('../models/times.json');
+const momentTZ = require('moment-timezone');
+const moment = require('moment');
+const twilio = require('twilio');
+const CurrencyModel = require('../models/Currency.model');
+const { scheduleAndupdateCustomer } = require('./subscriptions');
 var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 
 const getStartTime = (slots, zoneName) => {
-  let day = slots[0].split("-")[0].toLowerCase();
+  let day = slots[0].split('-')[0].toLowerCase();
   let slotsWithoutDay = slots.map(
-    (slot) => `${slot.split("-")[1]}-${slot.split("-")[2]}`
+    (slot) => `${slot.split('-')[1]}-${slot.split('-')[2]}`
   );
-  let selectedStartTime = "";
+  let selectedStartTime = '';
   for (let i = 0; i < times.length; i++) {
     const time = times[i];
     if (slotsWithoutDay.includes(time)) {
@@ -28,16 +28,16 @@ const getStartTime = (slots, zoneName) => {
     }
   }
   let time = moment(
-    `${day} ${selectedStartTime.split("-")[0]}`,
-    "dddd hh:mm A"
-  ).format("YYYY-MM-DD HH:mm");
+    `${day} ${selectedStartTime.split('-')[0]}`,
+    'dddd hh:mm A'
+  ).format('YYYY-MM-DD HH:mm');
   console.log(time);
   time = momentTZ
-    .tz(time, "Asia/Kolkata")
+    .tz(time, 'Asia/Kolkata')
     .clone()
     .tz(zoneName)
-    .format("dddd-hh:mm A");
-  return time.split("-");
+    .format('dddd-hh:mm A');
+  return time.split('-');
 };
 
 exports.getTeacherSlots = async (req, res) => {
@@ -46,7 +46,7 @@ exports.getTeacherSlots = async (req, res) => {
     const selectedTeacher = await TeacherModel.findOne({
       id: teacherId,
     })
-      .select("TeacherName availableSlots")
+      .select('TeacherName availableSlots')
       .lean();
 
     let schedules = await SchedulerModel.find({
@@ -55,15 +55,15 @@ exports.getTeacherSlots = async (req, res) => {
         $ne: true,
       },
       demo: false,
-    }).select("scheduleDescription className");
+    }).select('scheduleDescription className');
 
     return res.json({
       result: { ...selectedTeacher, schedules },
-      message: "Teacher retrieved successfully!!",
+      message: 'Teacher retrieved successfully!!',
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!" });
+    return res.status(500).json({ error: 'Something went wrong!' });
   }
 };
 
@@ -71,21 +71,21 @@ exports.getOnlyDemoCustomers = async (req, res) => {
   try {
     let { select } = req.query;
     if (select) {
-      select = select.split(",").join(" ");
+      select = select.split(',').join(' ');
     }
     const demoCustomers = await CustomerModel.find({
-      classStatusId: "38493085684944",
+      classStatusId: '38493085684944',
     })
       .select(select)
       .lean();
 
     return res.json({
-      message: "Demo customers retrieved successfully",
+      message: 'Demo customers retrieved successfully',
       result: demoCustomers,
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ error: "Something went wrong!" });
+    return res.status(500).json({ error: 'Something went wrong!' });
   }
 };
 
@@ -94,27 +94,27 @@ exports.postAnOption = async (req, res) => {
     const { customer, options, teacher, schedules } = req.body;
 
     if (!customer) {
-      return res.status(400).json({ error: "Customer Id is Required!" });
+      return res.status(400).json({ error: 'Customer Id is Required!' });
     }
 
     if (!teacher) {
-      return res.status(400).json({ error: "Teacher Id is Required!" });
+      return res.status(400).json({ error: 'Teacher Id is Required!' });
     }
 
     if (
       (!Array.isArray(options) || !options.length) &&
       (!Array.isArray(schedules) || !schedules.length)
     ) {
-      return res.status(400).json({ error: "Minimum 1 slot is required!" });
+      return res.status(400).json({ error: 'Minimum 1 slot is required!' });
     }
 
     if (!ObjectId.isValid(customer)) {
-      return res.status(400).json({ error: "Invalid Customer" });
+      return res.status(400).json({ error: 'Invalid Customer' });
     }
 
     let customerData = await CustomerModel.findById(customer);
     if (!customerData) {
-      return res.status(400).json({ error: "Invalid Customer" });
+      return res.status(400).json({ error: 'Invalid Customer' });
     }
 
     let alreadyExists = await OptionsModel.countDocuments({
@@ -131,23 +131,23 @@ exports.postAnOption = async (req, res) => {
         });
         console.log(messageResponse);
         return res.json({
-          message: "Options Created and Url sent successfully",
+          message: 'Options Created and Url sent successfully',
         });
       } else {
         return res.json({
           message:
-            "Options Created but message not sent as there is no Phone Number available",
+            'Options Created but message not sent as there is no Phone Number available',
         });
       }
     } else {
       return res.status(500).json({
         error:
-          "Options already exists for this customer!, please delete and try again",
+          'Options already exists for this customer!, please delete and try again',
       });
     }
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!" });
+    return res.status(500).json({ error: 'Something went wrong!' });
   }
 };
 
@@ -158,17 +158,17 @@ exports.getOptions = async (req, res) => {
         $ne: true,
       },
     })
-      .populate("customer", "id firstName lastName")
-      .populate("schedules", "scheduleDescription className")
-      .populate("teacherData", "TeacherName id")
+      .populate('customer', 'id firstName lastName')
+      .populate('schedules', 'scheduleDescription className')
+      .populate('teacherData', 'TeacherName id')
       .lean();
     return res.json({
       result,
-      message: "All Options Retrieved Successfully!!!",
+      message: 'All Options Retrieved Successfully!!!',
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!" });
+    return res.status(500).json({ error: 'Something went wrong!' });
   }
 };
 
@@ -177,12 +177,12 @@ exports.updateAnOption = async (req, res) => {
     const { id } = req.params;
     const updatedOption = await OptionsModel.findByIdAndUpdate(id, req.body);
     return res.json({
-      message: "Option updated successfully",
+      message: 'Option updated successfully',
       result: updatedOption,
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!" });
+    return res.status(500).json({ error: 'Something went wrong!' });
   }
 };
 
@@ -191,21 +191,21 @@ exports.deleteAnOption = async (req, res) => {
     const { optionId } = req.params;
 
     if (!optionId)
-      return res.status(400).json({ error: "Option Id is Required" });
+      return res.status(400).json({ error: 'Option Id is Required' });
     if (!ObjectId.isValid(optionId))
       return res
         .status(400)
-        .json({ error: "Option Id must be a valid objectId" });
+        .json({ error: 'Option Id must be a valid objectId' });
 
     const deletedOption = await OptionsModel.deleteOne({ _id: optionId });
     if (deletedOption.n && deletedOption.ok) {
-      return res.json({ message: "Option deleted successfully!" });
+      return res.json({ message: 'Option deleted successfully!' });
     } else {
-      return res.status(400).json({ message: "Option not deleted" });
+      return res.status(400).json({ message: 'Option not deleted' });
     }
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!" });
+    return res.status(500).json({ error: 'Something went wrong!' });
   }
 };
 
@@ -213,9 +213,9 @@ exports.getAnOption = async (req, res) => {
   try {
     const { id } = req.params;
     const option = await OptionsModel.findById(id)
-      .populate("customer", "id firstName lastName timeZoneId")
-      .populate("schedules", "scheduleDescription className slots")
-      .populate("teacherData", "TeacherName id")
+      .populate('customer', 'id firstName lastName timeZoneId')
+      .populate('schedules', 'scheduleDescription className slots')
+      .populate('teacherData', 'TeacherName id')
       .lean();
     let selectedZone;
     if (option) {
@@ -231,12 +231,12 @@ exports.getAnOption = async (req, res) => {
           selectedZoneUTCArray.includes(name)
         )[0];
       } else {
-        selectedZone = "Asia/Kolkata";
+        selectedZone = 'Asia/Kolkata';
       }
       let newSlots = option.options.map((optionObj) => {
         let optionSlots = {};
         Object.keys(optionObj).forEach((day) => {
-          if (day !== "_id") {
+          if (day !== '_id') {
             let [dayStr, time] = getStartTime([optionObj[day]], selectedZone);
             optionSlots[dayStr.toLowerCase()] = time;
           } else {
@@ -258,7 +258,7 @@ exports.getAnOption = async (req, res) => {
       });
 
       return res.json({
-        message: "Option retrieved successfully",
+        message: 'Option retrieved successfully',
         result: [
           ...newSlots.map((slot) => ({ ...slot, isScheduled: false })),
           ...scheduledSlots.map((slot) => ({ ...slot, isScheduled: true })),
@@ -267,34 +267,34 @@ exports.getAnOption = async (req, res) => {
     } else {
       return res
         .status(500)
-        .json({ error: "Link Expired please contact Agent for new Link" });
+        .json({ error: 'Link Expired please contact Agent for new Link' });
     }
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!" });
+    return res.status(500).json({ error: 'Something went wrong!' });
   }
 };
 
 exports.getOptionByCustomer = async (req, res) => {
   const { customerId } = req.params;
   const option = await OptionsModel.findOne({ customer: customerId })
-    .populate("discounts.plan")
-    .populate("customer")
+    .populate('discounts.plan')
+    .populate('customer')
     .lean();
 
   CurrencyModel.populate(
     option,
-    "discounts.plan.currency",
+    'discounts.plan.currency',
     function (err, results) {
       if (err) {
         return res.status(500).json({
           result: null,
-          error: "Option retrieved successfully!",
+          error: 'Option retrieved successfully!',
         });
       }
       return res.json({
         result: results,
-        message: "Option retrieved successfully!",
+        message: 'Option retrieved successfully!',
       });
     }
   );
@@ -306,17 +306,17 @@ exports.getOptionsByTeacherId = async (req, res) => {
     const options = await OptionsModel.find({
       teacher: teacherId,
     })
-      .populate("schedules")
-      .populate("customer");
+      .populate('schedules')
+      .populate('customer');
     return res.json({
-      message: "Options retrieved successfully",
+      message: 'Options retrieved successfully',
       result: options,
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       error,
-      message: "Something went wrong!",
+      message: 'Something went wrong!',
     });
   }
 };
@@ -324,17 +324,17 @@ exports.getOptionsByTeacherId = async (req, res) => {
 exports.manuallyMakeOptionsToSchedule = async (req, res) => {
   try {
     const { optionsId } = req.params;
-    console.log(optionsId)
+    console.log(optionsId);
     const option = await OptionsModel.findById(optionsId);
     const customer = await CustomerModel.findById(option.customer);
     let nextDate;
     if (customer.paidTill) {
       nextDate = moment(customer.paidTill)
-        .add(plan.interval + "s", plan.intervalCount)
+        .add(plan.interval + 's', plan.intervalCount)
         .format();
     } else {
       nextDate = moment()
-        .add(plan.interval + "s", plan.intervalCount)
+        .add(plan.interval + 's', plan.intervalCount)
         .format();
     }
     const teacher = await TeacherModel.findOne({ id: option.teacher });

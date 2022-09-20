@@ -1,26 +1,23 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var StripeTransactionsSchema = new mongoose.Schema(
   {
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref:"Customer"
+      ref: 'Customer',
     },
-    stripeCustomer:{
-        type:String
+    stripeCustomer: {
+      type: String,
     },
-    paymentData:{
-        type:mongoose.Schema.Types.Mixed
+    paymentData: {
+      type: mongoose.Schema.Types.Mixed,
     },
-    status:{
-      type:String,
-      enum:["FAIL","SUCCESS"]  
-    }
+    status: {
+      type: String,
+      enum: ['FAIL', 'SUCCESS'],
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model(
-  "StripeTransactions",
-  StripeTransactionsSchema
-);
+module.exports = mongoose.model('StripeTransactions', StripeTransactionsSchema);

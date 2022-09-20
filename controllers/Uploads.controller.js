@@ -1,7 +1,7 @@
-const Schedule = require("../models/Scheduler.model");
-const Uploads = require("../models/uploads.model");
-const SchedulerModel = require("../models/Scheduler.model");
-const moment = require("moment");
+const Schedule = require('../models/Scheduler.model');
+const Uploads = require('../models/uploads.model');
+const SchedulerModel = require('../models/Scheduler.model');
+const moment = require('moment');
 
 exports.GetTeacherSchedules = async (req, res) => {
   let teacherId = req.params.id;
@@ -12,13 +12,13 @@ exports.GetTeacherSchedules = async (req, res) => {
   let obj = [];
   ActiveSchds.forEach((el) => {
     eachObj = {};
-    eachObj["ScheduleId"] = el._id;
-    eachObj["ClassName"] = el.className;
+    eachObj['ScheduleId'] = el._id;
+    eachObj['ClassName'] = el.className;
     obj.push(eachObj);
   });
   try {
     return res.status(200).json({
-      message: "Teacher Scheduled Fetched",
+      message: 'Teacher Scheduled Fetched',
       obj,
     });
   } catch (error) {
@@ -34,12 +34,12 @@ exports.PostUpload = async (req, res) => {
     const upload = new Uploads(req.body);
     await upload.save();
     return res.json({
-      message: "Material Uploaded Successfully !",
+      message: 'Material Uploaded Successfully !',
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Error in uploading Material !",
+      error: 'Error in uploading Material !',
     });
   }
 };
@@ -48,15 +48,15 @@ exports.GetStudentMaterials = async (req, res) => {
   try {
     const { id } = req.params;
     let schedule = await SchedulerModel.findById(id)
-      .populate("materials")
-      .select("materials");
+      .populate('materials')
+      .select('materials');
     return res.json({
       result: schedule ? schedule.materials : [],
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Error in retrieving material!",
+      error: 'Error in retrieving material!',
     });
   }
 };
@@ -70,9 +70,9 @@ exports.assignMaterial = async (req, res) => {
     if (!scheduleData.materials.includes(materialId)) {
       scheduleData.materials.push(materialId);
     }
-    if (typeof scheduleData.lastTimeJoinedClass !== "object") {
-      if (typeof scheduleData.lastTimeJoinedClass === "string") {
-        let strings = scheduleData.lastTimeJoinedClass.split("-");
+    if (typeof scheduleData.lastTimeJoinedClass !== 'object') {
+      if (typeof scheduleData.lastTimeJoinedClass === 'string') {
+        let strings = scheduleData.lastTimeJoinedClass.split('-');
         scheduleData.lastTimeJoinedClass = new Date(
           strings[2],
           strings[1],
@@ -80,18 +80,18 @@ exports.assignMaterial = async (req, res) => {
         );
       } else {
         scheduleData.lastTimeJoinedClass = new Date(
-          moment().subtract(1, "days").format()
+          moment().subtract(1, 'days').format()
         );
       }
     }
     await scheduleData.save();
     return res.json({
-      message: "Material Assigned Successfully!!",
+      message: 'Material Assigned Successfully!!',
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Error in assigning Materials",
+      error: 'Error in assigning Materials',
     });
   }
 };
@@ -111,8 +111,8 @@ exports.getMaterialsByTeacherId = async (req, res) => {
         $in: materialIds,
       },
     })
-      .select("students materials className")
-      .populate("students", "firstName")
+      .select('students materials className')
+      .populate('students', 'firstName')
       .lean();
     let finalMaterials = [];
     materialsByTeacher.forEach((material) => {
@@ -129,12 +129,12 @@ exports.getMaterialsByTeacherId = async (req, res) => {
     });
     return res.json({
       result: finalMaterials,
-      message: "Materials Retrieved Successfully!",
+      message: 'Materials Retrieved Successfully!',
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "error in retrieving materials",
+      error: 'error in retrieving materials',
     });
   }
 };
@@ -155,9 +155,9 @@ exports.deleteMaterial = async (req, res) => {
         let index = schedule.materials.indexOf(materialId);
         schedule.materials.splice(index, 1);
       }
-      if (typeof schedule.lastTimeJoinedClass !== "object") {
-        if (typeof schedule.lastTimeJoinedClass === "string") {
-          let strings = schedule.lastTimeJoinedClass.split("-");
+      if (typeof schedule.lastTimeJoinedClass !== 'object') {
+        if (typeof schedule.lastTimeJoinedClass === 'string') {
+          let strings = schedule.lastTimeJoinedClass.split('-');
           schedule.lastTimeJoinedClass = new Date(
             strings[2],
             strings[1],
@@ -165,19 +165,19 @@ exports.deleteMaterial = async (req, res) => {
           );
         } else {
           schedule.lastTimeJoinedClass = new Date(
-            moment().subtract(1, "days").format()
+            moment().subtract(1, 'days').format()
           );
         }
       }
       await schedule.save();
     });
     return res.json({
-      message: "Material Deleted Successfully !",
+      message: 'Material Deleted Successfully !',
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something wrong in deleting Material",
+      error: 'Something wrong in deleting Material',
     });
   }
 };
@@ -195,12 +195,12 @@ exports.removeClassFromMaterialAccess = async (req, res) => {
       }
     }
     return res.json({
-      message: "Removed class Successfully !",
+      message: 'Removed class Successfully !',
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something went Wrong",
+      error: 'Something went Wrong',
     });
   }
 };

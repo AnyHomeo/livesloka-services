@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var ExpensesSchema = new mongoose.Schema(
   {
@@ -35,4 +35,4 @@ var ExpensesSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Expenses", ExpensesSchema);
+module.exports = mongoose.model('Expenses', ExpensesSchema);

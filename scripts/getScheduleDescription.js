@@ -1,6 +1,6 @@
-const times = require("../models/times.json");
-const moment = require("moment");
-const momentTZ = require("moment-timezone");
+const times = require('../models/times.json');
+const moment = require('moment');
+const momentTZ = require('moment-timezone');
 
 exports.getScheduleDescription = (slots, zone) => {
   let schedule = [];
@@ -12,37 +12,37 @@ exports.getScheduleDescription = (slots, zone) => {
       console.log(splitSlots);
       let startSlot, endSlot;
       if (splitSlots.length == 1) {
-        startSlot = splitSlots[0].split("-")[0];
-        endSlot = splitSlots[0].split("-")[1];
+        startSlot = splitSlots[0].split('-')[0];
+        endSlot = splitSlots[0].split('-')[1];
       } else {
         for (let i = 0; i < times.length; i++) {
           const time = times[i];
           if (splitSlots.includes(time)) {
-            startSlot = time.split("-")[0];
-            endSlot = times[i + 1].split("-")[1];
+            startSlot = time.split('-')[0];
+            endSlot = times[i + 1].split('-')[1];
             break;
           }
         }
       }
       let indianStartTime = moment(
         `${day}-${startSlot}`,
-        "dddd-hh:mm A"
-      ).format("YYYY-MM-DDTHH:mm:ss");
-      let indianEndTime = moment(`${day}-${endSlot}`, "dddd-hh:mm A").format(
-        "YYYY-MM-DDTHH:mm:ss"
+        'dddd-hh:mm A'
+      ).format('YYYY-MM-DDTHH:mm:ss');
+      let indianEndTime = moment(`${day}-${endSlot}`, 'dddd-hh:mm A').format(
+        'YYYY-MM-DDTHH:mm:ss'
       );
       let zonedStartTime = momentTZ
-        .tz(indianStartTime, "Asia/Kolkata")
+        .tz(indianStartTime, 'Asia/Kolkata')
         .tz(zone)
-        .format("dddd hh:mm A");
+        .format('dddd hh:mm A');
       let zonedEndTime = momentTZ
-        .tz(indianEndTime, "Asia/Kolkata")
+        .tz(indianEndTime, 'Asia/Kolkata')
         .tz(zone)
-        .format("hh:mm A");
+        .format('hh:mm A');
       schedule.push(`${zonedStartTime}-${zonedEndTime}`);
     }
   });
-  return schedule.join(", ");
+  return schedule.join(', ');
 };
 
 // getScheduleDescription(

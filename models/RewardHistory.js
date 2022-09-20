@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var RewardHistorySchema = new mongoose.Schema(
   {
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer",
+      ref: 'Customer',
     },
     previousValue: {
       type: Number,
@@ -19,4 +19,4 @@ var RewardHistorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("RewardHistory", RewardHistorySchema);
+module.exports = mongoose.model('RewardHistory', RewardHistorySchema);

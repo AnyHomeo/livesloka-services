@@ -1,19 +1,19 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var SubscriptionSchema = new mongoose.Schema(
   {
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer",
+      ref: 'Customer',
     },
     type: {
       type: String,
-      enum: ["PAYPAL", "STRIPE"],
-      default: "STRIPE",
+      enum: ['PAYPAL', 'STRIPE'],
+      default: 'STRIPE',
     },
     planId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Plan",
+      ref: 'Plan',
     },
     id: {
       type: String, //subscription id from third party
@@ -30,4 +30,4 @@ var SubscriptionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Subscriptions", SubscriptionSchema);
+module.exports = mongoose.model('Subscriptions', SubscriptionSchema);

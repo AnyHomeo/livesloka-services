@@ -1,17 +1,16 @@
 const express = require('express');
 const {
-	deleteAleaveByLeaveId,
-	updateALeaveByLeaveId,
-	postALeave,
-	getTeacherLeavesByTeacherId,
-	getAllTeachersLeaves,
-	getTodayLeavesOfTeacher
+  deleteAleaveByLeaveId,
+  updateALeaveByLeaveId,
+  postALeave,
+  getTeacherLeavesByTeacherId,
+  getAllTeachersLeaves,
+  getTodayLeavesOfTeacher,
 } = require('../controllers/teacherLeave.controller');
 const router = express.Router();
 
-
 router.get('/', getAllTeachersLeaves);
-router.get('/single-day/:day',getTodayLeavesOfTeacher);
+router.get('/single-day/:day', getTodayLeavesOfTeacher);
 router.post('/', postALeave);
 router.get('/:id', getTeacherLeavesByTeacherId);
 router.put('/:id', updateALeaveByLeaveId);

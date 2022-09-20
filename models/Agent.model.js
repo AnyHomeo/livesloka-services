@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var AgentSchema = new mongoose.Schema(
   {
@@ -18,37 +18,37 @@ var AgentSchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
-    AgentLoginId:{
-      trim:true,
-      lowercase:true,
-      type:String,
-      default:""
+    AgentLoginId: {
+      trim: true,
+      lowercase: true,
+      type: String,
+      default: '',
     },
-    AgentTimeZone:{
-      type:String,
-      trim:true,
-      default:"IST",
-      uppercase:true
+    AgentTimeZone: {
+      type: String,
+      trim: true,
+      default: 'IST',
+      uppercase: true,
     },
-    AgentRole:{
-      type:Number,
-      default:3
+    AgentRole: {
+      type: Number,
+      default: 3,
     },
-    phoneNumber:{
-      type:String,
-      default:""
+    phoneNumber: {
+      type: String,
+      default: '',
     },
-    needToFinalizeSalaries:{
-      type:Boolean,
-      default:false
+    needToFinalizeSalaries: {
+      type: Boolean,
+      default: false,
     },
-    role:{
-      type:mongoose.Schema.Types.ObjectId,
-      ref:"Roles",
-      default:' '
-    }
+    role: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Roles',
+      default: ' ',
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Agent", AgentSchema);
+module.exports = mongoose.model('Agent', AgentSchema);

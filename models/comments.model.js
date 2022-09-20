@@ -1,23 +1,23 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 const { Schema, model } = mongoose;
-const CustomerMessageTemplateSchema = require('./CustomerMessageTemplates.model')
+const CustomerMessageTemplateSchema = require('./CustomerMessageTemplates.model');
 
-const Comments = new Schema( 
+const Comments = new Schema(
   {
     // message: {
     //   type: Schema.Types.ObjectId,
     //   ref: "CustomerMessageTemplate",
     // },
-    text:{
-      type:String
+    text: {
+      type: String,
     },
     createdBy: {
       type: Schema.Types.ObjectId,
-      ref: "Agent",
+      ref: 'Agent',
     },
     customer: {
       type: Schema.Types.ObjectId,
-      ref: "Customer",
+      ref: 'Customer',
     },
     timeStamp: {
       type: Date,
@@ -27,4 +27,4 @@ const Comments = new Schema(
   { timestamps: true }
 );
 
-module.exports = model("Comments", Comments);
+module.exports = model('Comments', Comments);

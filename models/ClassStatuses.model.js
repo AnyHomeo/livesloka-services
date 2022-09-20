@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var ClassStatusSchema = new mongoose.Schema(
   {
@@ -20,13 +20,13 @@ var ClassStatusSchema = new mongoose.Schema(
     },
     statusCategory: {
       type: String,
-      enum: ["SALES", "SUPPORT"],
+      enum: ['SALES', 'SUPPORT'],
     },
-    statusOrder:{
+    statusOrder: {
       type: String,
-    }
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("ClassStatu", ClassStatusSchema);
+module.exports = mongoose.model('ClassStatu', ClassStatusSchema);

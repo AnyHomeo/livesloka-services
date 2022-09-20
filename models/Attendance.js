@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var AttendanceSchema = new mongoose.Schema(
   {
@@ -8,25 +8,25 @@ var AttendanceSchema = new mongoose.Schema(
     customers: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Customer",
+        ref: 'Customer',
       },
     ],
     absentees: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Customer",
+        ref: 'Customer',
       },
     ],
     requestedStudents: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Customer",
+        ref: 'Customer',
       },
     ],
-    requestedPaidStudents:[
+    requestedPaidStudents: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Customer",
+        ref: 'Customer',
       },
     ],
     date: {
@@ -39,10 +39,10 @@ var AttendanceSchema = new mongoose.Schema(
     },
     scheduleId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Schedule",
+      ref: 'Schedule',
     },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Attendance", AttendanceSchema);
+module.exports = mongoose.model('Attendance', AttendanceSchema);

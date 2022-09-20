@@ -1,21 +1,21 @@
-const TeacherLeavesModel = require("../models/TeacherLeaves.model");
-const moment = require("moment");
-const TeacherModel = require("../models/Teacher.model");
-const SchedulerModel = require("../models/Scheduler.model");
-const AdminModel = require("../models/Admin.model");
-const AdMessagesModel = require("../models/AdMessage.model");
-const momentTZ = require("moment-timezone");
-const commentsModel = require("../models/comments.model");
+const TeacherLeavesModel = require('../models/TeacherLeaves.model');
+const moment = require('moment');
+const TeacherModel = require('../models/Teacher.model');
+const SchedulerModel = require('../models/Scheduler.model');
+const AdminModel = require('../models/Admin.model');
+const AdMessagesModel = require('../models/AdMessage.model');
+const momentTZ = require('moment-timezone');
+const commentsModel = require('../models/comments.model');
 
 exports.getAllTeachersLeaves = async (req, res) => {
   try {
     let allLeaves = await TeacherLeavesModel.find({
       date: {
-        $gte: momentTZ().tz("Asia/Kolkata").subtract(1, "month").startOf("day"),
+        $gte: momentTZ().tz('Asia/Kolkata').subtract(1, 'month').startOf('day'),
       },
     })
-      .populate("teacherId", "TeacherName id")
-      .populate("scheduleId", "className")
+      .populate('teacherId', 'TeacherName id')
+      .populate('scheduleId', 'className')
       .sort({ date: -1 });
     return res.json({
       result: allLeaves,
@@ -23,7 +23,7 @@ exports.getAllTeachersLeaves = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something went wrong!",
+      error: 'Something went wrong!',
     });
   }
 };
@@ -36,21 +36,21 @@ exports.getTeacherLeavesByTeacherId = async (req, res) => {
       let leavesByTeacher = await TeacherLeavesModel.find({
         teacherId: teacher._id,
       })
-        .populate("scheduleId", "className")
+        .populate('scheduleId', 'className')
         .lean();
       return res.json({
         result: leavesByTeacher,
-        message: "Leaves of Teacher Retrieved Sucessfully!",
+        message: 'Leaves of Teacher Retrieved Sucessfully!',
       });
     } else {
       return res.status(400).json({
-        error: "Invalid Teacher",
+        error: 'Invalid Teacher',
       });
     }
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something went wrong!",
+      error: 'Something went wrong!',
     });
   }
 };
@@ -66,13 +66,13 @@ exports.postALeave = async (req, res) => {
         teacherId,
         scheduleId: scheduleId ? scheduleId : undefined,
         date: {
-          $gte: moment(date).startOf("day"),
-          $lte: moment(date).endOf("day"),
+          $gte: moment(date).startOf('day'),
+          $lte: moment(date).endOf('day'),
         },
       });
       if (alreadyApplied) {
         return res.status(400).json({
-          error: "Already Applied on that day",
+          error: 'Already Applied on that day',
         });
       }
       req.body.scheduleId = scheduleId ? scheduleId : undefined;
@@ -81,8 +81,8 @@ exports.postALeave = async (req, res) => {
       let newAdMessage = {};
       if (scheduleId) {
         let schedule = await SchedulerModel.findById(scheduleId)
-          .select("students")
-          .populate("students", "email _id");
+          .select('students')
+          .populate('students', 'email _id');
         if (schedule) {
           let adminIds = await AdminModel.find({
             userId: { $in: schedule.students.map((student) => student.email) },
@@ -91,12 +91,12 @@ exports.postALeave = async (req, res) => {
           newAdMessage = {
             adminIds,
             message: req.body.reason
-              ? req.body.reason + "on "
-              : teacher.TeacherName + " Teacher is on a Leave on ",
+              ? req.body.reason + 'on '
+              : teacher.TeacherName + ' Teacher is on a Leave on ',
             teacherLeaveDate: date,
-            icon: "alert-circle",
-            title: "Leave Alert",
-            broadCastTo: "customers",
+            icon: 'alert-circle',
+            title: 'Leave Alert',
+            broadCastTo: 'customers',
             expiryDate: moment(date).format(),
           };
           let notification = new AdMessagesModel(newAdMessage);
@@ -109,18 +109,18 @@ exports.postALeave = async (req, res) => {
 
           await notification.save();
           return res.json({
-            message: "Applied Leave Successfully!",
+            message: 'Applied Leave Successfully!',
           });
         }
       } else if (req.body.entireDay) {
         let day = momentTZ(date)
-          .tz("Asia/Kolkata")
-          .format("dddd")
+          .tz('Asia/Kolkata')
+          .format('dddd')
           .toLowerCase();
         let allSchedules = await Schedule.find({
-          ["slots." + day + ".0"]: { $exists: true },
+          ['slots.' + day + '.0']: { $exists: true },
           teacher: teacher.id,
-        }).populate("students", "email");
+        }).populate('students', 'email');
         let allEmails = [];
         allSchedules.forEach((schedule) =>
           allEmails.push(schedule.students.map((student) => student.email))
@@ -132,11 +132,11 @@ exports.postALeave = async (req, res) => {
           adminIds,
           message: req.body.reason
             ? req.body.reason
-            : teacher.TeacherName + " Teacher is on a Leave on ",
+            : teacher.TeacherName + ' Teacher is on a Leave on ',
           teacherLeaveDate: date,
-          icon: "alert-circle",
-          title: "Leave Alert",
-          broadCastTo: "customers",
+          icon: 'alert-circle',
+          title: 'Leave Alert',
+          broadCastTo: 'customers',
           expiryDate: moment(date).format(),
         };
         let notification = new AdMessagesModel(newAdMessage);
@@ -147,16 +147,16 @@ exports.postALeave = async (req, res) => {
             comments.push({ customer: student._id, text: req.body.reason });
           });
         });
-        commentsModel.insertMany(comments)
+        commentsModel.insertMany(comments);
         return res.json({
-          message: "Applied Leave Successfully!",
+          message: 'Applied Leave Successfully!',
         });
       }
     }
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something went wrong!",
+      error: 'Something went wrong!',
     });
   }
 };
@@ -173,13 +173,13 @@ exports.updateALeaveByLeaveId = async (req, res) => {
         teacherId,
         scheduleId: scheduleId ? scheduleId : undefined,
         date: {
-          $gte: moment(date).startOf("day"),
-          $lte: moment(date).endOf("day"),
+          $gte: moment(date).startOf('day'),
+          $lte: moment(date).endOf('day'),
         },
       });
       if (alreadyApplied) {
         return res.status(400).json({
-          error: "Already Applied on that day",
+          error: 'Already Applied on that day',
         });
       }
       req.body.scheduleId = scheduleId ? scheduleId : undefined;
@@ -189,22 +189,22 @@ exports.updateALeaveByLeaveId = async (req, res) => {
       );
       if (updatedLeave.nModified === 1) {
         return res.json({
-          message: "Leave updated Successfully!",
+          message: 'Leave updated Successfully!',
         });
       } else {
         return res.status(400).json({
-          error: "unable to update Leave!",
+          error: 'unable to update Leave!',
         });
       }
     } else {
       return res.status(400).json({
-        error: "Invalid User Id",
+        error: 'Invalid User Id',
       });
     }
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something went wrong!",
+      error: 'Something went wrong!',
     });
   }
 };
@@ -215,17 +215,17 @@ exports.deleteAleaveByLeaveId = async (req, res) => {
     let deletedLeave = await TeacherLeavesModel.deleteOne({ _id: id });
     if (deletedLeave.n === 1) {
       return res.json({
-        message: "Deleted Sucessfully!",
+        message: 'Deleted Sucessfully!',
       });
     } else {
       return res.status(400).json({
-        error: "unable to delete Leave!",
+        error: 'unable to delete Leave!',
       });
     }
   } catch (error) {
     console.log(error);
     return res.json({
-      error: "Something went wrong!",
+      error: 'Something went wrong!',
     });
   }
 };
@@ -235,14 +235,14 @@ exports.getTodayLeavesOfTeacher = async (req, res) => {
     const { day } = req.params;
     let leavesToday = await TeacherLeavesModel.find({
       date: {
-        $gte: momentTZ(day).tz("Asia/Kolkata").startOf("day").format(),
-        $lte: momentTZ(day).tz("Asia/Kolkata").endOf("day").format(),
+        $gte: momentTZ(day).tz('Asia/Kolkata').startOf('day').format(),
+        $lte: momentTZ(day).tz('Asia/Kolkata').endOf('day').format(),
       },
     }).lean();
     let entireDayLeaves = leavesToday.filter((leave) => leave.entireDay);
     let scheduleLeaves = leavesToday.filter((leave) => !leave.entireDay);
     return res.json({
-      message: "Today Teacher Leaves Retrieved successfully",
+      message: 'Today Teacher Leaves Retrieved successfully',
       result: {
         entireDayLeaves,
         scheduleLeaves,
@@ -251,7 +251,7 @@ exports.getTodayLeavesOfTeacher = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something went wrong!",
+      error: 'Something went wrong!',
     });
   }
 };

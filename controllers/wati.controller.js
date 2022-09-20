@@ -1,30 +1,30 @@
-require("dotenv").config();
-const CustomerModel = require("../models/Customer.model");
-const fetch = require("node-fetch");
-const moment = require("moment");
-const WatiMessagesModel = require("../models/WatiMessages.model");
+require('dotenv').config();
+const CustomerModel = require('../models/Customer.model');
+const fetch = require('node-fetch');
+const moment = require('moment');
+const WatiMessagesModel = require('../models/WatiMessages.model');
 
 const watiApiKey = process.env.WATI_API_KEY;
 const watiApiHost = process.env.WATI_API_HOST;
 
 let templateIds = {
-  Yes: "facebook_yes",
-  No: "feedback_no", 
+  Yes: 'facebook_yes',
+  No: 'feedback_no',
 };
 
 exports.watiWebhookController = async (req, res) => {
   try {
     const { text, waId } = req.body;
-    if (text === "Yes" || text === "No") {
+    if (text === 'Yes' || text === 'No') {
       const customers = await CustomerModel.find({ watiId: waId });
       const customerIds = customers.map((c) => c._id);
       if (customerIds.length) {
         await WatiMessagesModel.updateOne(
           {
             customer: { $in: customerIds },
-            response: "No response",
+            response: 'No response',
             createdAt: {
-              $gte: moment().subtract(12, "hours").format(),
+              $gte: moment().subtract(12, 'hours').format(),
             },
           },
           {
@@ -34,7 +34,7 @@ exports.watiWebhookController = async (req, res) => {
 
         const data = {
           template_name: templateIds[text],
-          broadcast_name: "Reply",
+          broadcast_name: 'Reply',
           receivers: [
             {
               whatsappNumber: waId,
@@ -47,10 +47,10 @@ exports.watiWebhookController = async (req, res) => {
         let response = await fetch(
           `${watiApiHost}/api/v1/sendTemplateMessages`,
           {
-            method: "POST",
+            method: 'POST',
             body: JSON.stringify(data),
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
               Authorization: `Bearer ${watiApiKey}`,
             },
           }
@@ -73,23 +73,23 @@ exports.getWatiMessages = async (req, res) => {
     const { from, to } = req.query;
     let query = {};
     if (from) {
-      query["createdAt"] = { $gte: moment(from).format() };
+      query['createdAt'] = { $gte: moment(from).format() };
     }
     if (to) {
-      if (query["createdAt"]) {
-        query["createdAt"]["$lte"] = moment(to).format();
+      if (query['createdAt']) {
+        query['createdAt']['$lte'] = moment(to).format();
       } else {
-        query["createdAt"] = { $lte: moment(to).format() };
+        query['createdAt'] = { $lte: moment(to).format() };
       }
     }
 
     const messages = await WatiMessagesModel.find(query)
-      .populate("customer", "firstName lastName email")
-      .populate("teacher", "TeacherName")
-      .populate("schedule", "className");
+      .populate('customer', 'firstName lastName email')
+      .populate('teacher', 'TeacherName')
+      .populate('schedule', 'className');
 
     const chart = messages.reduce((acc, message) => {
-      let { teacher } = message; 
+      let { teacher } = message;
       if (acc[teacher.TeacherName]) {
         let prevCount = acc[teacher.TeacherName][message.response];
         acc[teacher.TeacherName] = {
@@ -99,7 +99,7 @@ exports.getWatiMessages = async (req, res) => {
       } else {
         acc[teacher.TeacherName] = { [message.response]: 1 };
       }
-      return acc
+      return acc;
     }, {});
 
     return res.status(200).json({ result: { messages, chart } });

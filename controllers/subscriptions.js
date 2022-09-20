@@ -1,36 +1,36 @@
-const fetch = require("node-fetch");
-const momentTZ = require("moment-timezone");
+const fetch = require('node-fetch');
+const momentTZ = require('moment-timezone');
 const {
   asyncForEach,
   getNameFromTimezone,
   sendSMS,
   sendAdminsMessage,
-} = require("../config/helper");
-const CustomerModel = require("../models/Customer.model");
-const SubjectModel = require("../models/Subject.model");
-const OptionModel = require("../models/SlotOptions");
-const times = require("../models/times.json");
-const moment = require("moment");
-const ZoomAccountModel = require("../models/ZoomAccount.model");
-const SchedulerModel = require("../models/Scheduler.model");
-const TeacherModel = require("../models/Teacher.model");
-const { capitalize } = require("../scripts");
-const SubscriptionModel = require("../models/Subscription");
-const StripeTransaction = require("../models/StripeTransactions");
-const PaypalTransaction = require("../models/PaypalTransactions");
-const Plan = require("../models/Plan.model");
-const TimeZoneModel = require("../models/timeZone.model");
-const CurrencyModel = require("../models/Currency.model");
+} = require('../config/helper');
+const CustomerModel = require('../models/Customer.model');
+const SubjectModel = require('../models/Subject.model');
+const OptionModel = require('../models/SlotOptions');
+const times = require('../models/times.json');
+const moment = require('moment');
+const ZoomAccountModel = require('../models/ZoomAccount.model');
+const SchedulerModel = require('../models/Scheduler.model');
+const TeacherModel = require('../models/Teacher.model');
+const { capitalize } = require('../scripts');
+const SubscriptionModel = require('../models/Subscription');
+const StripeTransaction = require('../models/StripeTransactions');
+const PaypalTransaction = require('../models/PaypalTransactions');
+const Plan = require('../models/Plan.model');
+const TimeZoneModel = require('../models/timeZone.model');
+const CurrencyModel = require('../models/Currency.model');
 const {
   SUCCESSFUL_SUBSCRIPTION,
   ADMIN_PAYMENT_SUCCESSFUL,
   ADMIN_UNSUBSCRIBE,
-} = require("../config/messages");
-const { createSlotsZoomLink, generateSlots } = require("../config/util");
+} = require('../config/messages');
+const { createSlotsZoomLink, generateSlots } = require('../config/util');
 
-let accessToken = "";
+let accessToken = '';
 let expiresAt = new Date().getTime();
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const isValidAccessToken = () => {
   return !!accessToken && expiresAt > new Date().getTime();
@@ -39,22 +39,22 @@ const isValidAccessToken = () => {
 const getAccessToken = async () => {
   if (!isValidAccessToken()) {
     const paypalTokenParams = new URLSearchParams();
-    paypalTokenParams.append("grant_type", "client_credentials");
+    paypalTokenParams.append('grant_type', 'client_credentials');
     let response = await fetch(`${process.env.PAYPAL_API_KEY}/oauth2/token`, {
-      method: "POST",
+      method: 'POST',
       body: paypalTokenParams,
       headers: {
         Authorization:
-          "Basic " +
+          'Basic ' +
           Buffer.from(
             `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`,
-            "binary"
-          ).toString("base64"),
+            'binary'
+          ).toString('base64'),
       },
     });
     let json = await response.json();
-    accessToken = json["access_token"];
-    expiresAt = json["expires_in"] * 1000 + new Date().getTime();
+    accessToken = json['access_token'];
+    expiresAt = json['expires_in'] * 1000 + new Date().getTime();
     return accessToken;
   } else {
     return accessToken;
@@ -67,20 +67,20 @@ exports.createProductValidations = async (req, res, next) => {
   try {
     const { name, description, subject, image } = req.body;
     if (!name) {
-      return res.status(400).json({ error: "Name is Required" });
+      return res.status(400).json({ error: 'Name is Required' });
     }
     if (!description) {
-      return res.status(400).json({ error: "Description is Required" });
+      return res.status(400).json({ error: 'Description is Required' });
     }
     if (!subject) {
-      return res.status(400).json({ error: "Subject is Required" });
+      return res.status(400).json({ error: 'Subject is Required' });
     }
     next();
   } catch (error) {
     console.log(error);
     return res
       .status(500)
-      .json({ error: "Something went wrong in validation!" });
+      .json({ error: 'Something went wrong in validation!' });
   }
 };
 
@@ -88,26 +88,26 @@ exports.createPlanValidations = async (req, res, next) => {
   try {
     const { productIds, name, description, months, price } = req.body;
     if (!name) {
-      return res.status(400).json({ error: "Name is Required" });
+      return res.status(400).json({ error: 'Name is Required' });
     }
     if (!description) {
-      return res.status(400).json({ error: "Description is Required" });
+      return res.status(400).json({ error: 'Description is Required' });
     }
     if (Array.isArray(productIds) && !productIds.length) {
-      return res.status(400).json({ error: "Minimum 1 subject required" });
+      return res.status(400).json({ error: 'Minimum 1 subject required' });
     }
     if (!months) {
-      return res.status(400).json({ error: "Months are Required" });
+      return res.status(400).json({ error: 'Months are Required' });
     }
     if (!price) {
-      return res.status(400).json({ error: "Price is Required" });
+      return res.status(400).json({ error: 'Price is Required' });
     }
     next();
   } catch (error) {
     console.log(error);
     return res
       .status(500)
-      .json({ error: "Something went wrong in validation!" });
+      .json({ error: 'Something went wrong in validation!' });
   }
 };
 
@@ -116,21 +116,21 @@ exports.createProduct = async (req, res) => {
     const { name, description, subject } = req.body;
     let subjectData = await SubjectModel.findOne({ id: subject });
     if (!subjectData) {
-      return res.status(400).json({ error: "Subject is Invalid" });
+      return res.status(400).json({ error: 'Subject is Invalid' });
     }
     let accessToken = await getAccessToken();
     let body = JSON.stringify({
       name,
       description,
-      type: "SERVICE",
-      category: "EDUCATIONAL_AND_TEXTBOOKS",
-      home_url: "https://mylivesloka.com",
+      type: 'SERVICE',
+      category: 'EDUCATIONAL_AND_TEXTBOOKS',
+      home_url: 'https://mylivesloka.com',
     });
     let config = {
-      method: "POST",
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body,
     };
@@ -148,7 +148,7 @@ exports.createProduct = async (req, res) => {
         id: response.id,
       });
       return res.json({
-        message: "Subject Created Successfully",
+        message: 'Subject Created Successfully',
         result: { paypal: response, stripe: product },
       });
     } else {
@@ -157,11 +157,11 @@ exports.createProduct = async (req, res) => {
           .status(400)
           .json({ error: `${response.details[0].value} is Invalid` });
       }
-      return res.status(400).json({ error: "Product not created" });
+      return res.status(400).json({ error: 'Product not created' });
     }
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!!" });
+    return res.status(500).json({ error: 'Something went wrong!!' });
   }
 };
 
@@ -176,20 +176,20 @@ exports.createPlan = async (req, res) => {
         name,
         product_id: productId,
         description,
-        status: "ACTIVE",
+        status: 'ACTIVE',
         billing_cycles: [
           {
             frequency: {
-              interval_unit: "MONTH",
+              interval_unit: 'MONTH',
               interval_count: months,
             },
-            tenure_type: "REGULAR",
+            tenure_type: 'REGULAR',
             sequence: 1,
             total_cycles: 0,
             pricing_scheme: {
               fixed_price: {
                 value: req.body.price.toString(),
-                currency_code: "USD",
+                currency_code: 'USD',
               },
             },
           },
@@ -197,22 +197,22 @@ exports.createPlan = async (req, res) => {
         payment_preferences: {
           auto_bill_outstanding: true,
           setup_fee: {
-            value: "0",
-            currency_code: "USD",
+            value: '0',
+            currency_code: 'USD',
           },
-          setup_fee_failure_action: "CONTINUE",
+          setup_fee_failure_action: 'CONTINUE',
           payment_failure_threshold: 3,
         },
         taxes: {
-          percentage: "0",
+          percentage: '0',
           inclusive: false,
         },
       });
       let config = {
-        method: "POST",
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body,
       };
@@ -224,19 +224,19 @@ exports.createPlan = async (req, res) => {
       response = await response.json();
       const price = await stripe.prices.create({
         unit_amount: parseFloat(req.body.price) * 100,
-        currency: "usd",
-        recurring: { interval: "month", interval_count: months },
+        currency: 'usd',
+        recurring: { interval: 'month', interval_count: months },
         product: productId,
       });
       responses.push({ paypal: response, stripe: price });
     });
     return res.json({
-      message: "Plans Created Successfully!",
+      message: 'Plans Created Successfully!',
       result: { paypal: responses, stripe: stripeResponses },
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!!" });
+    return res.status(500).json({ error: 'Something went wrong!!' });
   }
 };
 
@@ -244,10 +244,10 @@ exports.getProducts = async (req, res) => {
   try {
     let accessToken = await getAccessToken();
     let config = {
-      method: "GET",
+      method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     };
     let response = await fetch(
@@ -258,9 +258,9 @@ exports.getProducts = async (req, res) => {
     result.products = result.products.sort((a, b) => {
       return new Date(b.create_time) - new Date(a.create_time);
     });
-    if (response.statusText !== "OK") {
+    if (response.statusText !== 'OK') {
       return res.status(400).json({
-        error: "Something went wrong in retrieving products from paypal!",
+        error: 'Something went wrong in retrieving products from paypal!',
         result,
       });
     }
@@ -269,11 +269,11 @@ exports.getProducts = async (req, res) => {
       result: result,
       stripe: products,
       accessToken,
-      message: "Products Retrieved successfully!",
+      message: 'Products Retrieved successfully!',
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!!" });
+    return res.status(500).json({ error: 'Something went wrong!!' });
   }
 };
 
@@ -281,17 +281,17 @@ exports.getPlansByCustomerId = async (req, res) => {
   try {
     const { customerId } = req.params;
     const customer = await CustomerModel.findById(customerId)
-      .populate("subject", "productId")
+      .populate('subject', 'productId')
       .lean();
     if (customer) {
       const { productId } = customer.subject;
       if (productId) {
         let accessToken = await getAccessToken();
         let config = {
-          method: "GET",
+          method: 'GET',
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         };
         let response = await fetch(
@@ -299,10 +299,10 @@ exports.getPlansByCustomerId = async (req, res) => {
           config
         );
         let result = await response.json();
-        if (response.statusText !== "OK") {
+        if (response.statusText !== 'OK') {
           return res.status(400).json({
             result,
-            message: "Something went wrong in retrieving plans from paypal!",
+            message: 'Something went wrong in retrieving plans from paypal!',
           });
         }
         let plans = await Promise.all(
@@ -328,19 +328,19 @@ exports.getPlansByCustomerId = async (req, res) => {
         return res.json({
           result: plans,
           stripePlans,
-          message: "Plans Retrieved successfully!",
+          message: 'Plans Retrieved successfully!',
         });
       } else {
         return res
           .status(400)
-          .json({ error: "No plans available for selected Subject" });
+          .json({ error: 'No plans available for selected Subject' });
       }
     } else {
-      return res.status(400).json({ error: "Invalid customer Id" });
+      return res.status(400).json({ error: 'Invalid customer Id' });
     }
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!!" });
+    return res.status(500).json({ error: 'Something went wrong!!' });
   }
 };
 
@@ -348,13 +348,13 @@ exports.getPlans = async (req, res) => {
   try {
     const { productId } = req.params;
     if (!productId)
-      return res.status(400).json({ error: "Product Id is required" });
+      return res.status(400).json({ error: 'Product Id is required' });
     let accessToken = await getAccessToken();
     let config = {
-      method: "GET",
+      method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     };
     let response = await fetch(
@@ -362,10 +362,10 @@ exports.getPlans = async (req, res) => {
       config
     );
     let result = await response.json();
-    if (response.statusText !== "OK") {
+    if (response.statusText !== 'OK') {
       return res.status(400).json({
         result,
-        message: "Something went wrong in retrieving plans from paypal!",
+        message: 'Something went wrong in retrieving plans from paypal!',
       });
     }
     let prices;
@@ -380,11 +380,11 @@ exports.getPlans = async (req, res) => {
     return res.json({
       result,
       stripe: prices,
-      message: "Plans Retrieved successfully!",
+      message: 'Plans Retrieved successfully!',
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!!" });
+    return res.status(500).json({ error: 'Something went wrong!!' });
   }
 };
 
@@ -392,14 +392,14 @@ exports.getPlanById = async (req, res) => {
   try {
     const { id } = req.params;
     if (!id) {
-      return res.status(400).json({ error: "Plan Id is Required." });
+      return res.status(400).json({ error: 'Plan Id is Required.' });
     }
     let accessToken = await getAccessToken();
     let config = {
-      method: "GET",
+      method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     };
     let response = await fetch(
@@ -408,11 +408,11 @@ exports.getPlanById = async (req, res) => {
     );
     return res.json({
       result: response,
-      message: "Plans Retrieved successfully!",
+      message: 'Plans Retrieved successfully!',
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!!" });
+    return res.status(500).json({ error: 'Something went wrong!!' });
   }
 };
 
@@ -423,24 +423,24 @@ exports.updateProductById = async (req, res) => {
     let body = [];
     if (description) {
       body.push({
-        op: "replace",
-        path: "/description",
+        op: 'replace',
+        path: '/description',
         value: description,
       });
     }
     if (image) {
       body.push({
-        op: "replace",
-        path: "/image_url",
+        op: 'replace',
+        path: '/image_url',
         value: image,
       });
     }
     let accessToken = await getAccessToken();
     let config = {
-      method: "PATCH",
+      method: 'PATCH',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
     };
@@ -449,13 +449,13 @@ exports.updateProductById = async (req, res) => {
         `${process.env.PAYPAL_API_KEY}/catalogs/products/${id}`,
         config
       );
-      return res.json({ message: "Updated product successfully!" });
+      return res.json({ message: 'Updated product successfully!' });
     } else {
-      return res.json({ message: "No updated Field!" });
+      return res.json({ message: 'No updated Field!' });
     }
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!!" });
+    return res.status(500).json({ error: 'Something went wrong!!' });
   }
 };
 
@@ -465,15 +465,15 @@ exports.updatePlanById = async (req, res) => {
     const { id } = req.params;
     if (description) {
       let config = {
-        method: "PATCH",
+        method: 'PATCH',
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify([
           {
-            op: "replace",
-            path: "/description",
+            op: 'replace',
+            path: '/description',
             value: description,
           },
         ]),
@@ -482,17 +482,17 @@ exports.updatePlanById = async (req, res) => {
         `${process.env.PAYPAL_API_KEY}/catalogs/products/${id}`,
         config
       );
-      return res.json({ message: "Updated product successfully!" });
+      return res.json({ message: 'Updated product successfully!' });
     }
     if (price) {
       if (isNaN(price)) {
-        return res.status(500).json({ message: "Price is numeric" });
+        return res.status(500).json({ message: 'Price is numeric' });
       }
       let config = {
-        method: "POST",
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           pricing_schemes: [
@@ -501,11 +501,11 @@ exports.updatePlanById = async (req, res) => {
               pricing_scheme: {
                 fixed_price: {
                   value: price.toString(),
-                  currency_code: "USD",
+                  currency_code: 'USD',
                 },
                 roll_out_strategy: {
                   effective_time: moment().format(),
-                  process_change_from: "NEXT_PAYMENT",
+                  process_change_from: 'NEXT_PAYMENT',
                 },
               },
             },
@@ -516,12 +516,12 @@ exports.updatePlanById = async (req, res) => {
         `${process.env.PAYPAL_API_KEY}/billing/plans/${id}/update-pricing-schemes`,
         config
       );
-      return res.json({ message: "Updated product successfully!" });
+      return res.json({ message: 'Updated product successfully!' });
     }
-    return res.json({ message: "No field updated!" });
+    return res.json({ message: 'No field updated!' });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!!" });
+    return res.status(500).json({ error: 'Something went wrong!!' });
   }
 };
 
@@ -530,10 +530,10 @@ exports.activatePlan = async (req, res) => {
     //422 if already activated
     const { planId } = req.params;
     let config = {
-      method: "POST",
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     };
     let response = await fetch(
@@ -542,12 +542,12 @@ exports.activatePlan = async (req, res) => {
     );
 
     return res.json({
-      message: "Plan Activated successfully!",
+      message: 'Plan Activated successfully!',
       result: response,
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!!" });
+    return res.status(500).json({ error: 'Something went wrong!!' });
   }
 };
 
@@ -556,10 +556,10 @@ exports.deactivatePlan = async (req, res) => {
     //422 if already deactivated
     const { planId } = req.params;
     let config = {
-      method: "POST",
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     };
     let response = await fetch(
@@ -568,12 +568,12 @@ exports.deactivatePlan = async (req, res) => {
     );
 
     return res.json({
-      message: "Plan Activated successfully!",
+      message: 'Plan Activated successfully!',
       result: response,
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!!" });
+    return res.status(500).json({ error: 'Something went wrong!!' });
   }
 };
 
@@ -587,13 +587,13 @@ exports.subscribeCustomerToAPlan = async (req, res) => {
     const { noSchedule } = req.query;
     const customer = await CustomerModel.findOne({ _id: customerId }).lean();
     if (!customer) {
-      return res.status(400).json({ error: "Invalid or Deleted customer Id" });
+      return res.status(400).json({ error: 'Invalid or Deleted customer Id' });
     }
     let accessToken = await getAccessToken();
     let subscriptionBody = {
       plan_id: planId,
-      start_time: moment.utc().add(10, "seconds").format(),
-      quantity: "1",
+      start_time: moment.utc().add(10, 'seconds').format(),
+      quantity: '1',
       subscriber: {
         name: {
           given_name: customer.firstName,
@@ -601,13 +601,13 @@ exports.subscribeCustomerToAPlan = async (req, res) => {
         email_address: customer.email,
       },
       application_context: {
-        brand_name: "Live Sloka",
-        locale: "en-US",
-        shipping_preference: "NO_SHIPPING",
-        user_action: "SUBSCRIBE_NOW",
+        brand_name: 'Live Sloka',
+        locale: 'en-US',
+        shipping_preference: 'NO_SHIPPING',
+        user_action: 'SUBSCRIBE_NOW',
         payment_method: {
-          payer_selected: "PAYPAL",
-          payee_preferred: "IMMEDIATE_PAYMENT_REQUIRED",
+          payer_selected: 'PAYPAL',
+          payee_preferred: 'IMMEDIATE_PAYMENT_REQUIRED',
         },
         return_url: `${process.env.SERVICES_URL}/subscriptions/subscription/success/${noSchedule}/${customerId}`,
         cancel_url: `${process.env.USER_CLIENT_URL}/subscriptions/failure`,
@@ -615,10 +615,10 @@ exports.subscribeCustomerToAPlan = async (req, res) => {
     };
     let config = {
       body: JSON.stringify(subscriptionBody),
-      method: "POST",
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     };
 
@@ -627,19 +627,19 @@ exports.subscribeCustomerToAPlan = async (req, res) => {
       config
     );
     let result = await response.json();
-    if (response.statusText !== "Created") {
+    if (response.statusText !== 'Created') {
       return res.redirect(
         `${process.env.USER_CLIENT_URL}/subscriptions/failure`
       );
     } else {
       let redirectLink = result.links.filter(
-        (link) => link.rel === "approve"
+        (link) => link.rel === 'approve'
       )[0];
       return res.redirect(redirectLink.href);
     }
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!!" });
+    return res.status(500).json({ error: 'Something went wrong!!' });
   }
 };
 
@@ -668,8 +668,8 @@ exports.subscribeCustomerToAStripePlan = async (req, res) => {
     const subscription = await stripe.subscriptions.create({
       customer: stripeCustomer.id,
       items: [{ price: plan.stripe }],
-      payment_behavior: "default_incomplete",
-      expand: ["latest_invoice.payment_intent"],
+      payment_behavior: 'default_incomplete',
+      expand: ['latest_invoice.payment_intent'],
     });
     customer.stripeId = stripeCustomer.id;
     await customer.save();
@@ -679,26 +679,26 @@ exports.subscribeCustomerToAStripePlan = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!!" });
+    return res.status(500).json({ error: 'Something went wrong!!' });
   }
 };
 
 const getNextSlot = (slot) => {
-  let day = slot.split("-")[0];
-  let time = slot.split("-")[1] + "-" + slot.split("-")[2];
+  let day = slot.split('-')[0];
+  let time = slot.split('-')[1] + '-' + slot.split('-')[2];
   let index = times.indexOf(time);
-  let nextSlot = day + "-" + times[index + 1];
+  let nextSlot = day + '-' + times[index + 1];
   return nextSlot;
 };
 
 const generateScheduleDescriptionAndSlots = (slots) => {
   let scheduleDescription = [];
   let slotsObject = Object.keys(slots).reduce((accumulator, key) => {
-    if (key === "_id") {
+    if (key === '_id') {
       return accumulator;
     } else {
       let slot = slots[key];
-      let splittedSlot = slot.split("-");
+      let splittedSlot = slot.split('-');
       scheduleDescription.push(
         `${capitalize(splittedSlot[0].toLowerCase())}-${splittedSlot[1]}`
       );
@@ -709,7 +709,7 @@ const generateScheduleDescriptionAndSlots = (slots) => {
 
   return {
     scheduleDescription:
-      "Attend class Every - " + scheduleDescription.join(","),
+      'Attend class Every - ' + scheduleDescription.join(','),
     slots: slotsObject,
   };
 };
@@ -731,14 +731,14 @@ const scheduleAndupdateCustomer = async (
         return res.redirect(`${process.env.USER_CLIENT_URL}/payment-success`);
       } else {
         return res.json({
-          message: "Scheduled Meeting Successfully!",
+          message: 'Scheduled Meeting Successfully!',
         });
       }
     }
-    if (option.selectedSlotType === "NEW") {
+    if (option.selectedSlotType === 'NEW') {
       //* 1 generate class name
       let className = `${customer.firstName} ${
-        customer.age ? `${customer.age}Y` : ""
+        customer.age ? `${customer.age}Y` : ''
       } ${subject.subjectName}- ${teacher.TeacherName}`;
       //*  generate indian schedule description
       let selectedOption = option.options.filter((singleOption) =>
@@ -748,7 +748,7 @@ const scheduleAndupdateCustomer = async (
         generateScheduleDescriptionAndSlots(selectedOption);
 
       let meetingLinks = await createSlotsZoomLink(slots);
-      if (typeof meetingLinks.message === "string") {
+      if (typeof meetingLinks.message === 'string') {
         meetingLinks = {};
       }
 
@@ -795,7 +795,7 @@ const scheduleAndupdateCustomer = async (
           $set: {
             scheduleDescription,
             teacherId: teacher.id,
-            classStatusId: "113975223750050",
+            classStatusId: '113975223750050',
             paidTill: periodEndDate,
           },
         }
@@ -818,10 +818,10 @@ const scheduleAndupdateCustomer = async (
         return res.redirect(`${process.env.USER_CLIENT_URL}/payment-success`);
       } else {
         return res.json({
-          message: "Scheduled Meeting Successfully!",
+          message: 'Scheduled Meeting Successfully!',
         });
       }
-    } else if (option.selectedSlotType === "EXISTING") {
+    } else if (option.selectedSlotType === 'EXISTING') {
       //* 1 update class Name
       let otherSchedulesOfCustomer = await SchedulerModel.find({
         students: {
@@ -848,7 +848,7 @@ const scheduleAndupdateCustomer = async (
       customer.scheduleDescription = schedule.scheduleDescription;
       customer.meetingLink = schedule.meetingLink;
       customer.teacherId = schedule.teacher;
-      customer.classStatusId = "113975223750050";
+      customer.classStatusId = '113975223750050';
       customer.paidTill = periodEndDate;
       await customer.save();
       await schedule.save();
@@ -857,16 +857,16 @@ const scheduleAndupdateCustomer = async (
         return res.redirect(`${process.env.USER_CLIENT_URL}/payment-success`);
       } else {
         return res.json({
-          message: "Scheduled Meeting Successfully!",
+          message: 'Scheduled Meeting Successfully!',
         });
       }
     } else {
       return res
         .status(500)
-        .json({ error: "Please select the options initially!" });
+        .json({ error: 'Please select the options initially!' });
     }
   } else {
-    return res.json({ message: "No Options available" });
+    return res.json({ message: 'No Options available' });
   }
 };
 
@@ -879,7 +879,7 @@ const deleteExistingSubscription = async (customer, reason) => {
   });
   if (latestSubscription) {
     let { id, type } = latestSubscription;
-    if (type === "STRIPE") {
+    if (type === 'STRIPE') {
       await stripe.subscriptions.del(id);
       latestSubscription.isActive = false;
       latestSubscription.cancelledDate = new Date();
@@ -898,11 +898,11 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     }).lean();
     const customer = await CustomerModel.findById(customerId);
     const subject = await SubjectModel.findOne({ id: customer.subjectId });
-    let periodEndDate = moment().add(1, "month").format();
+    let periodEndDate = moment().add(1, 'month').format();
     let timeZone = await TimeZoneModel.findOne({
-      id: customer.timeZoneId || "141139634553016",
+      id: customer.timeZoneId || '141139634553016',
     });
-    await deleteExistingSubscription(customer, "Remove old subscriptions");
+    await deleteExistingSubscription(customer, 'Remove old subscriptions');
     const subscription = await stripe.subscriptions.retrieve(sub_id);
     periodEndDate = moment(subscription.current_period_end * 1000).format();
     const planId = await Plan.findOne({
@@ -911,20 +911,20 @@ exports.handleSuccessfulSubscription = async (req, res) => {
     const newSubscription = new SubscriptionModel({
       customerId,
       stripeCustomer: customer.stripeId,
-      type: "STRIPE",
-      planId: planId ? planId._id : "",
+      type: 'STRIPE',
+      planId: planId ? planId._id : '',
       isActive: true,
       id: sub_id,
     });
     await newSubscription.save();
 
     //message to admin and customer
-    const zone = getNameFromTimezone(timeZone.timeZoneName) || "Asia/Kolkata";
+    const zone = getNameFromTimezone(timeZone.timeZoneName) || 'Asia/Kolkata';
     let customerMessage = SUCCESSFUL_SUBSCRIPTION(
       parseFloat(subscription.items.data[0].plan.amount) / 100,
       subscription.items.data[0].plan.currency,
       subject.subjectName,
-      momentTZ(periodEndDate).tz(zone).format("MMM Do YYYY")
+      momentTZ(periodEndDate).tz(zone).format('MMM Do YYYY')
     );
     sendSMS(
       customerMessage,
@@ -935,7 +935,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
       subscription.items.data[0].plan.currency,
       subject.subjectName,
       customer.firstName,
-      momentTZ(periodEndDate).tz("Asia/Kolkata").format("MMM Do YYYY")
+      momentTZ(periodEndDate).tz('Asia/Kolkata').format('MMM Do YYYY')
     );
     sendAdminsMessage(adminMessage);
 
@@ -952,7 +952,7 @@ exports.handleSuccessfulSubscription = async (req, res) => {
           false
         );
       } else {
-        return res.json({ message: "No Options available" });
+        return res.json({ message: 'No Options available' });
       }
     } else {
       await CustomerModel.updateOne(
@@ -965,14 +965,14 @@ exports.handleSuccessfulSubscription = async (req, res) => {
       );
 
       return res.json({
-        message: "Scheduled Meeting Successfully!",
+        message: 'Scheduled Meeting Successfully!',
       });
     }
   } catch (error) {
     console.log(error);
     return res
       .status(500)
-      .json({ error: "Something went wrong!!", result: error });
+      .json({ error: 'Something went wrong!!', result: error });
   }
 };
 
@@ -983,12 +983,12 @@ exports.cancelSubscription = async (req, res) => {
       customerId,
       isActive: true,
     })
-      .populate("planId")
-      .populate("customerId");
+      .populate('planId')
+      .populate('customerId');
     const currency = await CurrencyModel.findById(
       latestSubscription.planId
         ? latestSubscription.planId.currency
-        : "5f98fabdd5e2630017ec9ac1"
+        : '5f98fabdd5e2630017ec9ac1'
     );
     if (latestSubscription) {
       let { id } = latestSubscription;
@@ -997,28 +997,28 @@ exports.cancelSubscription = async (req, res) => {
       latestSubscription.cancelledDate = new Date();
       latestSubscription.reason = reason;
       await latestSubscription.save();
-      if (typeof latestSubscription.customerId === "object") {
+      if (typeof latestSubscription.customerId === 'object') {
         const { firstName, paidTill, countryCode, whatsAppnumber } =
           latestSubscription.customerId;
         let adminMessage = ADMIN_UNSUBSCRIBE(
           firstName,
-          momentTZ().tz("Asia/Kolkata").format("MMM Do YY, hh:mm:ss a z"),
+          momentTZ().tz('Asia/Kolkata').format('MMM Do YY, hh:mm:ss a z'),
           latestSubscription.planId.amount,
-          currency ? currency.currencyName : "USD",
+          currency ? currency.currencyName : 'USD',
           paidTill,
           `${countryCode}${whatsAppnumber}`.trim()
         );
         sendAdminsMessage(adminMessage);
       }
       return res.json({
-        message: "Cancelled plan successfully!",
+        message: 'Cancelled plan successfully!',
       });
     } else {
-      return res.status(500).json({ error: "No Active subscriptions" });
+      return res.status(500).json({ error: 'No Active subscriptions' });
     }
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!!" });
+    return res.status(500).json({ error: 'Something went wrong!!' });
   }
 };
 
@@ -1028,7 +1028,7 @@ exports.getAllSubscriptions = async (req, res) => {
     const { isActive } = req.query;
     let customer = await CustomerModel.findById(id).lean();
     if (!customer) {
-      return res.status(400).json({ error: "Invalid user id" });
+      return res.status(400).json({ error: 'Invalid user id' });
     }
     let allCustomers = await CustomerModel.find({
       email: customer.email,
@@ -1038,24 +1038,24 @@ exports.getAllSubscriptions = async (req, res) => {
       customerId: {
         $in: allCustomers,
       },
-      isActive: isActive === "1",
+      isActive: isActive === '1',
     })
-      .populate("customerId", "firstName lastName paidTill")
+      .populate('customerId', 'firstName lastName paidTill')
       .lean();
     return res.json({
       result: allSubscriptions,
-      message: "All Subscriptions Retrieved Successfully!",
+      message: 'All Subscriptions Retrieved Successfully!',
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!" });
+    return res.status(500).json({ error: 'Something went wrong!' });
   }
 };
 
 exports.listenToStripe = async (req, res) => {
   const event = req.body;
   switch (event.type) {
-    case "invoice.payment_succeeded":
+    case 'invoice.payment_succeeded':
       const customer = await CustomerModel.findOne({
         stripeId: event.data.object.customer,
       });
@@ -1072,7 +1072,7 @@ exports.listenToStripe = async (req, res) => {
       });
       await newStripeTransaction.save();
       break;
-    case "invoice.payment_failed":
+    case 'invoice.payment_failed':
       const failedCustomer = await CustomerModel.findOne({
         stripeId: event.data.object.customer,
       });
@@ -1080,7 +1080,7 @@ exports.listenToStripe = async (req, res) => {
         customerId: failedCustomer ? failedCustomer._id : undefined,
         stripeCustomer: event.data.object.customer,
         paymentData: event,
-        status: "FAIL",
+        status: 'FAIL',
       });
       await newFailedStripeTransaction.save();
       break;
@@ -1108,11 +1108,11 @@ exports.getAllTransactionsOfStripeCustomer = async (req, res) => {
       stripeCustomer,
     }).lean();
     return res.json({
-      message: "Transactions Retrieved successfully!",
+      message: 'Transactions Retrieved successfully!',
       result: stripeResponse,
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong!" });
+    return res.status(500).json({ error: 'Something went wrong!' });
   }
 };

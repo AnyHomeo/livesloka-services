@@ -47,7 +47,7 @@ exports.getMessagesByEmail = async (req, res) => {
       }).lean();
       let unSeenMessages = await AdMessagesModel.find({
         broadCastedToTeachers: { $in: [email] },
-        acknowledgedByTeachers: { $nin: [email] }
+        acknowledgedByTeachers: { $nin: [email] },
       }).lean();
       return res.json({
         result: { allMessages, unSeenMessages },
@@ -247,21 +247,24 @@ exports.addAcknowledgedCustomer = async (req, res) => {
 
 exports.markAllAsReadByTeacher = async (req, res) => {
   try {
-    const { email } = req.body
-    await AdMessagesModel.updateMany({
-      broadCastedToTeachers: { $in: [email] },
-      acknowledgedByTeachers: { $nin: [email] }
-    },{
-      $push: {acknowledgedByTeachers:email}
-    }).lean();
+    const { email } = req.body;
+    await AdMessagesModel.updateMany(
+      {
+        broadCastedToTeachers: { $in: [email] },
+        acknowledgedByTeachers: { $nin: [email] },
+      },
+      {
+        $push: { acknowledgedByTeachers: email },
+      }
+    ).lean();
     return res.json({
-      message:"Marked all as read!"
-    })
+      message: 'Marked all as read!',
+    });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.status(500).json({
-      error:"Something went wrong",
-      result:null
-    })
+      error: 'Something went wrong',
+      result: null,
+    });
   }
-}
+};

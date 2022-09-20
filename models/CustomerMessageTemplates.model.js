@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 const { Schema, model } = mongoose;
 
 const CustomerMessageTemplateSchema = new Schema(
@@ -16,6 +16,6 @@ const CustomerMessageTemplateSchema = new Schema(
 );
 
 module.exports = model(
-  "CustomerMessageTemplate",
+  'CustomerMessageTemplate',
   CustomerMessageTemplateSchema
 );

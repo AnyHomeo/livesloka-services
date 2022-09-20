@@ -1,29 +1,29 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const WatiMessageSchema = new mongoose.Schema(
   {
     customer: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer",
+      ref: 'Customer',
     },
     schedule: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Schedule",
+      ref: 'Schedule',
     },
     teacher: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Teacher",
+      ref: 'Teacher',
     },
     response: {
       type: String,
-      default: "No response",
+      default: 'No response',
     },
     watiMessageId: {
       type: String,
     },
     context: {
       type: String,
-      default: "FEEDBACK"
+      default: 'FEEDBACK',
     },
   },
   {
@@ -31,4 +31,4 @@ const WatiMessageSchema = new mongoose.Schema(
   }
 );
 
-module.exports = mongoose.model("WatiMessage", WatiMessageSchema);
+module.exports = mongoose.model('WatiMessage', WatiMessageSchema);

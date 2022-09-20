@@ -1,9 +1,13 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { getTransactionsData, getCardsData, getTransactionsTable } = require('../controllers/transactions.controller');
-const Transactions = require("../models/Transactions");
-const fs = require('fs')
-let months = ['july']
+const {
+  getTransactionsData,
+  getCardsData,
+  getTransactionsTable,
+} = require('../controllers/transactions.controller');
+const Transactions = require('../models/Transactions');
+const fs = require('fs');
+let months = ['july'];
 const path = require('path');
 
 // router.get('/paypal',async (req,res) => {
@@ -31,7 +35,7 @@ const path = require('path');
 //         let data = await Transactions.insertMany(finalArrToPush)
 //         return res.json({
 //             message: `${data.length} Transactions created successfully`
-//         })    
+//         })
 //     } catch (error) {
 //         console.log(error)
 //         return res.status(500).json({
@@ -39,7 +43,6 @@ const path = require('path');
 //         })
 //     }
 // })
-
 
 // router.get('/razorpay',async (req,res) => {
 //     try {
@@ -55,7 +58,7 @@ const path = require('path');
 //                         id,
 //                         mode:"RAZORPAY",
 //                         amount:amount/100,
-//                         date:new Date(created_at*1000)     
+//                         date:new Date(created_at*1000)
 //                     })
 //                 }
 //             })
@@ -64,7 +67,7 @@ const path = require('path');
 //         let data = await Transactions.insertMany(finalArrToPush)
 //         return res.json({
 //             message: `${data.length} Transactions created successfully`
-//         }) 
+//         })
 //     } catch (error) {
 //         console.log(error)
 //         return res.status(500).json({
@@ -73,7 +76,7 @@ const path = require('path');
 //     }
 // })
 
-router.get('/',getTransactionsData);
-router.get('/cards',getCardsData)
-router.get('/table',getTransactionsTable);
+router.get('/', getTransactionsData);
+router.get('/cards', getCardsData);
+router.get('/table', getTransactionsTable);
 module.exports = router;

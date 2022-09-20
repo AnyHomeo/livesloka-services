@@ -1,13 +1,13 @@
-require("dotenv").config();
-const paypal = require("paypal-rest-sdk");
-const Customer = require("../models/Customer.model");
-const Payment = require("../models/Payments");
-const Currency = require("../models/Currency.model");
-const ClassHistoryModel = require("../models/ClassHistory.model");
-const { addMonths } = require("../scripts");
-const moment = require("moment");
-const shortid = require("shortid");
-const Razorpay = require("razorpay");
+require('dotenv').config();
+const paypal = require('paypal-rest-sdk');
+const Customer = require('../models/Customer.model');
+const Payment = require('../models/Payments');
+const Currency = require('../models/Currency.model');
+const ClassHistoryModel = require('../models/ClassHistory.model');
+const { addMonths } = require('../scripts');
+const moment = require('moment');
+const shortid = require('shortid');
+const Razorpay = require('razorpay');
 
 paypal.configure({
   mode: process.env.PAYPAL_MODE,
@@ -24,18 +24,18 @@ exports.makePayment = async (req, res) => {
   try {
     const { id, deeplinking } = req.body;
     const user = await Customer.findById(id).select(
-      "firstName lastName className proposedAmount proposedCurrencyId discount"
+      'firstName lastName className proposedAmount proposedCurrencyId discount'
     );
     const currency = await Currency.findOne({ id: user.proposedCurrencyId });
-    if (currency.currencyName !== "INR") {
+    if (currency.currencyName !== 'INR') {
       if (user.proposedAmount) {
         let price = (
           parseInt(user.proposedAmount) - parseInt(user.discount)
         ).toString();
         const payment_json = {
-          intent: "sale",
+          intent: 'sale',
           payer: {
-            payment_method: "paypal",
+            payment_method: 'paypal',
           },
           redirect_urls: {
             return_url: !deeplinking
@@ -50,19 +50,19 @@ exports.makePayment = async (req, res) => {
               item_list: {
                 items: [
                   {
-                    name: user.className || "Livesloka class",
+                    name: user.className || 'Livesloka class',
                     price,
-                    currency: currency.currencyName || "USD",
+                    currency: currency.currencyName || 'USD',
                     quantity: 1,
                   },
                 ],
               },
               amount: {
-                currency: currency.currencyName || "USD",
+                currency: currency.currencyName || 'USD',
                 total: price,
               },
               description:
-                "Payment for Class: " + (user.className || "Livesloka class"),
+                'Payment for Class: ' + (user.className || 'Livesloka class'),
             },
           ],
         };
@@ -71,14 +71,14 @@ exports.makePayment = async (req, res) => {
             console.log(error);
             res.status(500).json({
               error:
-                "error in creating payment, Try again after Sometime or Contact Admin",
+                'error in creating payment, Try again after Sometime or Contact Admin',
             });
           } else {
             for (let i = 0; i < payment.links.length; i++) {
-              if (payment.links[i].rel === "approval_url") {
+              if (payment.links[i].rel === 'approval_url') {
                 return res.json({
                   link: payment.links[i].href,
-                  type: "PAYPAL",
+                  type: 'PAYPAL',
                 });
               }
             }
@@ -86,7 +86,7 @@ exports.makePayment = async (req, res) => {
         });
       } else {
         return res.status(500).json({
-          error: "Please Contact Admin! to add Amount or Currency",
+          error: 'Please Contact Admin! to add Amount or Currency',
         });
       }
     } else {
@@ -95,23 +95,23 @@ exports.makePayment = async (req, res) => {
           parseInt(
             parseFloat(user.proposedAmount) - parseFloat(user.discount)
           ) * 100,
-        currency: "INR",
+        currency: 'INR',
         receipt: shortid.generate(),
         payment_capture: 1,
       };
       let response = await razorpay.orders.create(options);
-	  console.log(response);
+      console.log(response);
       return res.json({
         amount: response.amount,
         currency: response.currency,
         id: response.id,
-        type: "RAZORPAY",
+        type: 'RAZORPAY',
       });
     }
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Internal Server Error, Try again after Sometime or Contact Admin",
+      error: 'Internal Server Error, Try again after Sometime or Contact Admin',
     });
   }
 };
@@ -126,7 +126,7 @@ exports.onSuccess = async (req, res) => {
     let previousValue = 0;
     let nextValue = 0;
     const customer = await Customer.findById(id).select(
-      "firstName lastName className proposedAmount proposedCurrencyId noOfClasses paymentDate numberOfClassesBought discount paidTill"
+      'firstName lastName className proposedAmount proposedCurrencyId noOfClasses paymentDate numberOfClassesBought discount paidTill'
     );
     const currency = await Currency.findOne({
       id: customer.proposedCurrencyId,
@@ -136,7 +136,7 @@ exports.onSuccess = async (req, res) => {
       transactions: [
         {
           amount: {
-            currency: currency.currencyName || "USD",
+            currency: currency.currencyName || 'USD',
             total: (
               parseInt(customer.proposedAmount) - parseInt(customer.discount)
             ).toString(),
@@ -152,7 +152,7 @@ exports.onSuccess = async (req, res) => {
         if (error) {
           console.log(error);
           return res.status(400).json({
-            error: "Something went wrong!",
+            error: 'Something went wrong!',
           });
         } else {
           if (customer.noOfClasses != 0 && !!customer.noOfClasses) {
@@ -163,7 +163,7 @@ exports.onSuccess = async (req, res) => {
             let newUpdate = new ClassHistoryModel({
               previousValue,
               nextValue,
-              comment: "Successful Payment!",
+              comment: 'Successful Payment!',
               customerId: id,
             });
             await newUpdate.save();
@@ -179,11 +179,11 @@ exports.onSuccess = async (req, res) => {
               );
             }
           }
-          customer.classStatusId = "113975223750050";
+          customer.classStatusId = '113975223750050';
           await customer.save();
           const newPayment = new Payment({
             customerId: id,
-            status: "SUCCESS",
+            status: 'SUCCESS',
             paymentData: payment,
           });
           newPayment
@@ -197,7 +197,7 @@ exports.onSuccess = async (req, res) => {
             })
             .catch((err) => {
               return res.json({
-                error: "Internal Server Error",
+                error: 'Internal Server Error',
               });
             });
         }
@@ -206,7 +206,7 @@ exports.onSuccess = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Internal Server Error",
+      error: 'Internal Server Error',
     });
   }
 };
@@ -217,7 +217,7 @@ exports.onRazorpaySuccess = async (req, res) => {
     let nextValue = 0;
     const { id } = req.params;
     const customer = await Customer.findById(id).select(
-      "firstName lastName classStatusId className proposedAmount proposedCurrencyId noOfClasses paymentDate numberOfClassesBought paidTill"
+      'firstName lastName classStatusId className proposedAmount proposedCurrencyId noOfClasses paymentDate numberOfClassesBought paidTill'
     );
     previousValue = customer.numberOfClassesBought;
     if (customer.noOfClasses != 0 && !!customer.noOfClasses) {
@@ -227,7 +227,7 @@ exports.onRazorpaySuccess = async (req, res) => {
       let newUpdate = new ClassHistoryModel({
         previousValue,
         nextValue,
-        comment: "Successful Payment from Razorpay!",
+        comment: 'Successful Payment from Razorpay!',
         customerId: id,
       });
       await newUpdate.save();
@@ -244,15 +244,15 @@ exports.onRazorpaySuccess = async (req, res) => {
       }
     }
 
-    customer.classStatusId = "113975223750050";
+    customer.classStatusId = '113975223750050';
     await customer.save();
     return res.json({
-      message: "Added classses Successfully",
+      message: 'Added classses Successfully',
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Internal Server Error",
+      error: 'Internal Server Error',
     });
   }
 };
@@ -263,7 +263,7 @@ exports.onFailurePayment = async (req, res) => {
     const { deeplinking } = req.query;
     const newPayment = new Payment({
       customerId: id,
-      status: "CANCELLED",
+      status: 'CANCELLED',
       paymentData: null,
     });
     newPayment
@@ -278,13 +278,13 @@ exports.onFailurePayment = async (req, res) => {
       .catch((err) => {
         console.log(err);
         return res.json({
-          error: "Internal server Error",
+          error: 'Internal server Error',
         });
       });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Internal Server Error, Try again after Sometime or Contact Admin",
+      error: 'Internal Server Error, Try again after Sometime or Contact Admin',
     });
   }
 };
@@ -292,7 +292,7 @@ exports.onFailurePayment = async (req, res) => {
 exports.getTransactions = async (req, res) => {
   const id = req.params.id;
   try {
-    const userEmail = await Customer.findOne({ _id: id }).select("email");
+    const userEmail = await Customer.findOne({ _id: id }).select('email');
     const allUsers = await Customer.find({
       email: userEmail.email,
     });
@@ -302,23 +302,23 @@ exports.getTransactions = async (req, res) => {
         $in: allUserIds,
       },
     })
-      .populate("customerId")
+      .populate('customerId')
       .sort({ createdAt: -1 });
 
     if (allTransactions === null) {
       return res.status(400).json({
-        error: "Not found",
+        error: 'Not found',
       });
     } else {
       return res.status(200).json({
-        message: "Retrived successfully",
+        message: 'Retrived successfully',
         result: allTransactions,
       });
     }
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something went wrong",
+      error: 'Something went wrong',
     });
   }
 };
@@ -326,16 +326,16 @@ exports.getTransactions = async (req, res) => {
 exports.getAllTransactions = async (req, res) => {
   try {
     const allTransactions = await Payment.find()
-      .populate("customerId")
+      .populate('customerId')
       .sort({ createdAt: -1 });
 
     if (allTransactions === null) {
       return res.status(400).json({
-        message: "Not found",
+        message: 'Not found',
       });
     } else
       return res.status(200).json({
-        message: "Retrived successfully",
+        message: 'Retrived successfully',
         result: allTransactions,
       });
   } catch (error) {
@@ -347,15 +347,15 @@ exports.getDailyDataGraph = async (req, res) => {
   try {
     const data = await Payment.find()
       .sort({ createdAt: 1 })
-      .populate("customerId");
+      .populate('customerId');
     let dailyData = {};
     let monthlyData = {};
 
     data &&
       data.forEach((val) => {
-        if (val.paymentData !== null && val.type === "PAYPAL") {
+        if (val.paymentData !== null && val.type === 'PAYPAL') {
           const date = moment(val.paymentData.create_time).format(
-            "MMMM D YYYY"
+            'MMMM D YYYY'
           );
           dailyData[date] = dailyData[date] || {
             responses: [],
@@ -367,7 +367,7 @@ exports.getDailyDataGraph = async (req, res) => {
             Math.floor(val.paymentData.transactions[0].amount.total)
           );
           dailyData[date].dates.push(
-            moment(val.paymentData.create_time).format("MMMM D YYYY")
+            moment(val.paymentData.create_time).format('MMMM D YYYY')
           );
           dailyData[date].totalSum = dailyData[date].totalAmount.reduce(
             function (a, b) {
@@ -387,7 +387,7 @@ exports.getDailyDataGraph = async (req, res) => {
 
     data &&
       data.forEach((item) => {
-        let month = moment(item.createdAt).format("MMMM YYYY");
+        let month = moment(item.createdAt).format('MMMM YYYY');
         monthlyData[month] = monthlyData[month] || { count: 0, responses: [] };
         monthlyData[month].count++;
         monthlyData[month].responses.push(item);
@@ -402,7 +402,7 @@ exports.getDailyDataGraph = async (req, res) => {
 
 exports.validateRazorpayWebhook = async (req, res, next) => {
   try {
-    let signature = req.headers["x-razorpay-signature"];
+    let signature = req.headers['x-razorpay-signature'];
     let isValid = Razorpay.validateWebhookSignature(
       JSON.stringify(req.body),
       signature,
@@ -412,11 +412,11 @@ exports.validateRazorpayWebhook = async (req, res, next) => {
       return next();
     }
     return res.json({
-      status: "SUCCESS",
+      status: 'SUCCESS',
     });
   } catch (error) {
     console.log(error);
-    return res.json({ status: "SUCCESS" });
+    return res.json({ status: 'SUCCESS' });
   }
 };
 
@@ -427,16 +427,16 @@ exports.razorpayWebhook = async (req, res) => {
     let payment = req.body;
     const newPayment = new Payment({
       customerId: id,
-      status: event === "payment.captured" ? "SUCCESS" : "CANCELLED",
+      status: event === 'payment.captured' ? 'SUCCESS' : 'CANCELLED',
       paymentData: payment,
-      type: "RAZORPAY",
+      type: 'RAZORPAY',
     });
     await newPayment.save();
     return res.json({
-      status: "SUCCESS",
+      status: 'SUCCESS',
     });
   } catch (error) {
     console.log(error);
-    return res.send({ status: "SUCCESS" });
+    return res.send({ status: 'SUCCESS' });
   }
 };

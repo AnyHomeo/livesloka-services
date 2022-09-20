@@ -1,24 +1,24 @@
 const {
   createStripeProduct,
   updateStripeProduct,
-  deleteStripeProduct
-} = require("../controllers/stripe");
-const Product = require("../models/Product.model");
-const ObjectId = require("mongoose").Types.ObjectId;
+  deleteStripeProduct,
+} = require('../controllers/stripe');
+const Product = require('../models/Product.model');
+const ObjectId = require('mongoose').Types.ObjectId;
 
 exports.createProduct = async (req, res) => {
   try {
     const { name, description, subject } = req.body;
 
     if (!subject && !ObjectId.isValid(subject)) {
-      return res.status(400).json({ error: "Invalid subject", result: null });
+      return res.status(400).json({ error: 'Invalid subject', result: null });
     }
 
     //check if already exists
-    let alreadyExists = await Product.findOne({ subject,isDeleted:false });
+    let alreadyExists = await Product.findOne({ subject, isDeleted: false });
     if (alreadyExists) {
       return res.status(400).json({
-        error: "Product already exists. Delete it and create New product",
+        error: 'Product already exists. Delete it and create New product',
         result: null,
       });
     }
@@ -39,22 +39,22 @@ exports.createProduct = async (req, res) => {
     });
     console.log(stripeProduct);
     //validate and respond
-    if (stripeProduct.type === "success") {
+    if (stripeProduct.type === 'success') {
       return res.json({
         result: newProduct,
-        message: "Product created successfully!",
+        message: 'Product created successfully!',
       });
     } else {
       return res.status(500).json({
         result: stripeProduct.result,
-        error: "Something went wrong in creating the product!",
+        error: 'Something went wrong in creating the product!',
       });
     }
   } catch (error) {
     //handle error
     return res.status(500).json({
       result: error,
-      error: "Something went wrong in creating the stripe product!",
+      error: 'Something went wrong in creating the stripe product!',
     });
   }
 };
@@ -65,13 +65,13 @@ exports.getAllProducts = async (req, res) => {
     const allProducts = await Product.find({ isDeleted: false });
     return res.json({
       result: allProducts,
-      message: "All products retrieved successfully!",
+      message: 'All products retrieved successfully!',
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       result: error,
-      error: "Something went wrong in retrieving products!",
+      error: 'Something went wrong in retrieving products!',
     });
   }
 };
@@ -91,31 +91,31 @@ exports.updateProduct = async (req, res) => {
         productId,
         newFields
       );
-      if (updatedStripeProduct.type === "success") {
+      if (updatedStripeProduct.type === 'success') {
         //update local db
         let newUpdate = await Product.findByIdAndUpdate(productId, newFields);
         return res.json({
-          message: "Product updated successfully!",
+          message: 'Product updated successfully!',
           result: newUpdate,
         });
       } else {
         //handle error
         return res.status(500).json({
           result: stripeProduct.result,
-          error: "Something went wrong in updating the stripe product!",
+          error: 'Something went wrong in updating the stripe product!',
         });
       }
     } else {
       return res.status(400).json({
         result: null,
-        error: "Invalid Product Id",
+        error: 'Invalid Product Id',
       });
     }
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       result: error,
-      error: "Something went wrong in updating the product!",
+      error: 'Something went wrong in updating the product!',
     });
   }
 };
@@ -124,24 +124,24 @@ exports.deleteProduct = async (req, res) => {
   try {
     const { productId } = req.params;
     if (productId && ObjectId.isValid(productId)) {
-        let newUpdate = await Product.findByIdAndUpdate(productId, {
-          isDeleted: true,
-        });
-        return res.json({
-          message: "Product Deleted successfully!",
-          result: newUpdate,
-        });
+      let newUpdate = await Product.findByIdAndUpdate(productId, {
+        isDeleted: true,
+      });
+      return res.json({
+        message: 'Product Deleted successfully!',
+        result: newUpdate,
+      });
     } else {
       return res.status(400).json({
         result: null,
-        error: "Invalid Product Id",
+        error: 'Invalid Product Id',
       });
     }
   } catch (error) {
     console.log(error);
     return res.status(500).json({
       result: error,
-      error: "Something went wrong in deleting the product!",
+      error: 'Something went wrong in deleting the product!',
     });
   }
 };

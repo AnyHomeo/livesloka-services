@@ -1,20 +1,20 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const CancelledClassesSchema = new mongoose.Schema(
   {
     studentId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref:"Customer"
+      ref: 'Customer',
     },
-    cancelledDate:{
-        type: Date
+    cancelledDate: {
+      type: Date,
     },
     scheduleId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Schedule",
+      ref: 'Schedule',
     },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("CancelledClasses", CancelledClassesSchema);
+module.exports = mongoose.model('CancelledClasses', CancelledClassesSchema);

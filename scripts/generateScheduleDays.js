@@ -1,5 +1,5 @@
-const moment = require("moment");
-const momentTZ = require("moment-timezone");
+const moment = require('moment');
+const momentTZ = require('moment-timezone');
 
 function nextWeekdayDate(date, day_in_week) {
   var ret = new Date(date || new Date());
@@ -8,7 +8,7 @@ function nextWeekdayDate(date, day_in_week) {
 }
 
 function getCorrectNumbers(startTime, startTimeHours, endTimeHours) {
-  if (!startTime.split(":")[1].trim().endsWith("AM")) {
+  if (!startTime.split(':')[1].trim().endsWith('AM')) {
     if (!(startTimeHours === 12 || startTimeHours === 12.5))
       startTimeHours += 12;
     if (!(endTimeHours === 12 || endTimeHours === 12.5)) endTimeHours += 12;
@@ -30,12 +30,12 @@ function generateScheduleDays(schedule, zone) {
     let startTimes = [];
     let endTimes = [];
     slots.forEach((slot) => {
-      let startTime = slot.split("-")[1];
-      let endTime = slot.split("-")[2];
-      let startTimeHours = parseInt(startTime.split(":")[0].trim());
-      let endTimeHours = parseInt(endTime.split(":")[0].trim());
+      let startTime = slot.split('-')[1];
+      let endTime = slot.split('-')[2];
+      let startTimeHours = parseInt(startTime.split(':')[0].trim());
+      let endTimeHours = parseInt(endTime.split(':')[0].trim());
       let bothNumbers;
-      if (startTime.split(":")[1].trim().startsWith("00")) {
+      if (startTime.split(':')[1].trim().startsWith('00')) {
         endTimeHours += 0.5;
         bothNumbers = getCorrectNumbers(
           startTime,
@@ -58,30 +58,29 @@ function generateScheduleDays(schedule, zone) {
       let maxEndTime = Math.max(...endTimes);
       let dateToday = JSON.stringify(
         nextWeekdayDate(
-          moment(new Date()).subtract(1, "day"),
+          moment(new Date()).subtract(1, 'day'),
           [
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-            "sunday",
+            'monday',
+            'tuesday',
+            'wednesday',
+            'thursday',
+            'friday',
+            'saturday',
+            'sunday',
           ].indexOf(day)
         )
       )
-        .split("T")[0]
+        .split('T')[0]
         .split('"')[1];
-        let tempTime = momentTZ(moment(dateToday).add(minStartTime, "hours").format())
-          .tz(zone)
-          
-      scheduleDays.push(
-        [
-          tempTime.format("dddd"),
-          tempTime.format("HH"),
-          tempTime.format("mm"),
-        ]
-      );
+      let tempTime = momentTZ(
+        moment(dateToday).add(minStartTime, 'hours').format()
+      ).tz(zone);
+
+      scheduleDays.push([
+        tempTime.format('dddd'),
+        tempTime.format('HH'),
+        tempTime.format('mm'),
+      ]);
     }
   });
   return scheduleDays;

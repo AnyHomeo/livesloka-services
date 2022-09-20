@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 
 const {
@@ -7,12 +7,12 @@ const {
   deleteReview,
   updateReview,
   getTeacherReviewsById,
-} = require("../controllers/Reviews.controller");
+} = require('../controllers/Reviews.controller');
 
-router.post("/", createReview);
-router.get("/:customerId/:scheduleId", getReview);
-router.delete("/:_id", deleteReview);
-router.patch("/:_id", updateReview);
-router.get("/:teacherId", getTeacherReviewsById);
+router.post('/', createReview);
+router.get('/:customerId/:scheduleId', getReview);
+router.delete('/:_id', deleteReview);
+router.patch('/:_id', updateReview);
+router.get('/:teacherId', getTeacherReviewsById);
 
 module.exports = router;

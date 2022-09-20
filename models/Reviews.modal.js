@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var ReviewSchema = new mongoose.Schema(
   {
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer",
+      ref: 'Customer',
     },
     teacherId: {
       type: String,
@@ -28,4 +28,4 @@ var ReviewSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Reviews", ReviewSchema);
+module.exports = mongoose.model('Reviews', ReviewSchema);

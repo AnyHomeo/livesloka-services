@@ -1,29 +1,31 @@
-const mongoose = require("mongoose");
-const mongooseLeanVirtuals = require("mongoose-lean-virtuals");
-const classModel = require("./classes.model");
-const subjectModel = require("./Subject.model");
-const categoryModel = require("./Category.model");
-const classStatus = require("./ClassStatuses.model");
-const teacherModel = require("./Teacher.model");
+const mongoose = require('mongoose');
+const mongooseLeanVirtuals = require('mongoose-lean-virtuals');
+const classModel = require('./classes.model');
+const subjectModel = require('./Subject.model');
+const categoryModel = require('./Category.model');
+const classStatus = require('./ClassStatuses.model');
+const teacherModel = require('./Teacher.model');
 
 const Customer = new mongoose.Schema(
   {
     id: Number,
-    isSubscription:{
-      type:Boolean,
-      default:false
+    isSubscription: {
+      type: Boolean,
+      default: false,
     },
     firstName: {
       trim: true,
       type: String,
     },
-    emailId:{
-      type:String,
-      default: function() { return this.email || ""} 
+    emailId: {
+      type: String,
+      default: function () {
+        return this.email || '';
+      },
     },
-    countryCode:{
-      type:String,
-      default:""
+    countryCode: {
+      type: String,
+      default: '',
     },
     isJoinButtonEnabledByAdmin: {
       type: Boolean,
@@ -73,7 +75,7 @@ const Customer = new mongoose.Schema(
     gender: {
       trim: true,
       type: String,
-      enum: ["male", "female"],
+      enum: ['male', 'female'],
     },
     subjectId: {
       trim: true,
@@ -106,7 +108,7 @@ const Customer = new mongoose.Schema(
     classStatusId: {
       trim: true,
       type: String,
-      default: "108731321313146850",
+      default: '108731321313146850',
     },
     proposedAmount: {
       type: Number,
@@ -115,7 +117,7 @@ const Customer = new mongoose.Schema(
     proposedCurrencyId: {
       trim: true,
       type: String,
-      default: "150762951045490",
+      default: '150762951045490',
     },
     welcomeCall: Boolean,
     welcomeChat: Boolean,
@@ -165,119 +167,119 @@ const Customer = new mongoose.Schema(
       type: String,
       default: true,
     },
-    isRedeemedCustomer:{
-      type:Boolean,
+    isRedeemedCustomer: {
+      type: Boolean,
       default: false,
     },
-    watiContactId:{
-      type:String,
+    watiContactId: {
+      type: String,
     },
-    watiId:{
-      type:String,
-    }
+    watiId: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
 
-Customer.virtual("subject", {
-  ref: "Subject",
-  localField: "subjectId",
-  foreignField: "id",
+Customer.virtual('subject', {
+  ref: 'Subject',
+  localField: 'subjectId',
+  foreignField: 'id',
   justOne: true,
   options: {
-    select: "subjectName _id",
+    select: 'subjectName _id',
   },
 });
 
-Customer.virtual("subjects", {
-  ref: "Subject",
-  localField: "requestedSubjects",
-  foreignField: "id",
+Customer.virtual('subjects', {
+  ref: 'Subject',
+  localField: 'requestedSubjects',
+  foreignField: 'id',
   options: {
-    select: "subjectName _id",
+    select: 'subjectName _id',
   },
 });
 
-Customer.virtual("class", {
-  ref: "Class",
-  localField: "classId",
-  foreignField: "id",
+Customer.virtual('class', {
+  ref: 'Class',
+  localField: 'classId',
+  foreignField: 'id',
   justOne: true,
   options: {
-    select: "className _id",
+    select: 'className _id',
   },
 });
 
-Customer.virtual("category", {
-  ref: "Category",
-  localField: "categoryId",
-  foreignField: "id",
+Customer.virtual('category', {
+  ref: 'Category',
+  localField: 'categoryId',
+  foreignField: 'id',
   justOne: true,
   options: {
-    select: "categoryName _id",
+    select: 'categoryName _id',
   },
 });
 
-Customer.virtual("timeZone", {
-  ref: "timeZone",
-  localField: "timeZoneId",
-  foreignField: "id",
+Customer.virtual('timeZone', {
+  ref: 'timeZone',
+  localField: 'timeZoneId',
+  foreignField: 'id',
   justOne: true,
   options: {
-    select: "timeZoneName _id",
+    select: 'timeZoneName _id',
   },
 });
 
-Customer.virtual("classStatus", {
-  ref: "ClassStatu",
-  localField: "classStatusId",
-  foreignField: "id",
+Customer.virtual('classStatus', {
+  ref: 'ClassStatu',
+  localField: 'classStatusId',
+  foreignField: 'id',
   justOne: true,
   options: {
-    select: "classStatusName _id",
+    select: 'classStatusName _id',
   },
 });
 
-Customer.virtual("currency", {
-  ref: "Currency",
-  localField: "proposedCurrencyId",
-  foreignField: "id",
+Customer.virtual('currency', {
+  ref: 'Currency',
+  localField: 'proposedCurrencyId',
+  foreignField: 'id',
   justOne: true,
   options: {
-    select: "currencyName _id prefix",
+    select: 'currencyName _id prefix',
   },
 });
 
-Customer.virtual("agent", {
-  ref: "Agent",
-  localField: "agentId",
-  foreignField: "id",
+Customer.virtual('agent', {
+  ref: 'Agent',
+  localField: 'agentId',
+  foreignField: 'id',
   justOne: true,
   options: {
-    select: "AgentName _id",
+    select: 'AgentName _id',
   },
 });
 
-Customer.virtual("teacher", {
-  ref: "Teacher",
-  localField: "teacherId",
-  foreignField: "id",
+Customer.virtual('teacher', {
+  ref: 'Teacher',
+  localField: 'teacherId',
+  foreignField: 'id',
   justOne: true,
   options: {
-    select: "TeacherName _id",
+    select: 'TeacherName _id',
   },
 });
 
-Customer.virtual("login", {
-  ref: "Admin",
-  localField: "email",
-  foreignField: "userId",
+Customer.virtual('login', {
+  ref: 'Admin',
+  localField: 'email',
+  foreignField: 'userId',
   justOne: true,
   options: {
-    select: "rewards userId",
+    select: 'rewards userId',
   },
 });
 
 Customer.plugin(mongooseLeanVirtuals);
 
-module.exports = mongoose.model("Customer", Customer);
+module.exports = mongoose.model('Customer', Customer);

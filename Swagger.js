@@ -1,29 +1,28 @@
-const swaggerJsDoc = require("swagger-jsdoc");
-const swaggerUi = require("swagger-ui-express");
-
+const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 
 module.exports = (app) => {
-  if (process.env.ENVIRONMENT === "DEV") {
+  if (process.env.ENVIRONMENT === 'DEV') {
     //swagger setup
     const swaggerOptions = {
       definition: {
-        openapi: "3.0.0",
+        openapi: '3.0.0',
         info: {
-          version: "1.0.0",
-          title: "Livesloka APIS",
-          description: "Livesloka API Information",
+          version: '1.0.0',
+          title: 'Livesloka APIS',
+          description: 'Livesloka API Information',
           contact: {
-            name: "Karthik",
+            name: 'Karthik',
           },
           servers: [
-            { url: "http://localhost:5000" },
-            { url: "https://livesloka-prod-7lzei.ondigitalocean.app" },
+            { url: 'http://localhost:5000' },
+            { url: 'https://livesloka-prod-7lzei.ondigitalocean.app' },
           ],
         },
       },
-      apis: ["./routes/*.js"],
+      apis: ['./routes/*.js'],
     };
     const swaggerDocs = swaggerJsDoc(swaggerOptions);
-    app.use("/documentation", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+    app.use('/documentation', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
   }
 };

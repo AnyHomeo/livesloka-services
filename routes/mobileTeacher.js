@@ -1,19 +1,19 @@
-const express = require("express");
-const { isAdmin, isLoggedId } = require("../controllers/helpers.js");
+const express = require('express');
+const { isAdmin, isLoggedId } = require('../controllers/helpers.js');
 const router = express.Router();
 
 const {
   getTeachersCategoried,
   getTeacherSchedules,
-} = require("../controllers/mobileTeacher.js");
+} = require('../controllers/mobileTeacher.js');
 
 router.get(
-  "/categories",
+  '/categories',
   //   isLoggedId,isAdmin,
   getTeachersCategoried
 );
 router.get(
-  "/:teacherId/schedules",
+  '/:teacherId/schedules',
   //   isLoggedId,isAdmin,
   getTeacherSchedules
 );

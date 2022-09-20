@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const InvoicesSchema = new mongoose.Schema(
   {
@@ -107,4 +107,4 @@ const InvoicesSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Invoices", InvoicesSchema);
+module.exports = mongoose.model('Invoices', InvoicesSchema);

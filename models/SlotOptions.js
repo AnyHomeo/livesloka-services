@@ -1,11 +1,11 @@
-const mongoose = require("mongoose");
-const mongooseLeanVirtuals = require("mongoose-lean-virtuals");
+const mongoose = require('mongoose');
+const mongooseLeanVirtuals = require('mongoose-lean-virtuals');
 
 const SlotOptionsSchema = new mongoose.Schema(
   {
     customer: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer",
+      ref: 'Customer',
       required: true,
     },
     options: [
@@ -22,41 +22,43 @@ const SlotOptionsSchema = new mongoose.Schema(
     schedules: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Schedule",
-      }, 
+        ref: 'Schedule',
+      },
     ],
     selectedSlotId: { type: String },
-    selectedSlotType: { type: String, enum: ["NEW", "EXISTING"] },
+    selectedSlotType: { type: String, enum: ['NEW', 'EXISTING'] },
     teacher: {
       type: String,
     },
-    discounts:[{
-      plan: {
-       type: mongoose.Schema.Types.ObjectId,
-       ref:"Plan"
+    discounts: [
+      {
+        plan: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Plan',
+        },
+        amount: Number,
       },
-      amount: Number
-    }],
-    startDate:{ type: Date },
-    isScheduled:{
+    ],
+    startDate: { type: Date },
+    isScheduled: {
       type: Boolean,
-      default: false
+      default: false,
     },
-    selectedPlan:{
+    selectedPlan: {
       type: mongoose.Schema.Types.ObjectId,
-      ref:"Plan"
-    }
-  }, 
+      ref: 'Plan',
+    },
+  },
   { timestamps: true }
 );
 
-SlotOptionsSchema.virtual("teacherData", {
-  ref: "Teacher",
-  localField: "teacher",
-  foreignField: "id",
+SlotOptionsSchema.virtual('teacherData', {
+  ref: 'Teacher',
+  localField: 'teacher',
+  foreignField: 'id',
   justOne: true,
 });
 
 SlotOptionsSchema.plugin(mongooseLeanVirtuals);
 
-module.exports = mongoose.model("SlotOptions", SlotOptionsSchema);
+module.exports = mongoose.model('SlotOptions', SlotOptionsSchema);

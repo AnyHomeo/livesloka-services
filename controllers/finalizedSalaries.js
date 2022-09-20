@@ -1,9 +1,9 @@
-const FinalizedSalaries = require("../models/finalizedSalaries");
-const Attendance = require("../models/Attendance");
-const CustomerModel = require("../models/Customer.model");
-const TeacherModel = require("../models/Teacher.model");
-const SchedulerModel = require("../models/Scheduler.model");
-const ExtraAmountsModel = require("../models/ExtraAmounts.model");
+const FinalizedSalaries = require('../models/finalizedSalaries');
+const Attendance = require('../models/Attendance');
+const CustomerModel = require('../models/Customer.model');
+const TeacherModel = require('../models/Teacher.model');
+const SchedulerModel = require('../models/Scheduler.model');
+const ExtraAmountsModel = require('../models/ExtraAmounts.model');
 
 exports.finalizeSalaries = async (req, res) => {
   try {
@@ -29,15 +29,15 @@ exports.finalizeSalaries = async (req, res) => {
         const allTeacherAttendances = await Attendance.find({
           date: { $regex: regex },
         }).populate(
-          "scheduleId",
-          "OneToOne oneToMany className students teacher demo"
+          'scheduleId',
+          'OneToOne oneToMany className students teacher demo'
         );
         Attendance.populate(
           allTeacherAttendances,
           {
-            path: "scheduleId.students",
+            path: 'scheduleId.students',
             model: CustomerModel,
-            select: "numberOfStudents",
+            select: 'numberOfStudents',
           },
           async (err, allTeacherAttendances) => {
             if (err) {
@@ -46,25 +46,25 @@ exports.finalizeSalaries = async (req, res) => {
             allTeacherAttendances = await Attendance.populate(
               allTeacherAttendances,
               {
-                path: "customers",
+                path: 'customers',
                 model: CustomerModel,
-                select: "numberOfStudents -_id firstName",
+                select: 'numberOfStudents -_id firstName',
               }
             );
             allTeacherAttendances = await Attendance.populate(
               allTeacherAttendances,
               {
-                path: "absentees",
+                path: 'absentees',
                 model: CustomerModel,
-                select: "numberOfStudents -_id firstName",
+                select: 'numberOfStudents -_id firstName',
               }
             );
             allTeacherAttendances = await Attendance.populate(
               allTeacherAttendances,
               {
-                path: "requestedPaidStudents",
+                path: 'requestedPaidStudents',
                 model: CustomerModel,
-                select: "numberOfStudents -_id  firstName",
+                select: 'numberOfStudents -_id  firstName',
               }
             );
             allTeachers.forEach((teacher) => {
@@ -109,18 +109,21 @@ exports.finalizeSalaries = async (req, res) => {
                         dates: [attendance.date],
                         presentees: [
                           attendance.customers.map(
-                            (customer) => (customer && customer.firstName) || "deleted user"
+                            (customer) =>
+                              (customer && customer.firstName) || 'deleted user'
                           ),
                         ],
 
                         absentees: [
                           attendance.absentees.map(
-                            (customer) => (customer && customer.firstName) || "deleted user"
+                            (customer) =>
+                              (customer && customer.firstName) || 'deleted user'
                           ),
                         ],
                         requestedPaidStudents: [
                           attendance.requestedPaidStudents.map(
-                            (customer) => (customer && customer.firstName) || "deleted user"
+                            (customer) =>
+                              (customer && customer.firstName) || 'deleted user'
                           ),
                         ],
                       };
@@ -143,20 +146,20 @@ exports.finalizeSalaries = async (req, res) => {
                       });
                       if (attendance.scheduleId.OneToOne) {
                         objToPush.details[className].commission =
-                          typeof teacher.Commission_Amount_One === "string"
+                          typeof teacher.Commission_Amount_One === 'string'
                             ? parseInt(teacher.Commission_Amount_One)
                             : 0;
                         objToPush.details[className].totalSalary =
-                          typeof teacher.Commission_Amount_One === "string"
+                          typeof teacher.Commission_Amount_One === 'string'
                             ? parseInt(teacher.Commission_Amount_One)
                             : 0;
                       } else {
                         objToPush.details[className].commission =
-                          typeof teacher.Commission_Amount_Many === "string"
+                          typeof teacher.Commission_Amount_Many === 'string'
                             ? parseInt(teacher.Commission_Amount_Many)
                             : 0;
                         objToPush.details[className].totalSalary =
-                          typeof teacher.Commission_Amount_Many === "string"
+                          typeof teacher.Commission_Amount_Many === 'string'
                             ? parseInt(teacher.Commission_Amount_Many)
                             : 0;
                       }
@@ -185,17 +188,20 @@ exports.finalizeSalaries = async (req, res) => {
                       objToPush.details[className].dates.push(attendance.date),
                         objToPush.details[className].presentees.push(
                           attendance.customers.map(
-                            (customer) => (customer && customer.firstName) || "deleted user"
+                            (customer) =>
+                              (customer && customer.firstName) || 'deleted user'
                           )
                         );
                       objToPush.details[className].absentees.push(
                         attendance.absentees.map(
-                          (customer) => (customer && customer.firstName) || "deleted user"
+                          (customer) =>
+                            (customer && customer.firstName) || 'deleted user'
                         )
                       );
                       objToPush.details[className].requestedPaidStudents.push(
                         attendance.requestedPaidStudents.map(
-                          (customer) => (customer && customer.firstName) || "deleted user"
+                          (customer) =>
+                            (customer && customer.firstName) || 'deleted user'
                         )
                       );
                       objToPush.details[className].numberOfStudents +=
@@ -227,10 +233,10 @@ exports.finalizeSalaries = async (req, res) => {
               ),
             }));
             finalizeSalariesDocument.finalizedSalaries = finalDataObjectArr;
-            finalizeSalariesDocument.markModified("finalizedSalaries");
+            finalizeSalariesDocument.markModified('finalizedSalaries');
             await finalizeSalariesDocument.save();
             return res.json({
-              message: "Finalized salaries successfully!",
+              message: 'Finalized salaries successfully!',
               isFinalized: true,
               result: finalDataObjectArr,
             });
@@ -238,18 +244,18 @@ exports.finalizeSalaries = async (req, res) => {
         );
       } else {
         return res.status(400).json({
-          error: "Invalid OTPs, please try again!",
+          error: 'Invalid OTPs, please try again!',
         });
       }
     } else {
       return res.status(400).json({
-        error: "Invalid OTPs, please try again!",
+        error: 'Invalid OTPs, please try again!',
       });
     }
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something wwent wrong!",
+      error: 'Something wwent wrong!',
     });
   }
 };

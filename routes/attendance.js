@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 
 const {
@@ -6,8 +6,8 @@ const {
   postAttendance,
   getAllAttendanceByScheduleIdAndDate,
   getAttendanceByScheduleId,
-  getAttendanceWithPayments
-} = require("../controllers/attendance.controller");
+  getAttendanceWithPayments,
+} = require('../controllers/attendance.controller');
 
 /**
  *@swagger
@@ -15,7 +15,6 @@ const {
  *   name: Attendance
  *   description: Apis to manage Customer Attendance
  */
-
 
 /**
  * @swagger
@@ -33,12 +32,12 @@ const {
  *     description: Something went wrong!
  */
 
-router.get("/admin/attendance/:id", getAttendance);
+router.get('/admin/attendance/:id', getAttendance);
 
 /**
  * @swagger
  *  /attendance:
- *  post: 
+ *  post:
  *   summary: Post attendance of a class
  *   tags: [Attendance]
  *   requestBody:
@@ -80,10 +79,9 @@ router.get("/admin/attendance/:id", getAttendance);
  *    500:
  *     description: Something went wrong!
  */
-router.post("/attendance", postAttendance);
+router.post('/attendance', postAttendance);
 
-
-router.get("/attendance/:scheduleId", getAllAttendanceByScheduleIdAndDate);
-router.get("/attendance/all/:scheduleId", getAttendanceByScheduleId);
-router.get("/user/history/:email",getAttendanceWithPayments)
+router.get('/attendance/:scheduleId', getAllAttendanceByScheduleIdAndDate);
+router.get('/attendance/all/:scheduleId', getAttendanceByScheduleId);
+router.get('/user/history/:email', getAttendanceWithPayments);
 module.exports = router;

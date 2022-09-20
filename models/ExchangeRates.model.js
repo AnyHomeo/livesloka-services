@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var ExchangeRateSchema = new mongoose.Schema(
   {
@@ -17,11 +17,11 @@ var ExchangeRateSchema = new mongoose.Schema(
     date: {
       type: Date,
     },
-    rate:{
-        type:Number
+    rate: {
+      type: Number,
     },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("ExchangeRate", ExchangeRateSchema);
+module.exports = mongoose.model('ExchangeRate', ExchangeRateSchema);

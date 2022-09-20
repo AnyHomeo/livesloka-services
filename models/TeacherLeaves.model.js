@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const TeacherLeaves = new mongoose.Schema(
   {
     teacherId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Teacher",
+      ref: 'Teacher',
     },
     date: {
       type: Date,
@@ -15,7 +15,7 @@ const TeacherLeaves = new mongoose.Schema(
     },
     scheduleId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Schedule",
+      ref: 'Schedule',
     },
     reason: {
       type: String,
@@ -24,4 +24,4 @@ const TeacherLeaves = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("TeacherLeaves", TeacherLeaves);
+module.exports = mongoose.model('TeacherLeaves', TeacherLeaves);

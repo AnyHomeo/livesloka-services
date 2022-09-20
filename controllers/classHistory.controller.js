@@ -1,12 +1,12 @@
-const CustomerModel = require("../models/Customer.model");
-const ClassHistoryModel = require("../models/ClassHistory.model");
-const SchedulerModel = require("../models/Scheduler.model");
+const CustomerModel = require('../models/Customer.model');
+const ClassHistoryModel = require('../models/ClassHistory.model');
+const SchedulerModel = require('../models/Scheduler.model');
 
 exports.updateClassesPaid = async (req, res) => {
   try {
     let { _id, comment, numberOfClassesBought } = req.body;
     let customer = await CustomerModel.findById(_id).select(
-      "numberOfClassesBought"
+      'numberOfClassesBought'
     );
     let previousValue = customer.numberOfClassesBought;
     if (previousValue !== numberOfClassesBought) {
@@ -19,31 +19,32 @@ exports.updateClassesPaid = async (req, res) => {
         comment,
       });
       await newHistory.save();
-      
-    } 
+    }
     return res.json({
-        message: "updated successfully!",
-      });
+      message: 'updated successfully!',
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "error while updating",
+      error: 'error while updating',
     });
   }
 };
 
-exports.getHistoryById = async (req,res) => {
+exports.getHistoryById = async (req, res) => {
   try {
     const { customerId } = req.params;
-    let history = await ClassHistoryModel.find({customerId}).sort("createdAt");
+    let history = await ClassHistoryModel.find({ customerId }).sort(
+      'createdAt'
+    );
     return res.json({
-      message:"Retrieved successfully!",
-      result:history
-    })
+      message: 'Retrieved successfully!',
+      result: history,
+    });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     return res.status(500).json({
-      error:"Error in retrieving the History"
-    })
+      error: 'Error in retrieving the History',
+    });
   }
-}
+};

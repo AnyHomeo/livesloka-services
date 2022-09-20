@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var CurrencySchema = new mongoose.Schema(
   {
@@ -18,12 +18,12 @@ var CurrencySchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
-    prefix:{
-      type:String,
-      default:"$"
-    }
+    prefix: {
+      type: String,
+      default: '$',
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Currency", CurrencySchema);
+module.exports = mongoose.model('Currency', CurrencySchema);

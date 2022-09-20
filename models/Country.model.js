@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var CountrySchema = new mongoose.Schema(
   {
@@ -18,12 +18,14 @@ var CountrySchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
-    subjects: [{
-      type:mongoose.Schema.Types.ObjectId,
-      ref:"Subject"
-    }]
+    subjects: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Subject',
+      },
+    ],
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Country", CountrySchema);
+module.exports = mongoose.model('Country', CountrySchema);

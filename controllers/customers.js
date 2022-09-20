@@ -1,9 +1,9 @@
-const Customers = require("../models/Customer.model");
-const Admins = require("../models/Admin.model");
-const moment = require("moment");
-const ClassStatusesModel = require("../models/ClassStatuses.model");
-const AdminModel = require("../models/Admin.model");
-const CustomerModel = require("../models/Customer.model");
+const Customers = require('../models/Customer.model');
+const Admins = require('../models/Admin.model');
+const moment = require('moment');
+const ClassStatusesModel = require('../models/ClassStatuses.model');
+const AdminModel = require('../models/Admin.model');
+const CustomerModel = require('../models/Customer.model');
 
 exports.getCustomers = async (req, res) => {
   try {
@@ -18,7 +18,7 @@ exports.getCustomers = async (req, res) => {
       values,
       field,
     } = req.query;
-    if (select) select = select.split(",").join(" ");
+    if (select) select = select.split(',').join(' ');
     let sort = { _id: -1 };
     if (sortBy) {
       sort = {
@@ -36,30 +36,30 @@ exports.getCustomers = async (req, res) => {
     }
     let filter = {};
     let searchables =
-      typeof searchFrom === "string" ? searchFrom.split(",") : [];
+      typeof searchFrom === 'string' ? searchFrom.split(',') : [];
     if (search && searchFrom) {
       filter = {
         $or: searchables.map((searchable) => ({
-          [searchable]: { $regex: "^" + search, $options: "i" },
+          [searchable]: { $regex: '^' + search, $options: 'i' },
         })),
       };
     }
     if (field) {
       filter[field] = {
-        $in: values.split(","),
+        $in: values.split(','),
       };
     }
 
     const customers = await Customers.find(filter)
-      .populate("subject")
-      .populate("subjects")
-      .populate("class")
-      .populate("category")
-      .populate("timeZone")
-      .populate("classStatus")
-      .populate("currency")
-      .populate("agent")
-      .populate("teacher")
+      .populate('subject')
+      .populate('subjects')
+      .populate('class')
+      .populate('category')
+      .populate('timeZone')
+      .populate('classStatus')
+      .populate('currency')
+      .populate('agent')
+      .populate('teacher')
       .select(select)
       .sort(sort)
       .limit(limit)
@@ -67,14 +67,14 @@ exports.getCustomers = async (req, res) => {
       .lean();
 
     return res.json({
-      message: "Customers Retrieved successfully!",
+      message: 'Customers Retrieved successfully!',
       result: customers,
     });
   } catch (err) {
     console.log(err);
     return res
       .status(500)
-      .json({ error: "Something went wrong!", result: err });
+      .json({ error: 'Something went wrong!', result: err });
   }
 };
 
@@ -91,15 +91,15 @@ exports.postNotificationToken = async (req, res) => {
         login.notificationToken = [token];
       }
       await login.save();
-      return res.json({ message: "Token added successfully" });
+      return res.json({ message: 'Token added successfully' });
     } else {
-      return res.status(400).json({ error: "Invalid userId!", result: null });
+      return res.status(400).json({ error: 'Invalid userId!', result: null });
     }
   } catch (error) {
     console.log(error);
     return res
       .status(500)
-      .json({ error: "Something went wrong!", result: null });
+      .json({ error: 'Something went wrong!', result: null });
   }
 };
 
@@ -108,7 +108,7 @@ exports.getCustomerDashboardData = async (req, res) => {
     const { from, to, category } = req.query;
 
     const statuses = await ClassStatusesModel.find({
-      statusCategory: category || "SALES",
+      statusCategory: category || 'SALES',
     }).lean();
 
     let query = {
@@ -120,14 +120,14 @@ exports.getCustomerDashboardData = async (req, res) => {
     };
 
     const customers = await Customers.find(query)
-      .populate("classStatus")
-      .populate("timeZone")
-      .populate("subject")
-      .populate("class")
-      .populate("category")
-      .populate("currency")
-      .populate("agent")
-      .populate("teacher")
+      .populate('classStatus')
+      .populate('timeZone')
+      .populate('subject')
+      .populate('class')
+      .populate('category')
+      .populate('currency')
+      .populate('agent')
+      .populate('teacher')
       .lean();
 
     let result = statuses.reduce((acc, status) => {
@@ -148,7 +148,7 @@ exports.getCustomerDashboardData = async (req, res) => {
     });
 
     return res.json({
-      message: "Retrieved customer data successfully",
+      message: 'Retrieved customer data successfully',
       result,
     });
   } catch (error) {
@@ -179,39 +179,39 @@ exports.postNewCustomer = async (req, res) => {
     }
     return res
       .status(200)
-      .send({ message: "New admission added successfully" });
+      .send({ message: 'New admission added successfully' });
   } catch (error) {
     console.log(error);
     return res
       .status(500)
-      .json({ error: error.message || "Something went wrong" });
+      .json({ error: error.message || 'Something went wrong' });
   }
 };
 
 exports.getAllLookups = async (req, res) => {
   try {
     const lookups = [
-      "ClassStatuses",
-      "Agent",
-      "timeZone",
-      "classes",
-      "Subject",
-      "Teacher",
-      "Country",
-      "Currency",
-      "Category",
+      'ClassStatuses',
+      'Agent',
+      'timeZone',
+      'classes',
+      'Subject',
+      'Teacher',
+      'Country',
+      'Currency',
+      'Category',
     ];
 
     const resultKeys = [
-      "classStatusLookup",
-      "agentLookup",
-      "timeZoneLookup",
-      "classLookup",
-      "subjectLookup",
-      "teachersLookup",
-      "countriesLookup",
-      "currencyLookup",
-      "categoryDropdown",
+      'classStatusLookup',
+      'agentLookup',
+      'timeZoneLookup',
+      'classLookup',
+      'subjectLookup',
+      'teachersLookup',
+      'countriesLookup',
+      'currencyLookup',
+      'categoryDropdown',
     ];
 
     let result = {
@@ -227,15 +227,15 @@ exports.getAllLookups = async (req, res) => {
     };
 
     let valueKeys = [
-      "classStatusName",
-      "Agent",
-      "timeZoneName",
-      "className",
-      "subjectName",
-      "TeacherName",
-      "countryName",
-      "currencyName",
-      "categoryName",
+      'classStatusName',
+      'Agent',
+      'timeZoneName',
+      'className',
+      'subjectName',
+      'TeacherName',
+      'countryName',
+      'currencyName',
+      'categoryName',
     ];
 
     for (let i = 0; i < lookups.length; i++) {
@@ -245,7 +245,7 @@ exports.getAllLookups = async (req, res) => {
       if (output && output.length > 0) {
         result[resultKeys[i]] = output.reduce((acc, obj) => {
           acc[obj.id] = obj[valueKeys[i]];
-          return acc
+          return acc;
         }, {});
       }
     }
@@ -257,6 +257,6 @@ exports.getAllLookups = async (req, res) => {
     console.log(error);
     return res
       .status(500)
-      .json({ error: error.message || "Something went wrong" });
+      .json({ error: error.message || 'Something went wrong' });
   }
 };

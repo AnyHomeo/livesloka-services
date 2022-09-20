@@ -1,23 +1,23 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var PaymentSchema = new mongoose.Schema(
   {
     customerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer",
+      ref: 'Customer',
     },
-    plan:{
+    plan: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Plan",    
+      ref: 'Plan',
     },
     status: {
       type: String,
-      enum: ["SUCCESS", "CANCELLED"],
+      enum: ['SUCCESS', 'CANCELLED'],
     },
     type: {
       type: String,
-      enum: ["PAYPAL", "RAZORPAY"],
-      default: "PAYPAL",
+      enum: ['PAYPAL', 'RAZORPAY'],
+      default: 'PAYPAL',
     },
     amount: {
       type: Number,
@@ -27,4 +27,4 @@ var PaymentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Payment", PaymentSchema);
+module.exports = mongoose.model('Payment', PaymentSchema);

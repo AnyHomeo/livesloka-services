@@ -1,7 +1,7 @@
-require("dotenv").config();
-const express = require("express");
+require('dotenv').config();
+const express = require('express');
 const router = express.Router();
-const twilio = require("twilio");
+const twilio = require('twilio');
 const client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 const {
   registerCustomer,
@@ -9,7 +9,7 @@ const {
   getRespectiveDetails,
   updateCustomer,
   deleteCustomer,
-} = require("../controllers/Customer.controller");
+} = require('../controllers/Customer.controller');
 const {
   addOtpToAdminCollection,
   validateOtpAndResetPassword,
@@ -22,18 +22,18 @@ const {
   updateStatus,
   updateCorrespondingData,
   deleteCorrespondingData,
-  addcomment, 
+  addcomment,
   getComments,
   editComment,
   deleteComment,
   resetPassword,
   getAllAdmins,
   getSingleTeacher,
-  getCommentsByCustomerIds
-} = require("../controllers/admin.controller");
+  getCommentsByCustomerIds,
+} = require('../controllers/admin.controller');
 
-router.get("/address/:id", getAddress);
-router.post("/address/:id", postAddress);
+router.get('/address/:id', getAddress);
+router.post('/address/:id', postAddress);
 
 /**
  *@swagger
@@ -85,7 +85,7 @@ router.post("/address/:id", postAddress);
  *     description: Something went wrong!
  */
 
-router.post("/login", authentication);
+router.post('/login', authentication);
 
 /**
  * @swagger
@@ -118,8 +118,8 @@ router.post("/login", authentication);
  *    500:
  *     description: Something went wrong!
  */
-router.post("/ChangePassword", changePassword);
-router.get("/otp/:number", (req, res) => {
+router.post('/ChangePassword', changePassword);
+router.get('/otp/:number', (req, res) => {
   const { number } = req.params;
   let otp = Math.floor(Math.random() * 10000);
   client.messages
@@ -130,14 +130,14 @@ router.get("/otp/:number", (req, res) => {
     })
     .then((message) => {
       return res.json({
-        message: "Otp sent!",
+        message: 'Otp sent!',
         result: otp + 3456,
       });
     })
     .catch((err) => {
       console.log(err);
       return res.status(500).json({
-        error: "Something went wrong!!",
+        error: 'Something went wrong!!',
       });
     });
 });
@@ -196,7 +196,7 @@ router.get("/otp/:number", (req, res) => {
  *     description: Something went wrong!
  */
 
-router.post("/customer/registerCustomer", registerCustomer);
+router.post('/customer/registerCustomer', registerCustomer);
 
 /**
  * @swagger
@@ -211,7 +211,7 @@ router.post("/customer/registerCustomer", registerCustomer);
  *     description: Something went wrong!
  */
 
-router.get("/customer/details", details);
+router.get('/customer/details', details);
 /**
  * @swagger
  *  /customer/details:
@@ -225,7 +225,7 @@ router.get("/customer/details", details);
  *     description: Something went wrong!
  */
 
-router.get("/customer/data", getRespectiveDetails);
+router.get('/customer/data', getRespectiveDetails);
 
 /**
  * @swagger
@@ -281,7 +281,7 @@ router.get("/customer/data", getRespectiveDetails);
  *     description: Something went wrong!
  */
 
-router.post("/customer/updateCustomer", updateCustomer);
+router.post('/customer/updateCustomer', updateCustomer);
 
 /**
  * @swagger
@@ -299,7 +299,7 @@ router.post("/customer/updateCustomer", updateCustomer);
  *     description: Something went wrong!
  */
 
-router.get("/customer/delete/:customerId", deleteCustomer);
+router.get('/customer/delete/:customerId', deleteCustomer);
 
 /**
  * @swagger
@@ -321,14 +321,14 @@ router.get("/customer/delete/:customerId", deleteCustomer);
  */
 
 //Getting all Feilds
-router.get("/admin/get/:name", getCorrespondingData);
+router.get('/admin/get/:name', getCorrespondingData);
 
 //add all fields
-router.post("/admin/add/:name", addField);
+router.post('/admin/add/:name', addField);
 
 //Updating Every Fields
-router.post("/admin/update/status", updateStatus);
-router.post("/admin/update/:name", updateCorrespondingData);
+router.post('/admin/update/status', updateStatus);
+router.post('/admin/update/:name', updateCorrespondingData);
 
 /**
  * @swagger
@@ -349,22 +349,22 @@ router.post("/admin/update/:name", updateCorrespondingData);
  *     description: Something went wrong!
  */
 //deleting Every Fields
-router.post("/admin/delete/:name/:id", deleteCorrespondingData);
+router.post('/admin/delete/:name/:id', deleteCorrespondingData);
 
 //working with comments
-router.post("/admin/comments", addcomment);
-router.get("/admin/comments/customer/:customerId", getComments);
-router.get("/admin/comments", getCommentsByCustomerIds);
-router.patch("/admin/comments/:commentId", editComment);
-router.delete("/admin/comments/:commentId", deleteComment);
+router.post('/admin/comments', addcomment);
+router.get('/admin/comments/customer/:customerId', getComments);
+router.get('/admin/comments', getCommentsByCustomerIds);
+router.patch('/admin/comments/:commentId', editComment);
+router.delete('/admin/comments/:commentId', deleteComment);
 
 //password reset
 
-router.get("/admin/reset/:id", resetPassword);
-router.get("/all/admins", getAllAdmins);
+router.get('/admin/reset/:id', resetPassword);
+router.get('/all/admins', getAllAdmins);
 
-router.get("/admin/getSingleTeacher/:id", getSingleTeacher);
+router.get('/admin/getSingleTeacher/:id', getSingleTeacher);
 
-router.post("/forgot-password", addOtpToAdminCollection);
-router.post("/user/password-reset", validateOtpAndResetPassword);
+router.post('/forgot-password', addOtpToAdminCollection);
+router.post('/user/password-reset', validateOtpAndResetPassword);
 module.exports = router;

@@ -1,4 +1,4 @@
-const Admin = require("../models/Admin.model");
+const Admin = require('../models/Admin.model');
 
 exports.getSettings = (req, res) => {
   const { id } = req.params;
@@ -6,14 +6,14 @@ exports.getSettings = (req, res) => {
     .then((data) => {
       if (data.settings) {
         return res.status(200).json({
-          message: "settings retrieved successfully",
+          message: 'settings retrieved successfully',
           result: data.settings,
         });
       } else {
         data.settings = {};
         data.save().then((docs) => {
           return res.status(200).json({
-            message: "new settings retrieved successsfully",
+            message: 'new settings retrieved successsfully',
             result: {},
           });
         });
@@ -22,7 +22,7 @@ exports.getSettings = (req, res) => {
     .catch((err) => {
       console.log(err);
       return res.status(500).json({
-        error: "error in retrieving settings",
+        error: 'error in retrieving settings',
       });
     });
 };
@@ -30,7 +30,7 @@ exports.getSettings = (req, res) => {
 exports.updateSettings = (req, res) => {
   const { id } = req.params;
   Admin.findById(id)
-    .select("settings")
+    .select('settings')
     .then((data) => {
       if (data.settings) {
         data.settings = { ...data.settings, ...req.body };
@@ -38,13 +38,13 @@ exports.updateSettings = (req, res) => {
           .save()
           .then((data) => {
             return res.status(200).json({
-              message: "settings updated successfully",
+              message: 'settings updated successfully',
             });
           })
           .catch((err) => {
             console.log(err);
             return res.status(500).json({
-              error: "error in updating settings",
+              error: 'error in updating settings',
             });
           });
       } else {
@@ -53,13 +53,13 @@ exports.updateSettings = (req, res) => {
           .save()
           .then((data) => {
             return res.status(200).json({
-              message: "settings updated successfully",
+              message: 'settings updated successfully',
             });
           })
           .catch((err) => {
             console.log(err);
             return res.status(500).json({
-              error: "error in updating settings",
+              error: 'error in updating settings',
             });
           });
       }
@@ -67,7 +67,7 @@ exports.updateSettings = (req, res) => {
     .catch((err) => {
       console.log(err);
       return res.status(500).json({
-        error: "error in updating settings",
+        error: 'error in updating settings',
       });
     });
 };

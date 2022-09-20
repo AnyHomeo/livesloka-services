@@ -1,18 +1,18 @@
-require("dotenv").config();
-const Schedule = require("../models/Scheduler.model");
-const Attendance = require("../models/Attendance");
-const Customer = require("../models/Customer.model");
-const Teacher = require("../models/Teacher.model");
-const Subject = require("../models/Subject.model");
-const ZoomAccountModel = require("../models/ZoomAccount.model");
-const fetch = require("node-fetch");
-const SchedulerModel = require("../models/Scheduler.model");
-const TeacherModel = require("../models/Teacher.model");
-const moment = require("moment");
-const momentTZ = require("moment-timezone");
-const Payments = require("../models/Payments");
-const times = require("../models/times.json");
-const CancelledClassesModel = require("../models/CancelledClasses.model");
+require('dotenv').config();
+const Schedule = require('../models/Scheduler.model');
+const Attendance = require('../models/Attendance');
+const Customer = require('../models/Customer.model');
+const Teacher = require('../models/Teacher.model');
+const Subject = require('../models/Subject.model');
+const ZoomAccountModel = require('../models/ZoomAccount.model');
+const fetch = require('node-fetch');
+const SchedulerModel = require('../models/Scheduler.model');
+const TeacherModel = require('../models/Teacher.model');
+const moment = require('moment');
+const momentTZ = require('moment-timezone');
+const Payments = require('../models/Payments');
+const times = require('../models/times.json');
+const CancelledClassesModel = require('../models/CancelledClasses.model');
 const {
   createSlotsZoomLink,
   generateSlots,
@@ -22,7 +22,7 @@ const {
   findIfNewMeetingLinkNeeded,
   updateCustomerWithUpdatedSchedule,
   deleteExistingZoomLinkOfTheSchedule,
-} = require("../config/util");
+} = require('../config/util');
 
 exports.createNewSchedule = async (req, res) => {
   try {
@@ -37,7 +37,7 @@ exports.createNewSchedule = async (req, res) => {
       students,
     } = req.body;
     if (!students || !Array.isArray(students) || !students.length)
-      return res.status(400).json({ message: "Students are required" });
+      return res.status(400).json({ message: 'Students are required' });
 
     const [slots] = generateSlots(req.body);
     const meetingLinks = await createSlotsZoomLink(slots);
@@ -60,7 +60,7 @@ exports.createNewSchedule = async (req, res) => {
     await updateCustomersWithSchedule(schedule);
     await updateTeacherWithSchedule(schedule);
     return res.json({
-      message: "Schedule saved successfully",
+      message: 'Schedule saved successfully',
       result: schedule,
     });
   } catch (error) {
@@ -80,7 +80,7 @@ exports.updateSchedule = async (req, res) => {
     const schedule = await Schedule.findById(scheduleId);
     if (!schedule)
       return res.status(404).json({
-        message: "Invalid schedule",
+        message: 'Invalid schedule',
       });
 
     // find if new link needs to be generated
@@ -95,11 +95,11 @@ exports.updateSchedule = async (req, res) => {
     let meetingLinks;
     if (isNewMeetingLinkNeeded) {
       meetingLinks = await createSlotsZoomLink(slots);
-      if (typeof meetingLinks.message === "string") {
+      if (typeof meetingLinks.message === 'string') {
         throw new Error(meetingLinks.message);
       } else {
         await deleteExistingZoomLinkOfTheSchedule(schedule);
-        console.log("NEW", { meetingLinks });
+        console.log('NEW', { meetingLinks });
         req.body.meetingLinks = meetingLinks;
       }
     }
@@ -114,7 +114,7 @@ exports.updateSchedule = async (req, res) => {
     await updateTeacherWithSchedule(newSchedule);
 
     return res.json({
-      message: "Schedule updated successfully",
+      message: 'Schedule updated successfully',
       result: newSchedule,
     });
   } catch (error) {
@@ -151,15 +151,15 @@ exports.deleteScheduleById = async (req, res) => {
     );
     const { meetingAccount, meetingLink, isZoomMeeting } = schedule;
     const meetingAccountData = await ZoomAccountModel.findById(meetingAccount);
-    if (meetingAccountData && isZoomMeeting && meetingLink.includes("zoom")) {
+    if (meetingAccountData && isZoomMeeting && meetingLink.includes('zoom')) {
       await fetch(
         `https://api.zoom.us/v2/meetings/${
-          meetingLink.split("/")[4].split("?")[0]
+          meetingLink.split('/')[4].split('?')[0]
         }`,
         {
-          method: "DELETE",
+          method: 'DELETE',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${meetingAccountData.zoomJwt}`,
           },
         }
@@ -184,7 +184,7 @@ exports.deleteScheduleById = async (req, res) => {
       if (err) {
         console.log(err);
         return res.status(500).json({
-          error: "error in updating teacher",
+          error: 'error in updating teacher',
         });
       }
       schedule.isDeleted = true;
@@ -194,18 +194,18 @@ exports.deleteScheduleById = async (req, res) => {
         if (err) {
           console.log(err);
           return res.status(500).json({
-            error: "error in updating teacher",
+            error: 'error in updating teacher',
           });
         }
         return res.status(200).json({
-          message: "Schedule Deleted Successfully",
+          message: 'Schedule Deleted Successfully',
         });
       });
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Error in Deleting Schedule",
+      error: 'Error in Deleting Schedule',
     });
   }
 };
@@ -214,10 +214,10 @@ exports.deleteSchedule = async (req, res) => {
   try {
     const { id } = req.params;
     const schedule = await SchedulerModel.findById(id);
-    if(schedule){
+    if (schedule) {
       const teacher = await Teacher.findOne({ id: schedule.teacher });
       const [_, allSlots] = generateSlots(schedule.slots);
-      if(teacher){
+      if (teacher) {
         teacher.availableSlots = [
           ...new Set([...teacher.availableSlots, ...allSlots]),
         ];
@@ -226,7 +226,7 @@ exports.deleteSchedule = async (req, res) => {
         );
         await teacher.save();
       }
-  
+
       await deleteExistingZoomLinkOfTheSchedule(schedule, false);
       schedule.isDeleted = true;
       schedule.lastTimeJoinedClass = undefined;
@@ -234,7 +234,7 @@ exports.deleteSchedule = async (req, res) => {
       await schedule.save();
     }
     return res.status(200).json({
-      message: "Schedule Deleted Successfully",
+      message: 'Schedule Deleted Successfully',
     });
   } catch (error) {
     console.log(error);
@@ -248,18 +248,18 @@ exports.getScheduleById = (req, res) => {
   const { id } = req.params;
   Schedule.findById(id)
     .populate(
-      "students",
-      "firstName lastName phone whatsAppnumber meetingLink email numberOfClassesBought paidTill"
+      'students',
+      'firstName lastName phone whatsAppnumber meetingLink email numberOfClassesBought paidTill'
     )
     .then((data) => {
       return res.status(200).json({
-        message: "Schedule Retrieved Successfully",
+        message: 'Schedule Retrieved Successfully',
         result: data,
       });
     })
     .catch((err) => {
       return res.status(500).json({
-        error: "Internal server error",
+        error: 'Internal server error',
         result: null,
       });
     });
@@ -267,7 +267,7 @@ exports.getScheduleById = (req, res) => {
 
 exports.getAllSchedules = (req, res) => {
   let { params } = req.query;
-  params = params ? params.split(",").join(" ") : "";
+  params = params ? params.split(',').join(' ') : '';
   Schedule.find({
     isDeleted: {
       $ne: true,
@@ -282,7 +282,7 @@ exports.getAllSchedules = (req, res) => {
     .catch((error) => {
       console.log(error);
       return res.status(500).json({
-        error: "Internal Server error",
+        error: 'Internal Server error',
       });
     });
 };
@@ -296,12 +296,12 @@ exports.getAllSchedulesByZoomAccountId = async (req, res) => {
     });
     return res.json({
       result: schedules,
-      message: "Schedules retrieved successfully",
+      message: 'Schedules retrieved successfully',
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Error in retreiving data",
+      error: 'Error in retreiving data',
     });
   }
 };
@@ -313,14 +313,14 @@ exports.getAllScheduleswithZoomAccountSorted = async (req, res) => {
       isDeleted: { $ne: true },
       meetingLinks: { $exists: true },
     })
-      .select("slots meetingLinks className")
+      .select('slots meetingLinks className')
       .sort({ meetingAccount: -1 })
       .lean();
 
     console.log(schedules.length);
 
     const allZoomAccounts = await ZoomAccountModel.find()
-      .select("color ZoomAccountName isDisabled timeSlots")
+      .select('color ZoomAccountName isDisabled timeSlots')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -340,23 +340,21 @@ exports.getAllScheduleswithZoomAccountSorted = async (req, res) => {
           schedule.meetingLinks[day].meetingAccount.toString() ===
             zoomAccount._id.toString()
         ) {
-          console.log("SLOTS", schedule);
+          console.log('SLOTS', schedule);
           schedule.slots = schedule.slots[day];
-          finalSortedData[zoomAccount.ZoomAccountName].schedules.push(
-            schedule
-          );
+          finalSortedData[zoomAccount.ZoomAccountName].schedules.push(schedule);
         }
       });
     });
 
     return res.json({
-      message: "Zoom accounts retrieved successfully",
+      message: 'Zoom accounts retrieved successfully',
       result: finalSortedData,
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something went wrong",
+      error: 'Something went wrong',
     });
   }
 };
@@ -366,20 +364,20 @@ exports.getZoomAccountDashboardOfDay = async (req, res) => {
     const { day } = req.query;
     if (!day)
       return res.status(404).json({
-        message: "Day needs to be provided",
+        message: 'Day needs to be provided',
       });
     const schedules = await SchedulerModel.find({
-      ["meetingLinks." + day]: {
+      ['meetingLinks.' + day]: {
         $exists: true,
       },
       isDeleted: false,
     })
-      .select("slots meetingLinks className")
+      .select('slots meetingLinks className')
       .sort({ meetingAccount: -1 })
       .lean();
 
     const allZoomAccounts = await ZoomAccountModel.find()
-      .select("color ZoomAccountName isDisabled timeSlots")
+      .select('color ZoomAccountName isDisabled timeSlots')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -403,13 +401,13 @@ exports.getZoomAccountDashboardOfDay = async (req, res) => {
     });
 
     return res.json({
-      message: "Zoom accounts retrieved successfully",
+      message: 'Zoom accounts retrieved successfully',
       result,
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      message: error.message || "Something went wrong",
+      message: error.message || 'Something went wrong',
     });
   }
 };
@@ -421,12 +419,12 @@ exports.dangerousScheduleUpdate = async (req, res) => {
     await SchedulerModel.updateOne({ _id: scheduleId }, { ...req.body });
 
     return res.json({
-      message: message ? message + " successful" : "Updated Successfully",
+      message: message ? message + ' successful' : 'Updated Successfully',
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: message ? message + " failed" : "Internal Server Error",
+      error: message ? message + ' failed' : 'Internal Server Error',
     });
   }
 };
@@ -438,7 +436,7 @@ exports.changeZoomLink = async (req, res) => {
     const { slots } = schedule;
 
     const meetingLinks = await createSlotsZoomLink(slots);
-    if (typeof meetingLinks.message === "string") {
+    if (typeof meetingLinks.message === 'string') {
       throw new Error(meetingLinks.message);
     } else {
       await deleteExistingZoomLinkOfTheSchedule(schedule);
@@ -451,63 +449,63 @@ exports.changeZoomLink = async (req, res) => {
     );
 
     return res.status(200).json({
-      message: "Meeting Link Updated successfully!",
+      message: 'Meeting Link Updated successfully!',
       result: newSchedule,
     });
   } catch (err) {
     console.log(err);
     return res.status(500).json({
-      error: err.message || "something went wrong",
+      error: err.message || 'something went wrong',
     });
   }
 };
 
 exports.getSchedulesByScheduleIdAndTime = (req, res) => {
   const { scheduleId, date } = req.params;
-  let month = parseInt(date.split("-")[1]) - 1;
-  let year = date.split("-")[0];
+  let month = parseInt(date.split('-')[1]) - 1;
+  let year = date.split('-')[0];
   Attendance.find({
     scheduleId,
     createdAt: {
       $gte: moment()
-        .set("month", month)
-        .set("year", year)
-        .startOf("month")
+        .set('month', month)
+        .set('year', year)
+        .startOf('month')
         .format(),
       $lte: moment()
-        .set("month", month)
-        .set("year", year)
-        .endOf("month")
+        .set('month', month)
+        .set('year', year)
+        .endOf('month')
         .format(),
     },
   })
-    .populate("customers", "firstName email")
-    .populate("requestedStudents", "firstName email")
-    .populate("requestedPaidStudents", "firstName email")
-    .populate("absentees", "firstName email")
-    .populate("requestedPaidStudents", "firstName email")
+    .populate('customers', 'firstName email')
+    .populate('requestedStudents', 'firstName email')
+    .populate('requestedPaidStudents', 'firstName email')
+    .populate('absentees', 'firstName email')
+    .populate('requestedPaidStudents', 'firstName email')
     .then((data) => {
       return res.json({
-        message: "Attendance retrieved successfully",
+        message: 'Attendance retrieved successfully',
         result: data,
       });
     })
     .catch((err) => {
       console.log(err);
       return res.status(500).json({
-        error: "error in retrieving Attendance",
+        error: 'error in retrieving Attendance',
       });
     });
 };
 
 const getNextSlot = (scheduledSlots, slot, presentMeetingSlots) => {
-  let day = slot.split("-")[0].toUpperCase();
-  let slotWithoutDay = slot.split("-")[1] + "-" + slot.split("-")[2];
+  let day = slot.split('-')[0].toUpperCase();
+  let slotWithoutDay = slot.split('-')[1] + '-' + slot.split('-')[2];
   let index = times.indexOf(slotWithoutDay);
   let allNextSlots = times.slice(index);
-  let nextSlot = "";
+  let nextSlot = '';
   for (let i = 0; i < allNextSlots.length; i++) {
-    let x = day + "-" + allNextSlots[i];
+    let x = day + '-' + allNextSlots[i];
     if (scheduledSlots.includes(x) && !presentMeetingSlots.includes(x)) {
       nextSlot = x;
       break;
@@ -521,15 +519,15 @@ exports.getPresentAndNextScheduleOfATeacher = async (req, res) => {
     const { teacherId, slot } = req.params;
     let teacher = await Teacher.findOne({ id: teacherId }).lean();
     let { scheduledSlots } = teacher;
-    let day = slot.split("-")[0].toLowerCase();
+    let day = slot.split('-')[0].toLowerCase();
     let scheduleRightNow = await SchedulerModel.findOne({
       teacher: teacherId,
       [`slots.${day}`]: {
         $in: [slot],
       },
       isDeleted: false,
-    }).populate("students", "firstName");
-    let nextSlot = "";
+    }).populate('students', 'firstName');
+    let nextSlot = '';
     if (scheduleRightNow) {
       nextSlot = getNextSlot(scheduledSlots, slot, scheduleRightNow.slots[day]);
     } else {
@@ -541,7 +539,7 @@ exports.getPresentAndNextScheduleOfATeacher = async (req, res) => {
         $in: [nextSlot],
       },
       isDeleted: false,
-    }).populate("students", "firstName");
+    }).populate('students', 'firstName');
 
     let idsToNotToRetrieve = [];
     if (scheduleRightNow) {
@@ -556,13 +554,13 @@ exports.getPresentAndNextScheduleOfATeacher = async (req, res) => {
         $nin: idsToNotToRetrieve,
       },
       teacher: teacherId,
-      ["slots." + day + ".0"]: { $exists: true },
+      ['slots.' + day + '.0']: { $exists: true },
       isDeleted: false,
     });
 
     let teacherSchedules = await SchedulerModel.find({
       teacher: teacherId,
-    }).select("_id");
+    }).select('_id');
 
     teacherSchedules = teacherSchedules.map((schedule) => schedule._id);
 
@@ -571,12 +569,12 @@ exports.getPresentAndNextScheduleOfATeacher = async (req, res) => {
         $in: teacherSchedules,
       },
       cancelledDate: {
-        $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
-        $lte: momentTZ().tz("Asia/Kolkata").endOf("day").format(),
+        $gte: momentTZ().tz('Asia/Kolkata').startOf('day').format(),
+        $lte: momentTZ().tz('Asia/Kolkata').endOf('day').format(),
       },
     })
-      .populate("studentId", "firstName")
-      .populate("scheduleId", "className");
+      .populate('studentId', 'firstName')
+      .populate('scheduleId', 'className');
 
     let tomorrowLeaves = await CancelledClassesModel.find({
       scheduleId: {
@@ -584,15 +582,15 @@ exports.getPresentAndNextScheduleOfATeacher = async (req, res) => {
       },
       cancelledDate: {
         $gte: momentTZ()
-          .tz("Asia/Kolkata")
-          .add(1, "day")
-          .startOf("day")
+          .tz('Asia/Kolkata')
+          .add(1, 'day')
+          .startOf('day')
           .format(),
-        $lte: momentTZ().tz("Asia/Kolkata").add(1, "day").endOf("day").format(),
+        $lte: momentTZ().tz('Asia/Kolkata').add(1, 'day').endOf('day').format(),
       },
     })
-      .populate("studentId", "firstName")
-      .populate("scheduleId", "className");
+      .populate('studentId', 'firstName')
+      .populate('scheduleId', 'className');
 
     return res.json({
       result: {
@@ -606,7 +604,7 @@ exports.getPresentAndNextScheduleOfATeacher = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something went wrong!",
+      error: 'Something went wrong!',
     });
   }
 };

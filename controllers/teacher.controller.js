@@ -1,53 +1,53 @@
-const TeacherModel = require("../models/Teacher.model");
-const CustomerModel = require("../models/Customer.model");
-const Category = require("../models/Category.model");
-const Schedule = require("../models/Scheduler.model");
-const Attendence = require("../models/Attendance");
-const SchedulerModel = require("../models/Scheduler.model");
-const CancelledClassesModel = require("../models/CancelledClasses.model");
-const moment = require("moment");
-const momentTZ = require("moment-timezone");
-const TeacherLeavesModel = require("../models/TeacherLeaves.model");
-const SubjectModel = require("../models/Subject.model");
-const TimeZoneModel = require("../models/timeZone.model");
-const { retrieveMeetingLink } = require("../config/util");
+const TeacherModel = require('../models/Teacher.model');
+const CustomerModel = require('../models/Customer.model');
+const Category = require('../models/Category.model');
+const Schedule = require('../models/Scheduler.model');
+const Attendence = require('../models/Attendance');
+const SchedulerModel = require('../models/Scheduler.model');
+const CancelledClassesModel = require('../models/CancelledClasses.model');
+const moment = require('moment');
+const momentTZ = require('moment-timezone');
+const TeacherLeavesModel = require('../models/TeacherLeaves.model');
+const SubjectModel = require('../models/Subject.model');
+const TimeZoneModel = require('../models/timeZone.model');
+const { retrieveMeetingLink } = require('../config/util');
 
 const days = [
-  "MONDAY",
-  "TUESDAY",
-  "WEDNESDAY",
-  "THURSDAY",
-  "FRIDAY",
-  "SATURDAY",
-  "SUNDAY",
+  'MONDAY',
+  'TUESDAY',
+  'WEDNESDAY',
+  'THURSDAY',
+  'FRIDAY',
+  'SATURDAY',
+  'SUNDAY',
 ];
 
 exports.validateSlot = (req, res, next) => {
   if (!req.body.slot) {
-    return res.status(400).json({ stage: 1, error: "Invalid Entry" });
+    return res.status(400).json({ stage: 1, error: 'Invalid Entry' });
   } else {
-    let arr = req.body.slot.split("-");
+    let arr = req.body.slot.split('-');
     if (!days.includes(arr[0].trim())) {
-      return res.status(400).json({ stage: 2, error: "Invalid Entry" });
+      return res.status(400).json({ stage: 2, error: 'Invalid Entry' });
     } else if (
-      !(!isNaN(arr[1].split(":")[0]) && parseInt(arr[1].split(":")[0]) <= 12)
+      !(!isNaN(arr[1].split(':')[0]) && parseInt(arr[1].split(':')[0]) <= 12)
     ) {
-      return res.status(400).json({ stage: 3, error: "Invalid Entry" });
+      return res.status(400).json({ stage: 3, error: 'Invalid Entry' });
     } else if (
       !(
-        arr[2].split(":")[1].startsWith("30") ||
-        arr[2].split(":")[1].startsWith("00")
+        arr[2].split(':')[1].startsWith('30') ||
+        arr[2].split(':')[1].startsWith('00')
       )
     ) {
-      return res.status(400).json({ stage: 4, error: "Invalid Entry" });
+      return res.status(400).json({ stage: 4, error: 'Invalid Entry' });
     } else {
       let { slot } = req.body;
       req.body.slot =
-        slot.split("-")[0].trim() +
-        "-" +
-        slot.split("-")[1].trim() +
-        "-" +
-        slot.split("-")[2].trim();
+        slot.split('-')[0].trim() +
+        '-' +
+        slot.split('-')[1].trim() +
+        '-' +
+        slot.split('-')[2].trim();
       next();
     }
   }
@@ -60,15 +60,15 @@ exports.addAvailableSlot = async (req, res) => {
     const teacher = await TeacherModel.findOne({ id });
     if (teacher) {
       if (teacher.scheduledSlots.includes(slot)) {
-        let day = slot.split("-")[0].toLowerCase;
+        let day = slot.split('-')[0].toLowerCase;
         const schedule = await SchedulerModel.find({
           teacher: id,
-          ["slots." + day]: { $in: [slot] },
+          ['slots.' + day]: { $in: [slot] },
           isDeleted: { $ne: true },
         });
         if (schedule) {
           return res.status(400).json({
-            message: "Cannot make available as it is already scheduled slot",
+            message: 'Cannot make available as it is already scheduled slot',
           });
         } else {
           teacher.scheduledSlots = teacher.scheduledSlots.filter(
@@ -84,16 +84,16 @@ exports.addAvailableSlot = async (req, res) => {
         }
       }
       await teacher.save();
-      return res.status(200).json({ message: "Slot added successfully" });
+      return res.status(200).json({ message: 'Slot added successfully' });
     } else {
       return res.status(404).json({
-        message: "Teacher not found",
+        message: 'Teacher not found',
       });
     }
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      message: error.message || "internal server error",
+      message: error.message || 'internal server error',
     });
   }
 };
@@ -101,9 +101,9 @@ exports.addAvailableSlot = async (req, res) => {
 exports.getAvailableSlots = (req, res) => {
   let { day } = req.query;
   const { id } = req.params;
-  day = day.split(",");
+  day = day.split(',');
   TeacherModel.findOne({ id })
-    .select("availableSlots")
+    .select('availableSlots')
     .then((data) => {
       let arr = [];
       if (data.availableSlots) {
@@ -115,7 +115,7 @@ exports.getAvailableSlots = (req, res) => {
           });
         });
         return res.status(200).json({
-          message: "slots retrieved successfully",
+          message: 'slots retrieved successfully',
           result: arr,
         });
       } else {
@@ -123,11 +123,11 @@ exports.getAvailableSlots = (req, res) => {
         data.save((err, docs) => {
           if (err) {
             return res.status(500).json({
-              error: "internal server error",
+              error: 'internal server error',
             });
           }
           return res.status(200).json({
-            message: "Slots retrieved successfully",
+            message: 'Slots retrieved successfully',
             result: [],
           });
         });
@@ -135,7 +135,7 @@ exports.getAvailableSlots = (req, res) => {
     })
     .catch((err) => {
       return res.status(400).json({
-        error: "error in retrieving data",
+        error: 'error in retrieving data',
       });
     });
 };
@@ -143,7 +143,7 @@ exports.getAvailableSlots = (req, res) => {
 const salaryUpdater = (teacherobj) => {
   let id = teacherobj.id;
   Attendence.find({ teacherId: id })
-    .populate("scheduleId")
+    .populate('scheduleId')
     .then((data) => {
       let salaryarray = [];
       for (classidx = 0; classidx < data.length; classidx++) {
@@ -180,10 +180,10 @@ exports.getTeachers = async (req, res) => {
   let { params } = req.query;
   if (!params) {
     return res.status(400).json({
-      error: "params required",
+      error: 'params required',
     });
   }
-  params = params.split(",").join(" ");
+  params = params.split(',').join(' ');
   TeacherModel.find({})
     .then((data) => {
       for (teacherIdx = 0; teacherIdx < data.length; teacherIdx++) {
@@ -197,27 +197,27 @@ exports.getTeachers = async (req, res) => {
     .select(params)
     .then((result) => {
       let paramsNeeded = [];
-      params.split(" ").forEach((para) => {
-        if (!para.startsWith("-")) {
+      params.split(' ').forEach((para) => {
+        if (!para.startsWith('-')) {
           paramsNeeded.push(para);
         }
       });
       result = result.map((item) => {
         let returnObj = {};
         paramsNeeded.forEach((key) => {
-          returnObj[key] = item[key] ? item[key] : "";
+          returnObj[key] = item[key] ? item[key] : '';
         });
         return returnObj;
       });
       return res.status(200).json({
-        message: "Teachers retrieved successfully",
+        message: 'Teachers retrieved successfully',
         result,
       });
     })
     .catch((err) => {
       console.log(err);
       return res.status(500).json({
-        error: "error in retrieving",
+        error: 'error in retrieving',
       });
     });
 };
@@ -226,7 +226,7 @@ exports.deleteSlot = (req, res) => {
   const { id } = req.params;
   const { slot } = req.body;
   TeacherModel.findOne({ id })
-    .select("availableSlots")
+    .select('availableSlots')
     .then((data) => {
       if (data && data.availableSlots) {
         let index = data.availableSlots.indexOf(slot);
@@ -239,7 +239,7 @@ exports.deleteSlot = (req, res) => {
             });
           }
           return res.status(200).json({
-            message: "deleted successfully",
+            message: 'deleted successfully',
             result: docs.availableSlots,
           });
         });
@@ -248,13 +248,13 @@ exports.deleteSlot = (req, res) => {
     .catch((err) => {
       console.log(err);
       return res.status(400).json({
-        error: "error in retrieving teacehers data",
+        error: 'error in retrieving teacehers data',
       });
     });
 };
 
 exports.getAllTEachers = (req, res) => {
-  CustomerModel.find({ classStatusId: "113975223750050" })
+  CustomerModel.find({ classStatusId: '113975223750050' })
     .then((students) => {
       TeacherModel.find({})
         .then((teachers) => {
@@ -280,14 +280,14 @@ exports.getAllTEachers = (req, res) => {
             }
           }
           return res.json({
-            message: "Teachers Students Fetched successfully",
+            message: 'Teachers Students Fetched successfully',
             result: obje,
           });
         })
         .catch((err) => {
           return res
             .status(400)
-            .json({ message: "error in retrieving data ", err });
+            .json({ message: 'error in retrieving data ', err });
         });
     })
     .catch((err) => {
@@ -297,19 +297,19 @@ exports.getAllTEachers = (req, res) => {
 
 exports.getOccupancyDashboardData = async (req, res) => {
   try {
-    let allCategories = await SubjectModel.find().select("id -_id subjectName");
+    let allCategories = await SubjectModel.find().select('id -_id subjectName');
     let allTeachers = await TeacherModel.find().select(
-      "id TeacherName availableSlots scheduledSlots category subject"
+      'id TeacherName availableSlots scheduledSlots category subject'
     );
     let allSchedules = await Schedule.find({
       isDeleted: { $ne: true },
     })
       .populate(
-        "students",
-        "firstName lastName numberOfClassesBought email whatsAppnumber countryCode age timeZoneId"
+        'students',
+        'firstName lastName numberOfClassesBought email whatsAppnumber countryCode age timeZoneId'
       )
-      .populate("group", "_id")
-      .populate("teacherData","joinLink")
+      .populate('group', '_id')
+      .populate('teacherData', 'joinLink')
       .lean();
 
     let finalObject = {};
@@ -328,13 +328,13 @@ exports.getOccupancyDashboardData = async (req, res) => {
                 Object.keys(schedule.slots).forEach((day) => {
                   if (
                     [
-                      "monday",
-                      "tuesday",
-                      "wednesday",
-                      "thursday",
-                      "friday",
-                      "saturday",
-                      "sunday",
+                      'monday',
+                      'tuesday',
+                      'wednesday',
+                      'thursday',
+                      'friday',
+                      'saturday',
+                      'sunday',
                     ].includes(day)
                   ) {
                     schedule.slots[day].forEach((slot) => {
@@ -359,7 +359,7 @@ exports.getOccupancyDashboardData = async (req, res) => {
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Error in retrieving Data",
+      error: 'Error in retrieving Data',
     });
   }
 };
@@ -368,28 +368,28 @@ exports.getAllDaysSlots = async (req, res) => {
   const { id } = req.params;
   try {
     let availableSlotsData = await TeacherModel.findOne({ id }).select(
-      "availableSlots -_id"
+      'availableSlots -_id'
     );
     let scheduledSlotsData = await Schedule.find({
       teacher: id,
       isDeleted: { $ne: true },
-    }).populate("students", "firstName email");
+    }).populate('students', 'firstName email');
     return res.status(200).json({
-      message: "data retrieved successfully",
+      message: 'data retrieved successfully',
       availableSlots: availableSlotsData.availableSlots,
       scheduledSlotsData,
     });
   } catch (err) {
     console.log(err);
-    return res.status(500).json({ error: "error in loading data" });
+    return res.status(500).json({ error: 'error in loading data' });
   }
 };
 
 exports.GetTeacherMeetings = async (req, res) => {
   Schedule.find({ teacher: req.params.id, isDeleted: { $ne: true } })
-    .populate("subject")
-    .populate("students")
-    .populate("teacherData")
+    .populate('subject')
+    .populate('students')
+    .populate('teacherData')
     .lean()
     .then(async (result) => {
       result = await Promise.all(
@@ -397,28 +397,28 @@ exports.GetTeacherMeetings = async (req, res) => {
           let cancelledClasses = await CancelledClassesModel.find({
             scheduleId: eachSchedule._id,
             cancelledDate: {
-              $gte: momentTZ().tz("Asia/Kolkata").startOf("day").format(),
+              $gte: momentTZ().tz('Asia/Kolkata').startOf('day').format(),
             },
-          }).populate("studentId", "firstName");
+          }).populate('studentId', 'firstName');
           return { ...eachSchedule, cancelledClasses };
         })
       );
       return res
         .status(200)
-        .json({ message: "Fetched  meetings successfully", result });
+        .json({ message: 'Fetched  meetings successfully', result });
     })
     .catch((err) => {
       console.log(err);
       return res
         .status(400)
-        .json({ message: "Fetched meetings  problem", err });
+        .json({ message: 'Fetched meetings  problem', err });
     });
 };
 
 exports.GetTeacherAttendance = async (req, res) => {
   let id = req.params.id;
   Attendence.find({ teacherId: id })
-    .populate("scheduleId")
+    .populate('scheduleId')
     .then((data) => {})
     .catch((err) => {
       console.log(err);
@@ -430,39 +430,39 @@ exports.GetSalaries = async (req, res) => {
     // let dat = req.params.month;
     const allTeachers = await TeacherModel.find({});
     let allTeacherIds = allTeachers.map((teacher) => teacher.id);
-    let dat = "2021-01";
+    let dat = '2021-01';
     let teacherAttends = await Attendence.find({
       $and: [
         { teacherId: { $in: allTeacherIds } },
-        { date: { $regex: dat, $options: "m" } },
+        { date: { $regex: dat, $options: 'm' } },
       ],
-    }).populate("scheduleId");
+    }).populate('scheduleId');
     let finalObj = [];
     allTeachers.forEach((teacher) => {
       let objj = {
         details: [],
       };
-      objj["TeacherName"] = teacher.TeacherName;
+      objj['TeacherName'] = teacher.TeacherName;
       let attendeceofTeacher = teacherAttends.filter(
         (att) => teacher.id === att.teacherId
       );
       attendeceofTeacher.forEach((eachAtt) => {
         let obj = {};
-        obj["ClassName"] = eachAtt.scheduleId.className;
-        obj["No.Students"] = eachAtt.customers.length;
-        obj["Number of Days"] = attendeceofTeacher.length;
+        obj['ClassName'] = eachAtt.scheduleId.className;
+        obj['No.Students'] = eachAtt.customers.length;
+        obj['Number of Days'] = attendeceofTeacher.length;
         if (eachAtt.scheduleId.OneToOne) {
-          obj["commission"] = teacher.Commission_Amount_One;
+          obj['commission'] = teacher.Commission_Amount_One;
         } else {
-          obj["commission"] = teacher.Commission_Amount_Many;
+          obj['commission'] = teacher.Commission_Amount_Many;
         }
-        obj["salary"] =
-          obj["No.Students"] * obj["Number of Days"] * obj["commission"];
-        objj["details"].push(obj);
+        obj['salary'] =
+          obj['No.Students'] * obj['Number of Days'] * obj['commission'];
+        objj['details'].push(obj);
       });
-      objj["salary"] = 0;
-      objj["details"].forEach((ell) => {
-        objj["salary"] = objj["salary"] + parseInt(ell.salary);
+      objj['salary'] = 0;
+      objj['details'].forEach((ell) => {
+        objj['salary'] = objj['salary'] + parseInt(ell.salary);
       });
       finalObj.push(objj);
       // finalObj[teacher.TeacherName].allAttendece = attendeceofTeacher;
@@ -479,7 +479,7 @@ exports.GetSalaries = async (req, res) => {
       // finalObj[teacher.TeacherName].allAttendece = undefined;
     });
 
-    return res.status(200).json({ message: "ok", finalObj });
+    return res.status(200).json({ message: 'ok', finalObj });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ error });
@@ -490,25 +490,25 @@ exports.joinClass = async (req, res) => {
   try {
     const { scheduleId } = req.params;
     let schedule = await SchedulerModel.findById(scheduleId)
-      .select("teacher")
-      .populate("teacherData")
+      .select('teacher')
+      .populate('teacherData')
       .lean();
     if (schedule) {
       await SchedulerModel.updateOne(
         { _id: scheduleId },
         { $set: { lastTimeJoinedClass: new Date() } }
-      )
+      );
       const link = schedule.teacherData?.joinLink;
       console.log(link, schedule);
       return res.json({
-        message: "Last time joined updated Successfully!",
+        message: 'Last time joined updated Successfully!',
         link,
       });
     }
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something went wrong !",
+      error: 'Something went wrong !',
     });
   }
 };
@@ -521,17 +521,17 @@ exports.getTeacherDetailsById = async (req, res) => {
     const teacherDetails = await TeacherModel.findOne({ id });
     if (teacherDetails) {
       res.status(200).json({
-        message: "Fetched Successfully",
+        message: 'Fetched Successfully',
         result: teacherDetails,
       });
     } else {
       res.status(404).json({
-        message: "No teacher found",
+        message: 'No teacher found',
       });
     }
   } catch (error) {
     res.status(500).json({
-      error: "Something went wrong",
+      error: 'Something went wrong',
     });
   }
 };
@@ -544,9 +544,9 @@ exports.getTeacherLeavesAndSchedules = async (req, res) => {
       isDeleted: { $ne: true },
     })
       .select(
-        "students slots className demo isClassTemperarilyCancelled cancelledTill message"
+        'students slots className demo isClassTemperarilyCancelled cancelledTill message'
       )
-      .populate("students", "firstName")
+      .populate('students', 'firstName')
       .lean();
     let scheduleIds = allSchedulesOfThatTeacher.map((schedule) => schedule._id);
     let leavesOfTeacher = await TeacherLeavesModel.find({
@@ -561,14 +561,14 @@ exports.getTeacherLeavesAndSchedules = async (req, res) => {
         },
       ],
       date: {
-        $gte: momentTZ().tz("Asia/Kolkata").startOf("week").format(),
-        $lte: momentTZ().tz("Asia/Kolkata").endOf("week").format(),
+        $gte: momentTZ().tz('Asia/Kolkata').startOf('week').format(),
+        $lte: momentTZ().tz('Asia/Kolkata').endOf('week').format(),
       },
     });
     let entireDayLeavesDays = leavesOfTeacher
       .filter((leave) => leave.entireDay)
       .map((leave) =>
-        momentTZ(leave.date).tz("Asia/Kolkata").format("dddd").toUpperCase()
+        momentTZ(leave.date).tz('Asia/Kolkata').format('dddd').toUpperCase()
       );
     let sortedSchedules = {};
     allSchedulesOfThatTeacher.forEach((schedule) => {
@@ -582,7 +582,7 @@ exports.getTeacherLeavesAndSchedules = async (req, res) => {
             ...schedule,
             slots: undefined,
             isOnLeave:
-              isOnLeave || entireDayLeavesDays.includes(hour.split("-")[0]),
+              isOnLeave || entireDayLeavesDays.includes(hour.split('-')[0]),
           };
         });
       });
@@ -590,10 +590,10 @@ exports.getTeacherLeavesAndSchedules = async (req, res) => {
 
     return res.json({
       result: sortedSchedules,
-      message: "Timetable Retrieved Successfully!",
+      message: 'Timetable Retrieved Successfully!',
     });
   } catch (error) {
     console.log(error);
-    return res.status(500).json({ error: "Something went wrong" });
+    return res.status(500).json({ error: 'Something went wrong' });
   }
 };

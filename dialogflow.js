@@ -9,7 +9,6 @@ const CREDENTIALS = {
   client_email: 'livesloka-93a02@appspot.gserviceaccount.com',
 };
 
-
 const PROJECID = CREDENTIALS.project_id;
 
 const CONFIGURATION = {

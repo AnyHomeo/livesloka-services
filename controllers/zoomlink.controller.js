@@ -1,18 +1,18 @@
-const fetch = require("node-fetch");
-const ZoomAccountModel = require("../models/ZoomAccount.model");
-const ZoomAccount = require("../models/ZoomAccount.model");
+const fetch = require('node-fetch');
+const ZoomAccountModel = require('../models/ZoomAccount.model');
+const ZoomAccount = require('../models/ZoomAccount.model');
 
 module.exports.zoomlink = async (req, res) => {
-  let token = "";
-  let jwtId = "";
-  let zoomEmail = "";
-  let zoomPassword = "";
+  let token = '';
+  let jwtId = '';
+  let zoomEmail = '';
+  let zoomPassword = '';
   try {
     const getJwtTokenDetails = await ZoomAccount.findOne({
       timeSlots: {
         $nin: req.body,
       },
-      isDisabled:{ $ne: true }
+      isDisabled: { $ne: true },
     });
     token = getJwtTokenDetails.zoomJwt;
     jwtId = getJwtTokenDetails._id;
@@ -22,7 +22,7 @@ module.exports.zoomlink = async (req, res) => {
     console.log(error);
   }
   const formData = {
-    topic: "Livesloka Online Class",
+    topic: 'Livesloka Online Class',
     type: 3,
     password: zoomPassword,
     settings: {
@@ -34,18 +34,18 @@ module.exports.zoomlink = async (req, res) => {
       watermark: false,
       use_pmi: false,
       approval_type: 2,
-      audio: "both",
-      auto_recording: "none",
+      audio: 'both',
+      auto_recording: 'none',
       waiting_room: false,
       meeting_authentication: false,
     },
   };
 
   fetch(`https://api.zoom.us/v2/users/${zoomEmail}/meetings`, {
-    method: "post",
+    method: 'post',
     body: JSON.stringify(formData),
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
   })
@@ -53,11 +53,11 @@ module.exports.zoomlink = async (req, res) => {
     .then((json) => {
       if (json.code === 1001) {
         return res.status(400).json({
-          message: "Error while creating meeting link",
+          message: 'Error while creating meeting link',
         });
       }
       return res.status(200).json({
-        message: "Meeting created successfully",
+        message: 'Meeting created successfully',
         result: { link: json.join_url, id: jwtId, email: zoomEmail },
       });
     })
@@ -72,12 +72,12 @@ module.exports.zoomDetails = async (req, res) => {
 
     if (zoomaccountDetails === null) {
       return res.status(400).json({
-        message: "Not found",
+        message: 'Not found',
         result: zoomaccountDetails,
       });
     } else
       return res.status(200).json({
-        message: "Retrived successfully",
+        message: 'Retrived successfully',
         result: zoomaccountDetails,
       });
   } catch (error) {

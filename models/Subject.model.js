@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var SubjectSchema = new mongoose.Schema(
   {
@@ -14,41 +14,41 @@ var SubjectSchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
-    description:{
-      trim:true,
-      type:String,
-      default:""
+    description: {
+      trim: true,
+      type: String,
+      default: '',
     },
     amount: {
       type: Number,
-      default:0
+      default: 0,
     },
-    imageLink:{
-      type:String,
-      default:"",
-      trim:true 
+    imageLink: {
+      type: String,
+      default: '',
+      trim: true,
     },
-    sortingOrder:{
-      type:Number,
-      default:0
+    sortingOrder: {
+      type: Number,
+      default: 0,
     },
-    category:{
-      type:String,
-      default:"",
+    category: {
+      type: String,
+      default: '',
     },
-    productId:{
-      type:String,
-      default:""
+    productId: {
+      type: String,
+      default: '',
     },
-    isNotAvailableInBooking:{
+    isNotAvailableInBooking: {
       type: Boolean,
       default: false,
     },
-    rewards:{
-      type:Number,
-      default: 100
-    }
+    rewards: {
+      type: Number,
+      default: 100,
+    },
   },
   { timestamps: true }
 );
-module.exports = mongoose.model("Subject", SubjectSchema);
+module.exports = mongoose.model('Subject', SubjectSchema);

@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
-const mongooseLeanVirtuals = require("mongoose-lean-virtuals");
+const mongoose = require('mongoose');
+const mongooseLeanVirtuals = require('mongoose-lean-virtuals');
 
 const Meeting = new mongoose.Schema({
   meetingAccount: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "ZoomAccount",
+    ref: 'ZoomAccount',
   },
   link: {
     type: String,
@@ -15,17 +15,17 @@ const SchedulerSchema = new mongoose.Schema(
   {
     group: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "group",
+      ref: 'group',
     },
     teacher: {
       type: String,
       trim: true,
-      required: "Teacher is Required",
+      required: 'Teacher is Required',
     },
     students: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Customer",
+        ref: 'Customer',
       },
     ],
     slots: {
@@ -62,7 +62,7 @@ const SchedulerSchema = new mongoose.Schema(
       trim: true,
       type: String,
     },
-    meetingAccount:{
+    meetingAccount: {
       type: String,
     },
     startDate: {
@@ -71,8 +71,8 @@ const SchedulerSchema = new mongoose.Schema(
     },
     subject: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Subject",
-      required: "Subject is Required",
+      ref: 'Subject',
+      required: 'Subject is Required',
     },
     scheduleDescription: {
       type: String,
@@ -98,16 +98,16 @@ const SchedulerSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    materials: [{ type: mongoose.Schema.Types.ObjectId, ref: "Upload" }],
+    materials: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Upload' }],
     lastTimeJoinedClass: {
       type: Date,
     },
-    cancelledTill:{
-      type:Date
+    cancelledTill: {
+      type: Date,
     },
     message: {
       type: String,
-      default: "",
+      default: '',
     },
     isSummerCampClass: {
       type: Boolean,
@@ -150,13 +150,13 @@ const SchedulerSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-SchedulerSchema.virtual("teacherData", {
-  ref: "Teacher",
-  localField: "teacher",
-  foreignField: "id",
+SchedulerSchema.virtual('teacherData', {
+  ref: 'Teacher',
+  localField: 'teacher',
+  foreignField: 'id',
   justOne: true,
 });
 
 SchedulerSchema.plugin(mongooseLeanVirtuals);
 
-module.exports = mongoose.model("Schedule", SchedulerSchema);
+module.exports = mongoose.model('Schedule', SchedulerSchema);

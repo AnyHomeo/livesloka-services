@@ -1,15 +1,15 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 var SubscriptionTransactionsSchema = new mongoose.Schema(
   {
     customerId: {
-      type: String
+      type: String,
     },
-    
+
     type: {
       type: String,
-      enum: ["PAYPAL", "STRIPE"],
-      default: "PAYPAL",
+      enum: ['PAYPAL', 'STRIPE'],
+      default: 'PAYPAL',
     },
     planId: {
       type: String,
@@ -27,6 +27,6 @@ var SubscriptionTransactionsSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model(
-  "Subscriptions",
+  'Subscriptions',
   SubscriptionTransactionsSchema
 );

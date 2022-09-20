@@ -1,12 +1,14 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 
 const {
-    getRewardsHistoryByUser, redeemRewards, addRewards
-} = require("../controllers/rewards.controller");
+  getRewardsHistoryByUser,
+  redeemRewards,
+  addRewards,
+} = require('../controllers/rewards.controller');
 
-router.get("/user/:userId", getRewardsHistoryByUser);
-router.post("/user", addRewards)
-router.post("/",redeemRewards)
+router.get('/user/:userId', getRewardsHistoryByUser);
+router.post('/user', addRewards);
+router.post('/', redeemRewards);
 
 module.exports = router;

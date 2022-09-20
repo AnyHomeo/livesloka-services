@@ -1,12 +1,12 @@
-require("dotenv").config();
-const Attendance = require("../models/Attendance");
-const CustomerModel = require("../models/Customer.model");
-const SchedulerModel = require("../models/Scheduler.model");
-const Payments = require("../models/Payments");
-const ClassHistoryModel = require("../models/ClassHistory.model");
-const momentTZ = require("moment-timezone");
-const { asyncForEach } = require("../config/helper");
-var twilio = require("twilio");
+require('dotenv').config();
+const Attendance = require('../models/Attendance');
+const CustomerModel = require('../models/Customer.model');
+const SchedulerModel = require('../models/Scheduler.model');
+const Payments = require('../models/Payments');
+const ClassHistoryModel = require('../models/ClassHistory.model');
+const momentTZ = require('moment-timezone');
+const { asyncForEach } = require('../config/helper');
+var twilio = require('twilio');
 var client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 
 const getAttendance = (req, res) => {
@@ -15,14 +15,14 @@ const getAttendance = (req, res) => {
   Attendance.find({
     customers: { $in: [id] },
   })
-    .select("date time scheduleId")
-    .populate("Schedule")
+    .select('date time scheduleId')
+    .populate('Schedule')
     .then((userAttendance) => {
       if (date) {
         let filteredData = [];
-        let filterDateArr = date.split("-").map((num) => parseInt(num));
+        let filterDateArr = date.split('-').map((num) => parseInt(num));
         userAttendance.forEach((attendance) => {
-          let dateArr = attendance.date.split("-").map((num) => parseInt(num));
+          let dateArr = attendance.date.split('-').map((num) => parseInt(num));
           if (
             dateArr[2] >= filterDateArr[2] &&
             dateArr[1] >= filterDateArr[1] &&
@@ -34,7 +34,7 @@ const getAttendance = (req, res) => {
         userAttendance = filteredData;
       }
       return res.status(200).json({
-        message: "Attendance Retrieved Successfully!",
+        message: 'Attendance Retrieved Successfully!',
         result: userAttendance,
       });
     })
@@ -42,35 +42,35 @@ const getAttendance = (req, res) => {
       console.log(error);
       return res
         .status(500)
-        .json({ error: "Error in Retrieving Attendance", result: null });
+        .json({ error: 'Error in Retrieving Attendance', result: null });
     });
 };
 
 const changeZoomLink = async (scheduleId) => {
   let schedule = await SchedulerModel.findById(scheduleId).populate(
-    "meetingAccount"
+    'meetingAccount'
   );
   const {
     meetingLink,
     meetingAccount: { zoomJwt, zoomEmail, zoomPassword },
   } = schedule;
 
-  if (meetingLink && meetingLink.includes("zoom")) {
+  if (meetingLink && meetingLink.includes('zoom')) {
     await fetch(
       `https://api.zoom.us/v2/meetings/${
-        meetingLink.split("/")[4].split("?")[0]
+        meetingLink.split('/')[4].split('?')[0]
       }`,
       {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${zoomJwt}`,
         },
       }
     );
   }
   const formData = {
-    topic: "Livesloka Online Class",
+    topic: 'Livesloka Online Class',
     type: 3,
     password: zoomPassword,
     settings: {
@@ -82,17 +82,17 @@ const changeZoomLink = async (scheduleId) => {
       watermark: false,
       use_pmi: false,
       approval_type: 2,
-      audio: "both",
-      auto_recording: "none",
+      audio: 'both',
+      auto_recording: 'none',
       waiting_room: false,
       meeting_authentication: false,
     },
   };
   let data = await fetch(`https://api.zoom.us/v2/users/${zoomEmail}/meetings`, {
-    method: "post",
+    method: 'post',
     body: JSON.stringify(formData),
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${zoomJwt}`,
     },
   });
@@ -101,7 +101,10 @@ const changeZoomLink = async (scheduleId) => {
   await schedule.save();
 };
 
-const sendMessageIfClassesLessThanOrEqualToZero = async (customers, scheduleId) => {
+const sendMessageIfClassesLessThanOrEqualToZero = async (
+  customers,
+  scheduleId
+) => {
   let message = `
 Namaskaram,
 
@@ -114,15 +117,15 @@ Live Sloka Team
   let customersToSendMessage = await CustomerModel.find({
     _id: { $in: customers },
     numberOfClassesBought: { $lte: 0 },
-  }).select("whatsAppnumber");
-  console.log(customersToSendMessage)
+  }).select('whatsAppnumber');
+  console.log(customersToSendMessage);
   if (customersToSendMessage.length) {
     customersToSendMessage = customersToSendMessage.map(
       (customer) => `${customer.countryCode}${customer.whatsAppnumber}`
     );
     // await changeZoomLink(scheduleId);
     await asyncForEach(customersToSendMessage, async (customer) => {
-      console.log(customer,process.env.TWILIO_NUMBER)
+      console.log(customer, process.env.TWILIO_NUMBER);
       await client.messages.create({
         body: message,
         to: customer, // Text this number
@@ -174,18 +177,18 @@ const postAttendance = (req, res) => {
             _id: {
               $in: newlyRequestedStudents,
             },
-          }).select("numberOfClassesBought");
+          }).select('numberOfClassesBought');
           allCustomersHistory = allCustomers.map((customer) => ({
             customerId: customer._id,
             previousValue: customer.numberOfClassesBought,
             nextValue: customer.numberOfClassesBought + 1,
-            comment: "Requested for a class!",
+            comment: 'Requested for a class!',
           }));
           await ClassHistoryModel.insertMany(allCustomersHistory);
           await CustomerModel.updateMany(
             { _id: { $in: newlyRequestedStudents } },
             { $inc: { numberOfClassesBought: 1 } }
-          ); 
+          );
           alreadyGivenAttendance.customers = customers;
           alreadyGivenAttendance.absentees = absentees;
           alreadyGivenAttendance.requestedStudents = requestedStudents;
@@ -194,11 +197,11 @@ const postAttendance = (req, res) => {
             if (err) {
               console.log(err);
               return res.status(500).json({
-                error: "Error in updating Attendance",
+                error: 'Error in updating Attendance',
               });
             } else {
               return res.json({
-                message: "Attendance updated successfully",
+                message: 'Attendance updated successfully',
               });
             }
           });
@@ -207,12 +210,12 @@ const postAttendance = (req, res) => {
             _id: {
               $in: [...customers, ...absentees],
             },
-          }).select("numberOfClassesBought");
+          }).select('numberOfClassesBought');
           allCustomersHistory = allCustomers.map((customer) => ({
             customerId: customer._id,
             previousValue: customer.numberOfClassesBought,
             nextValue: customer.numberOfClassesBought - 1,
-            comment: "Attendance Taken!",
+            comment: 'Attendance Taken!',
           }));
           await ClassHistoryModel.insertMany(allCustomersHistory);
           let data = await CustomerModel.updateMany(
@@ -229,11 +232,11 @@ const postAttendance = (req, res) => {
             if (err) {
               console.log(err);
               return res.status(500).json({
-                error: "Error in Taking Attendance",
+                error: 'Error in Taking Attendance',
               });
             } else {
               return res.json({
-                message: "Attendance Added successfully",
+                message: 'Attendance Added successfully',
               });
             }
           });
@@ -241,7 +244,7 @@ const postAttendance = (req, res) => {
       } catch (error) {
         console.log(error);
         return res.status(500).json({
-          error: "something went wrong!!",
+          error: 'something went wrong!!',
         });
       }
     })
@@ -255,18 +258,18 @@ const getAllAttendanceByScheduleIdAndDate = (req, res) => {
   const { date } = req.query;
   Attendance.findOne({
     scheduleId,
-    date: momentTZ.tz(date, "Asia/Kolkata").format("YYYY-MM-DD"),
+    date: momentTZ.tz(date, 'Asia/Kolkata').format('YYYY-MM-DD'),
   })
     .then((data) => {
       return res.json({
-        message: "Attendance retrieved successfully",
+        message: 'Attendance retrieved successfully',
         result: data,
       });
     })
     .catch((err) => {
       console.log(err);
       return res.status(500).json({
-        error: "error in retrieving Attendance",
+        error: 'error in retrieving Attendance',
       });
     });
 };
@@ -274,20 +277,20 @@ const getAllAttendanceByScheduleIdAndDate = (req, res) => {
 const getAttendanceByScheduleId = (req, res) => {
   const { scheduleId } = req.params;
   Attendance.find({ scheduleId })
-    .populate("customers", "firstName email")
-    .populate("requestedStudents", "firstName email")
-    .populate("requestedPaidStudents", "firstName email")
-    .populate("absentees", "firstName email")
+    .populate('customers', 'firstName email')
+    .populate('requestedStudents', 'firstName email')
+    .populate('requestedPaidStudents', 'firstName email')
+    .populate('absentees', 'firstName email')
     .then((data) => {
       return res.json({
-        message: "Attendance retrieved successfully",
+        message: 'Attendance retrieved successfully',
         result: data,
       });
     })
     .catch((err) => {
       console.log(err);
       return res.status(500).json({
-        error: "error in retrieving Attendance",
+        error: 'error in retrieving Attendance',
       });
     });
 };
@@ -307,8 +310,8 @@ const getAttendanceWithPayments = async (req, res) => {
         $ne: true,
       },
     })
-      .select("subject students")
-      .populate("subject", "subjectName")
+      .select('subject students')
+      .populate('subject', 'subjectName')
       .lean();
     let scheduleIds = schedules.map((schedule) => schedule._id);
     let result = await Promise.all(
@@ -318,10 +321,14 @@ const getAttendanceWithPayments = async (req, res) => {
         )[0];
         let allAttendances = await Attendance.find({
           scheduleId: schedule._id,
-        }).select("customers absentees requestedStudents createdAt").lean();
+        })
+          .select('customers absentees requestedStudents createdAt')
+          .lean();
         let allPayments = await Payments.find({
           customerId,
-        }).select("status type createdAt").lean();
+        })
+          .select('status type createdAt')
+          .lean();
         allPayments = allPayments.map((payment) => ({
           isPaymentObject: true,
           ...payment,
@@ -357,18 +364,18 @@ const getAttendanceWithPayments = async (req, res) => {
               ...object,
               createdAt: new Date(object.createdAt),
             })),
-          subject: schedule.subject ? schedule.subject.subjectName : "",
+          subject: schedule.subject ? schedule.subject.subjectName : '',
         };
       })
     );
     return res.json({
-      message: "retrieved successfully!!",
+      message: 'retrieved successfully!!',
       result,
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something went wrong!!",
+      error: 'Something went wrong!!',
       result: null,
     });
   }

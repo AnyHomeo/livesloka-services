@@ -1,7 +1,7 @@
-const AdminModel = require("../models/Admin.model");
-const CustomerModel = require("../models/Customer.model");
-const RewardsModel = require("../models/Rewards.model");
-const SubjectModel = require("../models/Subject.model");
+const AdminModel = require('../models/Admin.model');
+const CustomerModel = require('../models/Customer.model');
+const RewardsModel = require('../models/Rewards.model');
+const SubjectModel = require('../models/Subject.model');
 
 exports.getRewardsHistoryByUser = async (req, res) => {
   try {
@@ -11,7 +11,7 @@ exports.getRewardsHistoryByUser = async (req, res) => {
     if (redeems) {
       const redeemData = await RewardsModel.find({ login: admin._id }).lean();
       return res.json({
-        message: "Rewards retrieved successfully",
+        message: 'Rewards retrieved successfully',
         result: {
           rewards: admin.rewards,
           redeems: redeemData,
@@ -19,7 +19,7 @@ exports.getRewardsHistoryByUser = async (req, res) => {
       });
     }
     return res.json({
-      message: "Rewards retrieved successfully",
+      message: 'Rewards retrieved successfully',
       result: {
         rewards: admin.rewards,
       },
@@ -28,7 +28,7 @@ exports.getRewardsHistoryByUser = async (req, res) => {
     console.log(error);
     return res.status(500).json({
       result: error,
-      message: "Something went wrong",
+      message: 'Something went wrong',
     });
   }
 };
@@ -80,7 +80,7 @@ exports.redeemRewards = async (req, res) => {
     console.log(error);
     return res.status(500).json({
       result: error,
-      message: "Something went wrong",
+      message: 'Something went wrong',
     });
   }
 };
@@ -101,12 +101,12 @@ exports.addRewards = async (req, res) => {
     await admin.save();
 
     return res.status(200).json({
-      message: "Rewards added successfully",
+      message: 'Rewards added successfully',
     });
   } catch (error) {
     console.log(error);
     return res.status(500).json({
-      error: "Something went wrong!",
+      error: 'Something went wrong!',
       result: error,
     });
   }
