@@ -105,13 +105,6 @@ exports.CancelAClass = async (req, res) => {
         .select('students teacher')
         .lean();
 
-      let startOfCancelledDateMonth = moment(cancelledDate)
-        .startOf('month')
-        .format();
-      let endOfCancelledDateMonth = moment(cancelledDate)
-        .endOf('month')
-        .format();
-
       let studentIds = await CustomerModel.find({ email: studentId }).lean();
       studentIds = studentIds.map((id) => id._id);
       let scheduleUsers = schedule.students;
@@ -189,26 +182,59 @@ exports.CancelAClass = async (req, res) => {
           JSON.stringify(oldDate).split('T')[0] ===
           JSON.stringify(newDate).split('T')[0];
         if (!alreadyExists) {
-          const cancelledClass = new CancelledClassesModel(req.body);
-          await cancelledClass.save();
-          let customer = await CustomerModel.findById(
-            req.body.studentId
-          ).lean();
-          let newAdMessage = {
-            message:
-              customer.firstName +
-              ' Applied for a Leave on ' +
-              momentTZ(req.body.cancelledDate)
-                .tz('Asia/Kolkata')
-                .format('Do of MMMM'),
-            icon: 'alert-circle',
-            title: 'Leave Alert',
-            broadCastTo: 'teachers',
-            broadCastedToTeachers: [scheduleId.teacher],
-            expiryDate: moment(req.body.cancelledDate).format(),
-          };
-          let notification = new AdMessagesModel(newAdMessage);
-          await notification.save();
+          if (req.body.dates) {
+            await CancelledClassesModel.insertMany(
+              req.body.dates.map((d) => ({
+                ...req.body,
+                cancelledDate: d,
+              }))
+            );
+
+            let customer = await CustomerModel.findById(
+              req.body.studentId
+            ).lean();
+            let newAdMessage = {
+              message:
+                customer.firstName +
+                ' Applied for Leaves from ' +
+                momentTZ(req.body.cancelledDate)
+                  .tz('Asia/Kolkata')
+                  .format('Do of MMMM') +
+                ' to ' +
+                momentTZ(req.body.dates[req.body.dates.length - 1])
+                  .tz('Asia/Kolkata')
+                  .format('Do of MMMM'),
+              icon: 'alert-circle',
+              title: 'Leave Alert',
+              broadCastTo: 'teachers',
+              broadCastedToTeachers: [scheduleId.teacher],
+              expiryDate: moment(req.body.cancelledDate).format(),
+            };
+            let notification = new AdMessagesModel(newAdMessage);
+            await notification.save();
+          } else {
+            const cancelledClass = new CancelledClassesModel(req.body);
+            await cancelledClass.save();
+
+            let customer = await CustomerModel.findById(
+              req.body.studentId
+            ).lean();
+            let newAdMessage = {
+              message:
+                customer.firstName +
+                ' Applied for a Leave on ' +
+                momentTZ(req.body.cancelledDate)
+                  .tz('Asia/Kolkata')
+                  .format('Do of MMMM'),
+              icon: 'alert-circle',
+              title: 'Leave Alert',
+              broadCastTo: 'teachers',
+              broadCastedToTeachers: [scheduleId.teacher],
+              expiryDate: moment(req.body.cancelledDate).format(),
+            };
+            let notification = new AdMessagesModel(newAdMessage);
+            await notification.save();
+          }
           return res.status(200).json({
             message: 'applied for Leave successfully!',
           });
