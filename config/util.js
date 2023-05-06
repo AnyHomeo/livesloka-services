@@ -1,20 +1,20 @@
-const ClassHistoryModel = require("../models/ClassHistory.model");
-const CustomerModel = require("../models/Customer.model");
-const TeacherModel = require("../models/Teacher.model");
-const ZoomAccountModel = require("../models/ZoomAccount.model");
-const fetch = require("node-fetch");
-const equal = require("fast-deep-equal");
-const SchedulerModel = require("../models/Scheduler.model");
-const Payments = require("../models/Payments");
-const momentTZ = require("moment-timezone");
+const ClassHistoryModel = require('../models/ClassHistory.model');
+const CustomerModel = require('../models/Customer.model');
+const TeacherModel = require('../models/Teacher.model');
+const ZoomAccountModel = require('../models/ZoomAccount.model');
+const fetch = require('node-fetch');
+const equal = require('fast-deep-equal');
+const SchedulerModel = require('../models/Scheduler.model');
+const Payments = require('../models/Payments');
+const momentTZ = require('moment-timezone');
 const days = [
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-  "sunday",
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
 ];
 
 const createZoomLink = async (slots) => {
@@ -32,7 +32,7 @@ const createZoomLink = async (slots) => {
 
       // create new zoomlink
       const formData = {
-        topic: "Livesloka Online Class",
+        topic: 'Livesloka Online Class',
         type: 3,
         password: zoomPassword,
         settings: {
@@ -44,8 +44,8 @@ const createZoomLink = async (slots) => {
           watermark: false,
           use_pmi: false,
           approval_type: 2,
-          audio: "both",
-          auto_recording: "none",
+          audio: 'both',
+          auto_recording: 'none',
           waiting_room: false,
           meeting_authentication: false,
         },
@@ -54,10 +54,10 @@ const createZoomLink = async (slots) => {
       let data = await fetch(
         `https://api.zoom.us/v2/users/${zoomEmail}/meetings`,
         {
-          method: "post",
+          method: 'post',
           body: JSON.stringify(formData),
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${zoomJwt}`,
           },
         }
@@ -75,7 +75,7 @@ const createZoomLink = async (slots) => {
         link: response.join_url,
       };
     } else {
-      return "Zoom account not available";
+      return 'Zoom account not available';
     }
   } catch (error) {
     console.error(error);
@@ -103,7 +103,7 @@ const checkAccountAvailability = async (slots) => {
     }
     return isAccountsAvailable;
   } catch (error) {
-    console.log(error);
+    logError(error, 'UTILS');
     return false;
   }
 };
@@ -121,7 +121,7 @@ const createSlotsZoomLink = async (slots) => {
         let daySlots = slots[day];
         if (daySlots.length) {
           let response = await createZoomLink(daySlots);
-          if (typeof response === "string") {
+          if (typeof response === 'string') {
             return new Error(response);
           } else {
             meetingLinks[day] = response;
@@ -131,10 +131,10 @@ const createSlotsZoomLink = async (slots) => {
 
       return meetingLinks;
     } else {
-      throw new Error("Zoom accounts not available");
+      throw new Error('Zoom accounts not available');
     }
   } catch (error) {
-    console.log(error);
+    logError(error, 'UTILS');
     return new Error(error.message);
   }
 };
@@ -189,7 +189,7 @@ const updateCustomersWithSchedule = async (schedule) => {
         let newUpdate = new ClassHistoryModel({
           previousValue,
           nextValue,
-          comment: "Scheduled a Demo class",
+          comment: 'Scheduled a Demo class',
           customerId: customer._id,
         });
         await newUpdate.save();
@@ -198,12 +198,12 @@ const updateCustomersWithSchedule = async (schedule) => {
       customer.teacherId = schedule.teacher;
       customer.numberOfClassesBought = nextValue;
       customer.classStatusId = schedule.demo
-        ? "38493085684944"
-        : "121975682530440";
+        ? '38493085684944'
+        : '121975682530440';
       await customer.save();
     }
   } catch (error) {
-    console.log(error);
+    logError(error, 'UTILS');
   }
 };
 
@@ -223,7 +223,7 @@ const updateTeacherWithSchedule = async (schedule) => {
     teacher.scheduledSlots = [...new Set(teacher.scheduledSlots)];
     await teacher.save();
   } catch (error) {
-    throw new Error("Error while updating teacher slots");
+    throw new Error('Error while updating teacher slots');
   }
 };
 
@@ -272,18 +272,18 @@ const deleteMeetingFromZoom = async (
       try {
         let res = await fetch(
           `https://api.zoom.us/v2/meetings/${
-            meetingLink.split("/")[4].split("?")[0]
+            meetingLink.split('/')[4].split('?')[0]
           }`,
           {
-            method: "DELETE",
+            method: 'DELETE',
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
               Authorization: `Bearer ${zoomJwt}`,
             },
           }
         );
       } catch (error) {
-        console.log(error);
+        logError(error, 'UTILS');
       }
       if (!stopSlots) {
         slots.forEach((slot) => {
@@ -296,7 +296,7 @@ const deleteMeetingFromZoom = async (
       }
     }
   } catch (error) {
-    console.log(error);
+    logError(error, 'UTILS');
   }
 };
 
@@ -326,7 +326,7 @@ const deleteExistingZoomLinkOfTheSchedule = async (schedule, stopSlots) => {
       }
     }
   } catch (error) {
-    console.log(error);
+    logError(error, 'UTILS');
   }
 };
 
@@ -364,7 +364,7 @@ const updateCustomerWithUpdatedSchedule = async (oldSchedule, newSchedule) => {
       let newUpdate = new ClassHistoryModel({
         previousValue,
         nextValue,
-        comment: "Scheduled a Demo class",
+        comment: 'Scheduled a Demo class',
         customerId,
       });
       await newUpdate.save();
@@ -377,10 +377,10 @@ const updateCustomerWithUpdatedSchedule = async (oldSchedule, newSchedule) => {
           teacherId: newSchedule.teacher,
           numberOfClassesBought: nextValue,
           classStatusId: newSchedule.demo
-            ? "38493085684944"
+            ? '38493085684944'
             : anyPayments
-            ? "113975223750050"
-            : "121975682530440",
+            ? '113975223750050'
+            : '121975682530440',
         },
       }
     );
@@ -389,8 +389,8 @@ const updateCustomerWithUpdatedSchedule = async (oldSchedule, newSchedule) => {
 
 const retrieveMeetingLink = (schedule) => {
   const { meetingLink, meetingLinks } = schedule;
-  const day = momentTZ().tz("Asia/Kolkata").format("dddd").toLowerCase();
-  if (typeof meetingLinks === "object" && Object.keys(meetingLinks).length) {
+  const day = momentTZ().tz('Asia/Kolkata').format('dddd').toLowerCase();
+  if (typeof meetingLinks === 'object' && Object.keys(meetingLinks).length) {
     if (meetingLinks[day].link) {
       return meetingLinks[day].link;
     } else {
@@ -410,11 +410,11 @@ const retrieveMeetingLink = (schedule) => {
         }
         return link;
       } else {
-        return "";
+        return '';
       }
     }
   } else {
-    return meetingLink || "";
+    return meetingLink || '';
   }
 };
 

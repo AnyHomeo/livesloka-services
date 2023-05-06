@@ -11,6 +11,7 @@ const { mongooseError } = require('../config/helper');
 const AgentModel = require('../models/Agent.model');
 const client = new twilio(process.env.TWILIO_ID, process.env.TWILIO_TOKEN);
 const momentTZ = require('moment-timezone');
+const { logError } = require('../config/logger');
 
 exports.authentication = async (req, res) => {
   try {
@@ -105,7 +106,8 @@ exports.changePassword = (req, res) => {
       .then((result) => {
         res.status(200).send({ message: 'password updated successfully!' });
       })
-      .catch((err) => {
+      .catch((error) => {
+        logError(error);
         res.status(400).send({ message: 'Invalid userId' });
       });
   } else {
@@ -214,8 +216,8 @@ exports.getCorrespondingData = (req, res) => {
       .catch((err) => {
         res.status('400').send({ message: 'something went wrong !!', err });
       });
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.log(error);
     return res.status(400).json({
       error: 'No such Field',
     });
@@ -233,9 +235,9 @@ exports.updateStatus = (req, res) => {
         result,
       });
     })
-    .catch((err) => {
+    .catch((error) => {
       res.sendStatus(500);
-      console.log(err);
+      console.log(error);
     });
 };
 
@@ -323,16 +325,16 @@ exports.updateCorrespondingData = (req, res) => {
                       result,
                     });
                   })
-                  .catch((err) => {
-                    console.log(err);
+                  .catch((error) => {
+                    console.log(error);
                     return res.status(500).json({
                       error: 'Error in Creating userId',
                     });
                   });
               }
             })
-            .catch((err) => {
-              console.log(err);
+            .catch((error) => {
+              console.log(error);
               return res.status(500).json({
                 error: 'Something went wrong',
               });
@@ -369,9 +371,9 @@ exports.updateCorrespondingData = (req, res) => {
           });
         }
       })
-      .catch((err) => {
-        res.status(500);
-        console.log(err);
+      .catch((error) => {
+        res.status(500).json({ error });
+        console.log(error);
       });
   } catch (err) {
     return res.status(500).json({ error: 'no such field' });
@@ -388,9 +390,9 @@ exports.deleteCorrespondingData = (req, res) => {
         .status('200')
         .send({ message: 'deleted successfully', status: 'ok', result });
     })
-    .catch((err) => {
-      console.log(err);
-      res.status('400').send({ message: 'something went wrong !!', err });
+    .catch((error) => {
+      console.log(error);
+      res.status('400').send({ message: 'something went wrong !!', error });
     });
 };
 
@@ -422,7 +424,6 @@ exports.addField = (req, res) => {
           await newTeacher.save();
         }
         if (name === 'Agent') {
-          console.log(result);
           let body = {
             username: result.AgentName,
             userId: result.AgentLoginId,
@@ -438,8 +439,8 @@ exports.addField = (req, res) => {
           result,
         });
       })
-      .catch((err) => {
-        console.log(err);
+      .catch((error) => {
+        console.log(error);
         return res.status('400').send({ error: 'something went wrong !!' });
       });
   } catch (error) {
@@ -469,8 +470,8 @@ exports.resetPassword = (req, res) => {
             });
           });
       })
-      .catch((err) => {
-        console.log(err);
+      .catch((error) => {
+        console.log(error);
         return res
           .status(500)
           .json({ error: 'error in password reset,Try again later' });
@@ -493,8 +494,8 @@ exports.resetPassword = (req, res) => {
             });
           });
       })
-      .catch((err) => {
-        console.log(err);
+      .catch((error) => {
+        console.log(error);
         return res
           .status(500)
           .json({ error: 'error in password reset,Try again later' });
@@ -524,8 +525,8 @@ exports.getSingleTeacher = (req, res) => {
     .then((result) => {
       return res.status(200).json({ message: 'Fetched successfully', result });
     })
-    .catch((err) => {
-      return res.status(400).json({ message: 'Fetched  problem', err });
+    .catch((error) => {
+      return res.status(400).json({ message: 'Fetched  problem', error });
     });
 };
 

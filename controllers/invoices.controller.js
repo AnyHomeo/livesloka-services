@@ -271,7 +271,7 @@ exports.getInvoices = async (req, res) => {
 
 exports.storeAllExhangeRates = async (req, res) => {
   try {
-    let startDate = momentTZ.tz('2022-08-11 00:00', 'Africa/Monrovia').utc();
+    let startDate = momentTZ.tz('2023-01-07 00:00', 'Africa/Monrovia').utc();
     let endDate = momentTZ().subtract(1, 'day').utc();
     let exchangeRates = [];
     while (startDate.unix() < endDate.unix()) {

@@ -30,7 +30,7 @@ exports.makePayment = async (req, res) => {
     if (currency.currencyName !== 'INR') {
       if (user.proposedAmount) {
         let price = (
-          parseInt(user.proposedAmount) - parseInt(user.discount)
+          parseInt(user.proposedAmount) - parseInt(user.discount || 0)
         ).toString();
         const payment_json = {
           intent: 'sale',
@@ -68,7 +68,7 @@ exports.makePayment = async (req, res) => {
         };
         paypal.payment.create(payment_json, function (error, payment) {
           if (error) {
-            console.log(error);
+            console.log(JSON.stringify(error));
             res.status(500).json({
               error:
                 'error in creating payment, Try again after Sometime or Contact Admin',
@@ -93,7 +93,7 @@ exports.makePayment = async (req, res) => {
       const options = {
         amount:
           parseInt(
-            parseFloat(user.proposedAmount) - parseFloat(user.discount)
+            parseFloat(user.proposedAmount) - parseFloat(user.discount || 0)
           ) * 100,
         currency: 'INR',
         receipt: shortid.generate(),
@@ -138,7 +138,8 @@ exports.onSuccess = async (req, res) => {
           amount: {
             currency: currency.currencyName || 'USD',
             total: (
-              parseInt(customer.proposedAmount) - parseInt(customer.discount)
+              parseInt(customer.proposedAmount) -
+              parseInt(customer.discount || 0)
             ).toString(),
           },
         },

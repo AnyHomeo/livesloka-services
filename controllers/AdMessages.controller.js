@@ -2,6 +2,7 @@ const AdminModel = require('../models/Admin.model');
 const AdMessagesModel = require('../models/AdMessage.model');
 const SchedulerModel = require('../models/Scheduler.model');
 const CustomerModel = require('../models/Customer.model');
+const { logError } = require('../config/logger');
 
 exports.getMessagesByEmail = async (req, res) => {
   try {
@@ -55,7 +56,7 @@ exports.getMessagesByEmail = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error);
+    logError(error, 'Ad Messages');
     return res.status(500).json({
       error: 'Something went wrong!',
     });
@@ -93,7 +94,7 @@ const getAdminsFromScheduleIds = async (req, res) => {
       message: 'Admins Retrieved successfully !',
     });
   } catch (error) {
-    console.log(error);
+    logError(error, 'Ad Messages');
     return res.status(500).json({
       error: 'Something went wrong!',
     });
@@ -131,7 +132,7 @@ const getAdminsFromTeacherIds = async (req, res) => {
       message: 'Admins Retrieved successfully !',
     });
   } catch (error) {
-    console.log(error);
+    logError(error, 'Ad Messages');
   }
 };
 
@@ -159,8 +160,8 @@ const getAdminsFromAgentId = async (req, res) => {
       result: allAdmins,
       message: 'Admins Retrieved successfully !',
     });
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    logError(error, 'Ad Messages');
     return res.status(500).json({
       error: 'Something went wrong',
     });
@@ -183,7 +184,7 @@ exports.getAdmins = (req, res) => {
         });
     }
   } catch (error) {
-    console.log(error);
+    logError(error, 'Ad Messages');
     return res.status(500).json({
       error: 'Something went wrong',
     });
@@ -210,7 +211,7 @@ exports.getMessages = async (req, res) => {
       })),
     });
   } catch (error) {
-    console.log(error);
+    logError(error, 'Ad Messages');
     return res.status(500).json({
       error: 'Something went wrong!',
     });
@@ -238,7 +239,7 @@ exports.addAcknowledgedCustomer = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error);
+    logError(error, 'Ad Messages');
     return res.status(500).json({
       error: 'Something went wrong!',
     });
@@ -261,7 +262,7 @@ exports.markAllAsReadByTeacher = async (req, res) => {
       message: 'Marked all as read!',
     });
   } catch (error) {
-    console.log(error);
+    logError(error, 'Ad Messages');
     return res.status(500).json({
       error: 'Something went wrong',
       result: null,
